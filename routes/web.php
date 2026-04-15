@@ -14,6 +14,18 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/shop', function () {
+    return Inertia::render('Shop');
+});
+
+Route::get('/cart', function () {
+    return Inertia::render('Cart');
+});
+
+Route::get('/favorite', function () {
+    return Inertia::render('Favorite');
+});
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
