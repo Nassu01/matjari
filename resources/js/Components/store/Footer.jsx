@@ -87,7 +87,7 @@ export default function Footer() {
 
             <div className="border-t border-stone-800">
                 <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 text-sm text-stone-500 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-                    <p>© {new Date().getFullYear()} {siteName}. {siteSettings.footer_copyright}</p>
+                    <p>&copy; {new Date().getFullYear()} {siteName}. {siteSettings.footer_copyright}</p>
                     <div className="flex gap-5">
                         <span>{siteSettings.footer_policy_label}</span>
                         <span>{siteSettings.footer_terms_label}</span>

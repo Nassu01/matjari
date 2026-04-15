@@ -1,14 +1,20 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import useStorefront from '../hooks/useStorefront';
 
-function IconButton({ href, children, label }) {
+function IconButton({ href, children, label, count = 0 }) {
     return (
         <Link
             href={href}
             aria-label={label}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-800 transition hover:border-stone-900 hover:bg-stone-900 hover:text-white"
+            className="relative flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-800 transition hover:border-stone-900 hover:bg-stone-900 hover:text-white"
         >
             {children}
+            {count > 0 ? (
+                <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 text-[11px] font-semibold text-stone-950">
+                    {count}
+                </span>
+            ) : null}
         </Link>
     );
 }
@@ -16,6 +22,7 @@ function IconButton({ href, children, label }) {
 export default function Navbar({ auth }) {
     const [hover, setHover] = useState(false);
     const { siteSettings = {} } = usePage().props;
+    const { cartCount, favorites } = useStorefront();
     const categories = Array.isArray(siteSettings.navbar_links) ? siteSettings.navbar_links : [];
     const siteName = siteSettings.site_name || 'Matjari';
     const logoPath = siteSettings.navbar_logo_path || '';
@@ -25,10 +32,10 @@ export default function Navbar({ auth }) {
 
     return (
         <header className="sticky top-0 z-50 border-b border-stone-200/80 bg-[#f7f3ee]/90 backdrop-blur">
-            <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between gap-4 rounded-full border border-stone-200 bg-white/90 px-4 py-3 shadow-sm sm:px-6">
+            <div className="mx-auto w-[95%] max-w-[1500px] px-2 py-4 sm:px-4 lg:px-6">
+                <div className="flex items-center justify-between gap-4 rounded-full border border-stone-200 bg-white/95 px-4 py-3 shadow-[0_14px_34px_rgba(28,25,23,0.08)] sm:px-6">
                     <div className="flex items-center gap-5">
-                        <Link href="/" className="flex items-center gap-3 text-sm font-semibold tracking-[0.32em] text-stone-900">
+                        <Link href="/" className="flex items-center gap-3 text-sm font-semibold tracking-[0.24em] text-stone-900">
                             {logoPath ? (
                                 <img src={logoPath} alt={siteName} className="h-9 w-9 rounded-full object-cover" />
                             ) : null}
@@ -127,7 +134,7 @@ export default function Navbar({ auth }) {
                             </svg>
                         </IconButton>
 
-                        <IconButton href="/favorite" label="Favorite">
+                        <IconButton href="/favorite" label="Favorite" count={favorites.length}>
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                                 <path
                                     d="M12 21s-7-4.6-9.2-9A5.5 5.5 0 0 1 12 5.6 5.5 5.5 0 0 1 21.2 12c-2.2 4.4-9.2 9-9.2 9Z"
@@ -138,7 +145,7 @@ export default function Navbar({ auth }) {
                             </svg>
                         </IconButton>
 
-                        <IconButton href="/cart" label="Cart">
+                        <IconButton href="/cart" label="Cart" count={cartCount}>
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                                 <path
                                     d="M6 6h15l-1.5 9h-12L6 6Z"

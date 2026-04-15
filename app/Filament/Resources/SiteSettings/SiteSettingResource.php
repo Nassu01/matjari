@@ -30,6 +30,11 @@ class SiteSettingResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Site Settings';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return SiteSettingForm::configure($schema);

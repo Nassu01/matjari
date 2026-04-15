@@ -19,11 +19,11 @@ Route::get('/shop', function () {
 });
 
 Route::get('/cart', function () {
-    return Inertia::render('Cart');
+    return Inertia::render('StorefrontCart');
 });
 
 Route::get('/favorite', function () {
-    return Inertia::render('Favorite');
+    return Inertia::render('StorefrontFavorite');
 });
 
 Route::get('/dashboard', function () {

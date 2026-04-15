@@ -3,11 +3,17 @@ import { useMemo, useState } from 'react';
 import Navbar from '../Components/Navbar';
 import Footer from '../Components/store/Footer';
 import ProductCard from '../Components/store/ProductCard';
-import { mockProducts } from '../data/products';
+import { mockProducts } from '../data/storefrontData';
+
+const PER_PAGE = 6;
 
 export default function Shop({ auth }) {
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState('all');
+    const [sort, setSort] = useState('featured');
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+    const [page, setPage] = useState(1);
 
     const categories = useMemo(
         () => ['all', ...new Set(mockProducts.map((product) => product.category))],
@@ -15,17 +21,50 @@ export default function Shop({ auth }) {
     );
 
     const filtered = useMemo(() => {
-        return mockProducts.filter((product) => {
+        const min = minPrice === '' ? null : Number(minPrice);
+        const max = maxPrice === '' ? null : Number(maxPrice);
+
+        const results = mockProducts.filter((product) => {
             const matchesCategory = category === 'all' || product.category === category;
             const search = query.trim().toLowerCase();
             const matchesSearch =
                 !search ||
                 product.name.toLowerCase().includes(search) ||
-                product.category.toLowerCase().includes(search);
+                product.category.toLowerCase().includes(search) ||
+                product.description.toLowerCase().includes(search);
 
-            return matchesCategory && matchesSearch;
+            const matchesMin = min == null || product.price >= min;
+            const matchesMax = max == null || product.price <= max;
+
+            return matchesCategory && matchesSearch && matchesMin && matchesMax;
         });
-    }, [category, query]);
+
+        switch (sort) {
+            case 'price-asc':
+                return [...results].sort((a, b) => a.price - b.price);
+            case 'price-desc':
+                return [...results].sort((a, b) => b.price - a.price);
+            case 'name':
+                return [...results].sort((a, b) => a.name.localeCompare(b.name));
+            default:
+                return results;
+        }
+    }, [category, maxPrice, minPrice, query, sort]);
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+    const paginated = useMemo(() => {
+        const start = (page - 1) * PER_PAGE;
+        return filtered.slice(start, start + PER_PAGE);
+    }, [filtered, page]);
+
+    const clearFilters = () => {
+        setQuery('');
+        setCategory('all');
+        setSort('featured');
+        setMinPrice('');
+        setMaxPrice('');
+        setPage(1);
+    };
 
     return (
         <>
@@ -55,7 +94,7 @@ export default function Shop({ auth }) {
                     </div>
 
                     <div className="mt-8 rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm">
-                        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                        <div className="grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
                             <input
                                 value={query}
                                 onChange={(event) => setQuery(event.target.value)}
@@ -63,6 +102,40 @@ export default function Shop({ auth }) {
                                 className="h-12 rounded-full border border-stone-200 px-5 text-sm outline-none transition focus:border-stone-900"
                             />
 
+                            <div className="grid gap-3 sm:grid-cols-3">
+                                <select
+                                    value={sort}
+                                    onChange={(event) => setSort(event.target.value)}
+                                    className="h-12 rounded-full border border-stone-200 px-4 text-sm outline-none transition focus:border-stone-900"
+                                >
+                                    <option value="featured">Featured</option>
+                                    <option value="price-asc">Price: Low to High</option>
+                                    <option value="price-desc">Price: High to Low</option>
+                                    <option value="name">Name</option>
+                                </select>
+                                <input
+                                    value={minPrice}
+                                    onChange={(event) => setMinPrice(event.target.value)}
+                                    placeholder="Min DH"
+                                    className="h-12 rounded-full border border-stone-200 px-4 text-sm outline-none transition focus:border-stone-900"
+                                />
+                                <input
+                                    value={maxPrice}
+                                    onChange={(event) => setMaxPrice(event.target.value)}
+                                    placeholder="Max DH"
+                                    className="h-12 rounded-full border border-stone-200 px-4 text-sm outline-none transition focus:border-stone-900"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={clearFilters}
+                                className="rounded-full border border-stone-900 px-4 py-2 text-sm font-semibold text-stone-900 transition hover:bg-stone-900 hover:text-white"
+                            >
+                                Clear
+                            </button>
                             <div className="flex flex-wrap gap-3">
                                 {categories.map((item) => {
                                     const active = item === category;
@@ -71,7 +144,7 @@ export default function Shop({ auth }) {
                                             key={item}
                                             type="button"
                                             onClick={() => setCategory(item)}
-                                            className={`rounded-full px-4 py-3 text-sm font-medium transition ${
+                                            className={`rounded-full px-4 py-3 text-sm font-medium capitalize transition ${
                                                 active
                                                     ? 'bg-stone-900 text-white'
                                                     : 'border border-stone-200 bg-stone-50 text-stone-700 hover:border-stone-900'
@@ -91,10 +164,32 @@ export default function Shop({ auth }) {
                         </p>
                     </div>
 
-                    <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-                        {filtered.map((product) => (
+                    <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                        {paginated.map((product) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
+                    </div>
+
+                    <div className="mt-8 flex items-center justify-center gap-3">
+                        <button
+                            type="button"
+                            disabled={page <= 1}
+                            onClick={() => setPage((current) => Math.max(1, current - 1))}
+                            className="rounded-full border border-stone-200 px-4 py-2 text-sm font-medium text-stone-700 transition disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            Prev
+                        </button>
+                        <div className="rounded-full bg-stone-900 px-4 py-2 text-sm font-semibold text-white">
+                            Page {page} / {totalPages}
+                        </div>
+                        <button
+                            type="button"
+                            disabled={page >= totalPages}
+                            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                            className="rounded-full border border-stone-200 px-4 py-2 text-sm font-medium text-stone-700 transition disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            Next
+                        </button>
                     </div>
                 </section>
 
