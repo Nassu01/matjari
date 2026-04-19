@@ -1,3 +1,153 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
+}
+
+@layer components {
+  .auth-page {
+    @apply min-h-screen px-4 py-8 md:px-6 lg:px-8;
+    background:
+      radial-gradient(circle at top left, rgba(244, 114, 20, 0.14), transparent 24%),
+      linear-gradient(180deg, #fffdf8 0%, #f8fafc 100%);
+  }
+
+  .auth-shell {
+    @apply mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)];
+    grid-template-columns: 1fr;
+  }
+
+  .auth-panel {
+    @apply relative flex flex-col;
+  }
+
+  .auth-panel--brand {
+    @apply hidden justify-between overflow-hidden bg-slate-950 px-10 py-10 text-white lg:flex;
+    background:
+      radial-gradient(circle at top right, rgba(251, 146, 60, 0.22), transparent 26%),
+      linear-gradient(160deg, #0f172a 0%, #111827 48%, #1e293b 100%);
+  }
+
+  .auth-panel--brand-alt {
+    background:
+      radial-gradient(circle at top right, rgba(250, 204, 21, 0.18), transparent 26%),
+      linear-gradient(160deg, #111827 0%, #1f2937 48%, #334155 100%);
+  }
+
+  .auth-panel--form {
+    @apply px-6 py-7 sm:px-8 lg:px-12 lg:py-10;
+  }
+
+  .auth-back {
+    @apply inline-flex w-fit items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950;
+  }
+
+  .auth-back--light {
+    @apply border-white/15 bg-white/10 text-white backdrop-blur hover:border-white/30 hover:bg-white/15 hover:text-white;
+  }
+
+  .auth-eyebrow {
+    @apply inline-flex w-fit rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-orange-200;
+  }
+
+  .auth-brand-copy {
+    @apply mt-14 max-w-lg;
+  }
+
+  .auth-brand-copy h1 {
+    @apply mt-5 text-4xl font-semibold leading-tight tracking-tight text-white;
+  }
+
+  .auth-brand-copy p {
+    @apply mt-4 max-w-md text-base leading-7 text-slate-300;
+  }
+
+  .auth-feature-list {
+    @apply mt-10 grid gap-4;
+  }
+
+  .auth-feature-card {
+    @apply rounded-3xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur;
+  }
+
+  .auth-feature-card strong {
+    @apply block text-sm font-semibold text-white;
+  }
+
+  .auth-feature-card span {
+    @apply mt-1 block text-sm leading-6 text-slate-300;
+  }
+
+  .auth-panel--form h2,
+  .auth-card h1 {
+    @apply mt-6 text-3xl font-semibold tracking-tight text-slate-950;
+  }
+
+  .auth-panel--form > p,
+  .auth-card > p {
+    @apply mt-3 max-w-xl text-[15px] leading-7 text-slate-500;
+  }
+
+  .auth-card {
+    @apply mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-2xl flex-col rounded-[28px] border border-slate-200 bg-white px-6 py-7 shadow-[0_18px_48px_rgba(15,23,42,0.10)] sm:px-8 lg:px-10;
+  }
+
+  .auth-form {
+    @apply mt-8 grid gap-5;
+  }
+
+  .auth-field {
+    @apply grid gap-2;
+  }
+
+  .auth-field span {
+    @apply text-sm font-semibold text-slate-700;
+  }
+
+  .auth-field input {
+    @apply h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[15px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-200/60;
+  }
+
+  .auth-field small {
+    @apply text-sm text-rose-600;
+  }
+
+  .auth-checkbox {
+    @apply flex items-center gap-3 text-sm font-medium text-slate-600;
+  }
+
+  .auth-checkbox input {
+    @apply h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400;
+  }
+
+  .auth-button {
+    @apply inline-flex h-12 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70;
+  }
+
+  .auth-button--danger {
+    @apply bg-rose-600 hover:bg-rose-500;
+  }
+
+  .auth-links {
+    @apply mt-6 flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-600;
+  }
+
+  .auth-links a,
+  .auth-links button {
+    @apply text-slate-700 transition hover:text-slate-950;
+  }
+
+  .auth-status {
+    @apply mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700;
+  }
+}
+
+@media (min-width: 1024px) {
+  .auth-shell {
+    grid-template-columns: 1.05fr 0.95fr;
+  }
+}

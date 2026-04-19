@@ -1,110 +1,139 @@
-import Checkbox from '@/Components/Checkbox';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
+import type { FormEventHandler, ReactNode } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
 
-export default function Login({
-    status,
-    canResetPassword,
-}: {
-    status?: string;
+type LoginProps = {
     canResetPassword: boolean;
-}) {
+    status?: string;
+};
+
+export default function Login({ canResetPassword, status }: LoginProps) {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
-        remember: false as boolean,
+        remember: false,
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-
         post(route('login'), {
             onFinish: () => reset('password'),
         });
     };
 
     return (
-        <GuestLayout>
-            <Head title="Log in" />
+        <>
+            <Head title="Login" />
+            <AuthShell
+                title="Login to your account"
+                subtitle="Access your dashboard, orders, and profile."
+            >
+                {status ? <div className="auth-status">{status}</div> : null}
 
-            {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
-
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
+                <form onSubmit={submit} className="auth-form">
+                    <AuthField
+                        label="Email"
                         type="email"
-                        name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
+                        onChange={(value) => setData('email', value)}
+                        error={errors.email}
                     />
 
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
+                    <AuthField
+                        label="Password"
                         type="password"
-                        name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
+                        onChange={(value) => setData('password', value)}
+                        error={errors.password}
                     />
 
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4 block">
-                    <label className="flex items-center">
-                        <Checkbox
-                            name="remember"
+                    <label className="auth-checkbox">
+                        <input
+                            type="checkbox"
                             checked={data.remember}
-                            onChange={(e) =>
-                                setData(
-                                    'remember',
-                                    (e.target.checked || false) as false,
-                                )
-                            }
+                            onChange={(e) => setData('remember', e.target.checked)}
                         />
-                        <span className="ms-2 text-sm text-gray-600 dark:text-gray-400">
-                            Remember me
-                        </span>
+                        <span>Remember me</span>
                     </label>
-                </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
-                        >
-                            Forgot your password?
-                        </Link>
-                    )}
+                    <button className="auth-button" type="submit" disabled={processing}>
+                        {processing ? 'Signing in...' : 'Login'}
+                    </button>
+                </form>
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
-                    </PrimaryButton>
+                <div className="auth-links">
+                    {canResetPassword ? (
+                        <Link href={route('password.request')}>Forgot password?</Link>
+                    ) : null}
+                    <Link href={route('register')}>Create an account</Link>
                 </div>
-            </form>
-        </GuestLayout>
+            </AuthShell>
+        </>
+    );
+}
+
+type ShellProps = {
+    title: string;
+    subtitle: string;
+    children: ReactNode;
+};
+
+function AuthShell({ title, subtitle, children }: ShellProps) {
+    return (
+        <main className="auth-page">
+            <div className="auth-shell">
+                <section className="auth-panel auth-panel--brand">
+                    <Link href="/" className="auth-back auth-back--light">
+                        Back to store
+                    </Link>
+
+                    <div className="auth-brand-copy">
+                        <span className="auth-eyebrow">Matjari Access</span>
+                        <h1>Welcome back to your curated shopping space.</h1>
+                        <p>
+                            Sign in to track orders, manage your profile, and keep your favorite
+                            products close.
+                        </p>
+                    </div>
+
+                    <div className="auth-feature-list">
+                        <div className="auth-feature-card">
+                            <strong>Fast checkout</strong>
+                            <span>Saved details and smoother ordering flow.</span>
+                        </div>
+                        <div className="auth-feature-card">
+                            <strong>Order visibility</strong>
+                            <span>Follow purchases and account activity in one place.</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="auth-panel auth-panel--form">
+                    <Link href="/" className="auth-back">
+                        Back to store
+                    </Link>
+                    <h2>{title}</h2>
+                    <p>{subtitle}</p>
+                    {children}
+                </section>
+            </div>
+        </main>
+    );
+}
+
+type FieldProps = {
+    label: string;
+    type: string;
+    value: string;
+    onChange: (value: string) => void;
+    error?: string;
+};
+
+function AuthField({ label, type, value, onChange, error }: FieldProps) {
+    return (
+        <label className="auth-field">
+            <span>{label}</span>
+            <input type={type} value={value} onChange={(e) => onChange(e.target.value)} />
+            {error ? <small>{error}</small> : null}
+        </label>
     );
 }

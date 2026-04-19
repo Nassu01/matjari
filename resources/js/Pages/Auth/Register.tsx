@@ -1,10 +1,5 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
+import type { FormEventHandler, ReactNode } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -16,106 +11,124 @@ export default function Register() {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-
         post(route('register'), {
             onFinish: () => reset('password', 'password_confirmation'),
         });
     };
 
     return (
-        <GuestLayout>
+        <>
             <Head title="Register" />
-
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="name" value="Name" />
-
-                    <TextInput
-                        id="name"
-                        name="name"
+            <AuthShell
+                title="Create your account"
+                subtitle="Register, verify your email, and unlock your dashboard."
+            >
+                <form onSubmit={submit} className="auth-form">
+                    <AuthField
+                        label="Name"
+                        type="text"
                         value={data.name}
-                        className="mt-1 block w-full"
-                        autoComplete="name"
-                        isFocused={true}
-                        onChange={(e) => setData('name', e.target.value)}
-                        required
+                        onChange={(value) => setData('name', value)}
+                        error={errors.name}
                     />
-
-                    <InputError message={errors.name} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
+                    <AuthField
+                        label="Email"
                         type="email"
-                        name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
+                        onChange={(value) => setData('email', value)}
+                        error={errors.email}
                     />
-
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
+                    <AuthField
+                        label="Password"
                         type="password"
-                        name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                        required
+                        onChange={(value) => setData('password', value)}
+                        error={errors.password}
                     />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel
-                        htmlFor="password_confirmation"
-                        value="Confirm Password"
-                    />
-
-                    <TextInput
-                        id="password_confirmation"
+                    <AuthField
+                        label="Confirm password"
                         type="password"
-                        name="password_confirmation"
                         value={data.password_confirmation}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) =>
-                            setData('password_confirmation', e.target.value)
-                        }
-                        required
+                        onChange={(value) => setData('password_confirmation', value)}
+                        error={errors.password_confirmation}
                     />
 
-                    <InputError
-                        message={errors.password_confirmation}
-                        className="mt-2"
-                    />
+                    <button className="auth-button" type="submit" disabled={processing}>
+                        {processing ? 'Creating account...' : 'Register'}
+                    </button>
+                </form>
+
+                <div className="auth-links">
+                    <Link href={route('login')}>Already have an account?</Link>
                 </div>
+            </AuthShell>
+        </>
+    );
+}
 
-                <div className="mt-4 flex items-center justify-end">
-                    <Link
-                        href={route('login')}
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
-                    >
-                        Already registered?
+type ShellProps = {
+    title: string;
+    subtitle: string;
+    children: ReactNode;
+};
+
+function AuthShell({ title, subtitle, children }: ShellProps) {
+    return (
+        <main className="auth-page">
+            <div className="auth-shell">
+                <section className="auth-panel auth-panel--brand auth-panel--brand-alt">
+                    <Link href="/" className="auth-back auth-back--light">
+                        Back to store
                     </Link>
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Register
-                    </PrimaryButton>
-                </div>
-            </form>
-        </GuestLayout>
+                    <div className="auth-brand-copy">
+                        <span className="auth-eyebrow">Create Account</span>
+                        <h1>Join Matjari and unlock a smarter storefront experience.</h1>
+                        <p>
+                            Register once, verify your email, and manage orders, favorites, and
+                            account details with ease.
+                        </p>
+                    </div>
+
+                    <div className="auth-feature-list">
+                        <div className="auth-feature-card">
+                            <strong>Email verification</strong>
+                            <span>Protect your account and enable secured access.</span>
+                        </div>
+                        <div className="auth-feature-card">
+                            <strong>Personal dashboard</strong>
+                            <span>Access profile settings and future order history.</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="auth-panel auth-panel--form">
+                    <Link href="/" className="auth-back">
+                        Back to store
+                    </Link>
+                    <h2>{title}</h2>
+                    <p>{subtitle}</p>
+                    {children}
+                </section>
+            </div>
+        </main>
+    );
+}
+
+type FieldProps = {
+    label: string;
+    type: string;
+    value: string;
+    onChange: (value: string) => void;
+    error?: string;
+};
+
+function AuthField({ label, type, value, onChange, error }: FieldProps) {
+    return (
+        <label className="auth-field">
+            <span>{label}</span>
+            <input type={type} value={value} onChange={(e) => onChange(e.target.value)} />
+            {error ? <small>{error}</small> : null}
+        </label>
     );
 }

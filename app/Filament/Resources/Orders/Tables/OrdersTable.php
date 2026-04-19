@@ -17,6 +17,10 @@ class OrdersTable
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
+                TextColumn::make('merchant.name')
+                    ->label('Merchant')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('user.name')
                     ->label('User')
                     ->searchable(),

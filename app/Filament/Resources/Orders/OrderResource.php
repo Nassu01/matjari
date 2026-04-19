@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class OrderResource extends Resource
@@ -47,6 +48,37 @@ class OrderResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->isAdmin() || auth()->user()?->isMerchant();
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->isAdmin() || auth()->user()?->isMerchant();
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->isAdmin() || auth()->user()?->isMerchant();
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user?->isAdmin()) {
+            return $query;
+        }
+
+        if ($user?->isMerchant()) {
+            return $query->where('merchant_id', $user->id);
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 
     public static function getPages(): array

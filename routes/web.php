@@ -1,36 +1,26 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\StorefrontController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
-
-Route::get('/shop', function () {
-    return Inertia::render('Shop');
-});
-
-Route::get('/cart', function () {
-    return Inertia::render('StorefrontCart');
-});
-
-Route::get('/favorite', function () {
-    return Inertia::render('StorefrontFavorite');
-});
+Route::get('/', StorefrontController::class)->name('storefront.home');
+Route::get('/shop', StorefrontController::class)->name('storefront.shop');
+Route::get('/cart', StorefrontController::class)->name('storefront.cart');
+Route::get('/favorite', StorefrontController::class)->name('storefront.favorite');
+Route::get('/order', StorefrontController::class)->name('storefront.order');
+Route::get('/checkout', StorefrontController::class)->name('storefront.checkout');
+Route::get('/privacy', StorefrontController::class)->name('storefront.privacy');
+Route::get('/terms', StorefrontController::class)->name('storefront.terms');
+Route::get('/contact', StorefrontController::class)->name('storefront.contact');
+Route::get('/about', StorefrontController::class)->name('storefront.about');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

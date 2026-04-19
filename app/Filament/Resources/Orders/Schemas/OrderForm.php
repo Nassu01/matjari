@@ -19,6 +19,13 @@ class OrderForm
                     ->searchable()
                     ->preload()
                     ->default(null),
+                Select::make('merchant_id')
+                    ->label('Merchant')
+                    ->relationship('merchant', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                    ->visible(fn () => auth()->user()?->isAdmin()),
                 TextInput::make('order_number')
                     ->required()
                     ->unique(ignoreRecord: true)

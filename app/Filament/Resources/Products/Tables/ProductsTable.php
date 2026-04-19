@@ -18,6 +18,10 @@ class ProductsTable
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
+                TextColumn::make('merchant.name')
+                    ->label('Merchant')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('brand.name')
                     ->label('Brand')
                     ->searchable(),

@@ -1,56 +1,50 @@
-import InputError from '@/Components/InputError';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function ForgotPassword({ status }: { status?: string }) {
+type ForgotPasswordProps = {
+    status?: string;
+};
+
+export default function ForgotPassword({ status }: ForgotPasswordProps) {
     const { data, setData, post, processing, errors } = useForm({
         email: '',
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-
         post(route('password.email'));
     };
 
     return (
-        <GuestLayout>
-            <Head title="Forgot Password" />
+        <>
+            <Head title="Forgot password" />
+            <main className="auth-page">
+                <div className="auth-card">
+                    <h1>Forgot password?</h1>
+                    <p>Enter your email address and we will send you a reset link.</p>
+                    {status ? <div className="auth-status">{status}</div> : null}
 
-            <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                Forgot your password? No problem. Just let us know your email
-                address and we will email you a password reset link that will
-                allow you to choose a new one.
-            </div>
+                    <form onSubmit={submit} className="auth-form">
+                        <label className="auth-field">
+                            <span>Email</span>
+                            <input
+                                type="email"
+                                value={data.email}
+                                onChange={(e) => setData('email', e.target.value)}
+                            />
+                            {errors.email ? <small>{errors.email}</small> : null}
+                        </label>
 
-            {status && (
-                <div className="mb-4 text-sm font-medium text-green-600 dark:text-green-400">
-                    {status}
+                        <button className="auth-button" type="submit" disabled={processing}>
+                            {processing ? 'Sending...' : 'Email reset link'}
+                        </button>
+                    </form>
+
+                    <div className="auth-links">
+                        <Link href={route('login')}>Back to login</Link>
+                    </div>
                 </div>
-            )}
-
-            <form onSubmit={submit}>
-                <TextInput
-                    id="email"
-                    type="email"
-                    name="email"
-                    value={data.email}
-                    className="mt-1 block w-full"
-                    isFocused={true}
-                    onChange={(e) => setData('email', e.target.value)}
-                />
-
-                <InputError message={errors.email} className="mt-2" />
-
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Email Password Reset Link
-                    </PrimaryButton>
-                </div>
-            </form>
-        </GuestLayout>
+            </main>
+        </>
     );
 }
