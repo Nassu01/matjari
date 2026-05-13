@@ -13,8 +13,16 @@ class UserInfolist
             ->components([
                 TextEntry::make('name'),
                 TextEntry::make('email')
-                    ->label('Email address'),
+                    ->label('Adresse email'),
+                TextEntry::make('phone')
+                    ->label('Téléphone')
+                    ->placeholder('-'),
                 TextEntry::make('email_verified_at')
+                    ->label('Email vérifié le')
+                    ->dateTime()
+                    ->placeholder('-'),
+                TextEntry::make('phone_verified_at')
+                    ->label('Téléphone vérifié le')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('created_at')

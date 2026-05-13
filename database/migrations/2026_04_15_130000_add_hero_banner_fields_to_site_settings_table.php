@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\SiteSetting;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -28,6 +29,8 @@ return new class extends Migration
             $table->string('promo_button_label')->nullable()->after('promo_description');
             $table->string('promo_button_url')->nullable()->after('promo_button_label');
         });
+
+        SiteSetting::query()->firstOrCreate([], SiteSetting::defaults());
     }
 
     public function down(): void

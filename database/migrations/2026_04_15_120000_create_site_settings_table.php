@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\SiteSetting;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -29,8 +28,6 @@ return new class extends Migration
             $table->string('footer_terms_label')->default('Terms & Conditions');
             $table->timestamps();
         });
-
-        SiteSetting::query()->create(SiteSetting::defaults());
     }
 
     public function down(): void

@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import Navbar from "./components/layout/header/Navbar";
@@ -11,10 +11,14 @@ import Shop from "./pages/shop/Shop";
 
 export default function App() {
   const cartCount = useSelector((state) => state.cart?.totalQuantity ?? 0);
+  const location = useLocation();
+  const usesAppShell = ["/shop", "/cart", "/checkout", "/order", "/favorite"].includes(
+    location.pathname
+  );
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      <Navbar cartCount={cartCount} />
+      {usesAppShell && <Navbar cartCount={cartCount} />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />
@@ -28,7 +32,7 @@ export default function App() {
         <Route path="/about" element={<Home />} />
         <Route path="*" element={<Home />} />
       </Routes>
-      <Footer />
+      {usesAppShell && <Footer />}
     </div>
   );
 }

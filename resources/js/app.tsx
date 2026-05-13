@@ -12,9 +12,16 @@ createInertiaApp({
         const pages = {
             ...import.meta.glob('./Pages/**/*.tsx'),
             ...import.meta.glob('./Pages/**/*.jsx'),
+            ...import.meta.glob('./pages/**/*.tsx'),
+            ...import.meta.glob('./pages/**/*.jsx'),
         };
 
-        return pages[`./Pages/${name}.tsx`]?.() || pages[`./Pages/${name}.jsx`]?.();
+        return (
+            pages[`./Pages/${name}.tsx`]?.() ||
+            pages[`./Pages/${name}.jsx`]?.() ||
+            pages[`./pages/${name}.tsx`]?.() ||
+            pages[`./pages/${name}.jsx`]?.()
+        );
     },
     setup({ el, App, props }) {
         if (import.meta.env.SSR) {

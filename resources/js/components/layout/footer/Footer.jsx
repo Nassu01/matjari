@@ -14,11 +14,13 @@ const socialIcons = {
   in: FaLinkedinIn,
 };
 
-const Footer = () => {
+const Footer = ({ forceDocumentNavigation = false }) => {
   const { settings } = useStorefrontContent();
   const footer = settings?.footer || {};
   const quickLinks = footer.quickLinks || [];
   const socialLinks = footer.socialLinks || [];
+  const StoreLink = ({ to, children }) =>
+    forceDocumentNavigation ? <a href={to}>{children}</a> : <Link to={to}>{children}</Link>;
 
   return (
     <footer className="footer">
@@ -35,7 +37,7 @@ const Footer = () => {
             <ul>
               {quickLinks.map((link) => (
                 <li key={`${link.label}-${link.url}`}>
-                  <Link to={link.url || "/"}>{link.label}</Link>
+                  <StoreLink to={link.url || "/"}>{link.label}</StoreLink>
                 </li>
               ))}
             </ul>
@@ -82,8 +84,8 @@ const Footer = () => {
           </p>
 
           <div className="footer-bottom-links">
-            <Link to="/privacy">{footer.policyLabel}</Link>
-            <Link to="/terms">{footer.termsLabel}</Link>
+            <StoreLink to="/privacy">{footer.policyLabel}</StoreLink>
+            <StoreLink to="/terms">{footer.termsLabel}</StoreLink>
           </div>
         </div>
       </div>

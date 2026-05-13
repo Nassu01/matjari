@@ -9,7 +9,7 @@ const defaultContent = {
   settings: {
     siteName: "Matjari",
     navbar: {
-      logoPath: "/images/Logo.png",
+      logoPath: "",
       homeLabel: "HOME",
       categoryLabel: "CATEGORY",
       searchPlaceholder: "Search products...",

@@ -3,75 +3,111 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
 import { fetchProducts } from "../../redux/ProductSlice";
-import CartProduit from "../../components/Product/CartProduit";
+import { addToCart, getCartTotals } from "../../redux/CartSlice";
+import useImages11, { imageFromImages11 } from "../../hooks/useImages11";
+import {
+  fetchApiCategories,
+  fetchApiProducts,
+  normalizeApiProduct,
+  normalizeLocalProduct,
+} from "../../services/fakeStoreApi";
 
-const PER_PAGE = 20;
+const API_PER_PAGE = 20;
 
 export default function Shop() {
   const dispatch = useDispatch();
-  const { products = [], status = "idle", error = null } = useSelector(
-    (state) => state.products || {}
+  const { products: localProducts = [], status: localStatus = "idle", error: localError = null } =
+    useSelector((state) => state.products || {});
+  const { products: cartProducts = [], totalQuantity = 0, totalAmount = 0 } = useSelector(
+    (state) => state.cart || {}
   );
+  const { displayImages } = useImages11();
+
+  const [apiProducts, setApiProducts] = useState([]);
+  const [apiCategories, setApiCategories] = useState([]);
+  const [apiPage, setApiPage] = useState(1);
+  const [apiTotalPages, setApiTotalPages] = useState(1);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+  const [hasMoreApiProducts, setHasMoreApiProducts] = useState(true);
 
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
   const [sort, setSort] = useState("featured");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [page, setPage] = useState(1);
 
   useEffect(() => {
-    if (status === "idle") dispatch(fetchProducts());
-  }, [dispatch, status]);
+    if (localStatus === "idle") dispatch(fetchProducts());
+  }, [dispatch, localStatus]);
 
-  const normalized = useMemo(() => {
-    const infer = (product) => {
-      const img = String(product.image || "").toLowerCase();
-      if (img.includes("bag")) return "bags";
-      if (img.includes("boot") || img.includes("sandle") || img.includes("sandal")) {
-        return "shoes";
-      }
-      if (img.includes("watch") || img.includes("cap")) return "accessories";
-      if (img.includes("headphone")) return "electronics";
-      if (img.includes("shirt")) return "clothing";
-      return "other";
-    };
+  useEffect(() => {
+    loadApiProducts(1, true);
 
-    return (products || []).map((product) => ({
-      ...product,
-      name: product.name ?? product.title ?? "Untitled",
-      price: Number(product.price ?? 0),
-      category: product.category ?? infer(product),
-      image: product.image ?? "",
-    }));
-  }, [products]);
+    fetchApiCategories()
+      .then((categories) => setApiCategories(categories))
+      .catch(() => setApiCategories([]));
+  }, []);
+
+  useEffect(() => {
+    dispatch(getCartTotals());
+  }, [dispatch, cartProducts]);
+
+  const normalizedLocalProducts = useMemo(() => {
+    return (localProducts || []).map((product, index) => {
+      const manifestImage = imageFromImages11(displayImages, index);
+      return normalizeLocalProduct({
+        ...product,
+        image: manifestImage?.url || product.image || "",
+        category: product.categoryName || product.category || "Makeup",
+      });
+    });
+  }, [localProducts, displayImages]);
+
+  const normalizedApiProducts = useMemo(
+    () => (apiProducts || []).map(normalizeApiProduct),
+    [apiProducts]
+  );
+
+  const mixedProducts = useMemo(
+    () => [...normalizedLocalProducts, ...normalizedApiProducts],
+    [normalizedLocalProducts, normalizedApiProducts]
+  );
 
   const categories = useMemo(() => {
-    const set = new Set(normalized.map((product) => product.category).filter(Boolean));
-    return ["all", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
-  }, [normalized]);
+    const values = new Set();
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const min = minPrice === "" ? null : Number(minPrice);
-    const max = maxPrice === "" ? null : Number(maxPrice);
+    mixedProducts.forEach((product) => {
+      if (product.category) values.add(String(product.category));
+    });
 
-    let list = normalized;
+    apiCategories.forEach((item) => {
+      const label = item?.name || item?.title || item;
+      if (label) values.add(String(label));
+    });
+
+    return ["all", ...Array.from(values).sort((a, b) => a.localeCompare(b))];
+  }, [mixedProducts, apiCategories]);
+
+  const filteredProducts = useMemo(() => {
+    const search = query.trim().toLowerCase();
+
+    let list = mixedProducts;
+
+    if (sourceFilter !== "all") {
+      list = list.filter((product) => product.source === sourceFilter);
+    }
 
     if (category !== "all") {
       list = list.filter((product) => String(product.category) === String(category));
     }
 
-    if (q) {
+    if (search) {
       list = list.filter((product) => {
-        const name = String(product.name || "").toLowerCase();
-        const cat = String(product.category || "").toLowerCase();
-        return name.includes(q) || cat.includes(q);
+        const title = String(product.title || "").toLowerCase();
+        const productCategory = String(product.category || "").toLowerCase();
+        return title.includes(search) || productCategory.includes(search);
       });
     }
-
-    if (Number.isFinite(min)) list = list.filter((product) => product.price >= min);
-    if (Number.isFinite(max)) list = list.filter((product) => product.price <= max);
 
     const sorted = [...list];
     switch (sort) {
@@ -82,218 +118,351 @@ export default function Shop() {
         sorted.sort((a, b) => b.price - a.price);
         break;
       case "name-asc":
-        sorted.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+        sorted.sort((a, b) => String(a.title).localeCompare(String(b.title)));
         break;
       case "name-desc":
-        sorted.sort((a, b) => String(b.name).localeCompare(String(a.name)));
+        sorted.sort((a, b) => String(b.title).localeCompare(String(a.title)));
         break;
       default:
         break;
     }
+
     return sorted;
-  }, [normalized, category, query, minPrice, maxPrice, sort]);
+  }, [mixedProducts, sourceFilter, category, query, sort]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  const pageSafe = Math.min(page, totalPages);
+  async function loadApiProducts(page = 1, replace = false) {
+    setApiLoading(true);
+    setApiError("");
 
-  const paginated = useMemo(() => {
-    const start = (pageSafe - 1) * PER_PAGE;
-    return filtered.slice(start, start + PER_PAGE);
-  }, [filtered, pageSafe]);
+    try {
+      const payload = await fetchApiProducts(page, API_PER_PAGE);
+      const nextProducts = payload.products || [];
 
-  useEffect(() => {
-    setPage(1);
-  }, [category, query, minPrice, maxPrice, sort]);
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [pageSafe]);
+      setApiProducts((current) => (replace ? nextProducts : [...current, ...nextProducts]));
+      setApiPage(payload.currentPage || page);
+      setApiTotalPages(payload.totalPages || 1);
+      setHasMoreApiProducts((payload.currentPage || page) < (payload.totalPages || 1));
+    } catch (error) {
+      setApiError(error?.message || "Could not load API products.");
+    } finally {
+      setApiLoading(false);
+    }
+  }
 
   const clearFilters = () => {
     setQuery("");
     setCategory("all");
+    setSourceFilter("all");
     setSort("featured");
-    setMinPrice("");
-    setMaxPrice("");
-    setPage(1);
   };
 
-  const retry = () => dispatch(fetchProducts());
-
-  if (status === "loading") {
-    return (
-      <div className="shop-page">
-        <div className="shop-container">
-          <div className="shop-head">
-            <div>
-              <h1 className="shop-title">Shop</h1>
-              <p className="shop-subtitle">Loading products...</p>
-            </div>
-          </div>
-
-          <div className="shop-grid">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="shop-card shop-skel">
-                <div className="shop-skel-img" />
-                <div className="shop-card-body">
-                  <div className="shop-skel-line w-75" />
-                  <div className="shop-skel-line w-50" />
-                  <div className="shop-skel-btn" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+  const addProductToCart = (product) => {
+    dispatch(
+      addToCart({
+        id: product.id,
+        name: product.title,
+        price: product.price,
+        image: product.image,
+        source: product.source,
+        category: product.category,
+      })
     );
-  }
+    dispatch(getCartTotals());
+  };
 
-  if (status === "failed") {
-    return (
-      <div className="shop-page">
-        <div className="shop-container">
-          <div className="shop-error">
-            <h1 className="shop-error-title">Could not load products</h1>
-            <p className="shop-error-text">{String(error || "Unknown error")}</p>
-
-            <div className="shop-error-actions">
-              <button className="shop-btn shop-btn--black" onClick={retry} type="button">
-                Retry
-              </button>
-              <Link className="shop-btn shop-btn--white" to="/">
-                Back to Home
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const isInitialLoading =
+    (localStatus === "loading" && normalizedLocalProducts.length === 0) ||
+    (apiLoading && normalizedApiProducts.length === 0);
 
   return (
-    <div className="shop-page">
-      <div className="shop-container">
-        <div className="shop-head">
+    <div className="min-h-screen bg-neutral-50 px-4 py-8 text-neutral-950 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="shop-title">Shop</h1>
-            <p className="shop-subtitle">Browse products, filter, and sort easily.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-orange-600">
+              Matjari Shop
+            </p>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+              Products
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-600">
+              Your makeup products stay local. General products are loaded live from the
+              external API and never saved to the database.
+            </p>
           </div>
 
-          <div className="shop-results">
-            <span className="shop-results-strong">{filtered.length}</span> results
-          </div>
+          <aside className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm lg:min-w-72">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm font-semibold text-neutral-500">Cart summary</span>
+              <span className="rounded-full bg-neutral-950 px-3 py-1 text-xs font-bold text-white">
+                {totalQuantity} items
+              </span>
+            </div>
+            <div className="mt-3 flex items-end justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.14em] text-neutral-400">Total</p>
+                <strong className="text-2xl">${Number(totalAmount || 0).toFixed(2)}</strong>
+              </div>
+              <Link
+                to="/cart"
+                className="inline-flex h-10 items-center justify-center rounded-md border border-neutral-950 px-4 text-sm font-bold transition hover:bg-neutral-950 hover:text-white"
+              >
+                View cart
+              </Link>
+            </div>
+          </aside>
         </div>
 
-        <div className="shop-controls">
-          <div className="shop-controls-grid">
+        <section className="mt-6 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+          <div className="grid gap-3 lg:grid-cols-[1fr_220px_220px_180px_auto]">
             <input
-              className="shop-input"
+              className="h-11 rounded-md border border-neutral-300 bg-white px-4 text-sm outline-none transition focus:border-orange-500"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by name or category..."
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search products by name..."
             />
 
             <select
-              className="shop-select"
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
+              className="h-11 rounded-md border border-neutral-300 bg-white px-3 text-sm outline-none transition focus:border-orange-500"
+              value={sourceFilter}
+              onChange={(event) => setSourceFilter(event.target.value)}
             >
-              <option value="featured">Sort: Featured</option>
+              <option value="all">All products</option>
+              <option value="local">My products / Makeup</option>
+              <option value="api">API products / General</option>
+            </select>
+
+            <select
+              className="h-11 rounded-md border border-neutral-300 bg-white px-3 text-sm outline-none transition focus:border-orange-500"
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
+            >
+              {categories.map((item) => (
+                <option key={item} value={item}>
+                  {item === "all" ? "All categories" : item}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="h-11 rounded-md border border-neutral-300 bg-white px-3 text-sm outline-none transition focus:border-orange-500"
+              value={sort}
+              onChange={(event) => setSort(event.target.value)}
+            >
+              <option value="featured">Featured</option>
               <option value="price-asc">Price: Low to High</option>
               <option value="price-desc">Price: High to Low</option>
               <option value="name-asc">Name: A to Z</option>
               <option value="name-desc">Name: Z to A</option>
             </select>
 
-            <div className="shop-price">
-              <input
-                className="shop-input"
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
-                placeholder="Min $"
-                inputMode="decimal"
-              />
-              <input
-                className="shop-input"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-                placeholder="Max $"
-                inputMode="decimal"
-              />
-            </div>
-
-            <button className="shop-btn shop-btn--white" type="button" onClick={clearFilters}>
+            <button
+              className="h-11 rounded-md border border-neutral-300 px-4 text-sm font-bold transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white"
+              type="button"
+              onClick={clearFilters}
+            >
               Clear
             </button>
           </div>
 
-          <div className="shop-chips">
-            {categories.map((item) => {
-              const active = item === category;
-              return (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setCategory(item)}
-                  className={`shop-chip ${active ? "is-active" : ""}`}
-                >
-                  {item === "all" ? "All" : item}
-                </button>
-              );
-            })}
+          <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-[0.12em]">
+            <button
+              className={`rounded-full px-3 py-2 transition ${
+                sourceFilter === "all" ? "bg-neutral-950 text-white" : "bg-neutral-100 text-neutral-600"
+              }`}
+              type="button"
+              onClick={() => setSourceFilter("all")}
+            >
+              All products
+            </button>
+            <button
+              className={`rounded-full px-3 py-2 transition ${
+                sourceFilter === "local" ? "bg-neutral-950 text-white" : "bg-neutral-100 text-neutral-600"
+              }`}
+              type="button"
+              onClick={() => setSourceFilter("local")}
+            >
+              My makeup products
+            </button>
+            <button
+              className={`rounded-full px-3 py-2 transition ${
+                sourceFilter === "api" ? "bg-orange-600 text-white" : "bg-orange-100 text-orange-700"
+              }`}
+              type="button"
+              onClick={() => setSourceFilter("api")}
+            >
+              General API products
+            </button>
+            <span className="rounded-full bg-neutral-100 px-3 py-2 text-neutral-600">
+              {normalizedLocalProducts.length} local
+            </span>
+            <span className="rounded-full bg-orange-100 px-3 py-2 text-orange-700">
+              {normalizedApiProducts.length} API loaded / page {apiPage} of {apiTotalPages}
+            </span>
+            <span className="rounded-full bg-neutral-950 px-3 py-2 text-white">
+              {filteredProducts.length} showing
+            </span>
           </div>
-        </div>
+        </section>
 
-        <div className="shop-content">
-          {paginated.length === 0 ? (
-            <div className="shop-empty">
-              <div className="shop-empty-icon">Search</div>
-              <h2 className="shop-empty-title">No products found</h2>
-              <p className="shop-empty-text">Try changing your search or filters.</p>
-              <button className="shop-btn shop-btn--black shop-btn--pill" onClick={clearFilters}>
+        {localStatus === "failed" ? (
+          <ErrorBanner
+            title="Local products could not load"
+            message={localError || "Your API /api/storefront/products returned an error."}
+            onRetry={() => dispatch(fetchProducts())}
+          />
+        ) : null}
+
+        {apiError ? (
+          <ErrorBanner
+            title="API products could not load"
+            message={apiError}
+            onRetry={() => loadApiProducts(apiPage || 1, apiProducts.length === 0)}
+          />
+        ) : null}
+
+        <section className="mt-6">
+          {isInitialLoading ? (
+            <ProductSkeletonGrid />
+          ) : filteredProducts.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-neutral-300 bg-white px-6 py-16 text-center">
+              <h2 className="text-2xl font-bold">No products found</h2>
+              <p className="mt-2 text-sm text-neutral-500">
+                Try another search term, category, or product source.
+              </p>
+              <button
+                className="mt-5 h-11 rounded-md bg-neutral-950 px-5 text-sm font-bold text-white"
+                type="button"
+                onClick={clearFilters}
+              >
                 Reset filters
               </button>
             </div>
           ) : (
-            <>
-              <div className="shop-grid">
-                {paginated.map((product) => (
-                  <CartProduit
-                    key={product.id}
-                    id={product.id}
-                    img={product.image}
-                    titre={product.name}
-                    price={product.price}
-                  />
-                ))}
-              </div>
-
-              <div className="shop-pagination">
-                <button
-                  className="shop-btn shop-btn--white"
-                  type="button"
-                  disabled={pageSafe <= 1}
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
-                >
-                  Prev
-                </button>
-
-                <div className="shop-pagecount">
-                  Page <b>{pageSafe}</b> / <b>{totalPages}</b>
-                </div>
-
-                <button
-                  className="shop-btn shop-btn--white"
-                  type="button"
-                  disabled={pageSafe >= totalPages}
-                  onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                >
-                  Next
-                </button>
-              </div>
-            </>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAddToCart={() => addProductToCart(product)}
+                />
+              ))}
+            </div>
           )}
+        </section>
+
+        <div className="mt-8 flex justify-center">
+          <button
+            className="inline-flex h-12 items-center justify-center rounded-md border border-neutral-950 bg-neutral-950 px-6 text-sm font-bold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
+            type="button"
+            disabled={apiLoading || !hasMoreApiProducts}
+            onClick={() => loadApiProducts(apiPage + 1)}
+          >
+            {apiLoading
+              ? "Loading API products..."
+              : hasMoreApiProducts
+                ? "Load More API Products"
+                : "No More API Products"}
+          </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ProductCard({ product, onAddToCart }) {
+  const description =
+    product.description && product.description.length > 96
+      ? `${product.description.slice(0, 96)}...`
+      : product.description;
+
+  return (
+    <article className="group flex min-h-full flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-orange-300 hover:shadow-lg">
+      <div className="relative aspect-square bg-neutral-100">
+        {product.image ? (
+          <img
+            className="h-full w-full object-contain p-5 transition group-hover:scale-105"
+            src={product.image}
+            alt={product.title || "Product"}
+            loading="lazy"
+          />
+        ) : (
+          <div className="grid h-full place-items-center text-sm font-semibold text-neutral-400">
+            No image
+          </div>
+        )}
+        <span
+          className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${
+            product.source === "api"
+              ? "bg-orange-100 text-orange-700"
+              : "bg-neutral-950 text-white"
+          }`}
+        >
+          {product.source === "api" ? "API" : "Makeup"}
+        </span>
+      </div>
+
+      <div className="flex flex-1 flex-col p-4">
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-400">
+          {product.category || "General"}
+        </p>
+        <h3 className="mt-2 line-clamp-2 text-base font-bold leading-6 text-neutral-950">
+          {product.title || "Untitled product"}
+        </h3>
+        {description ? (
+          <p className="mt-2 line-clamp-3 text-sm leading-6 text-neutral-500">
+            {description}
+          </p>
+        ) : (
+          <p className="mt-2 text-sm leading-6 text-neutral-400">No description available.</p>
+        )}
+
+        <div className="mt-auto pt-4">
+          <div className="mb-3 text-xl font-black">${Number(product.price || 0).toFixed(2)}</div>
+          <button
+            className="inline-flex h-11 w-full items-center justify-center rounded-md bg-neutral-950 px-4 text-sm font-bold text-white transition hover:bg-orange-600"
+            type="button"
+            onClick={onAddToCart}
+          >
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function ProductSkeletonGrid() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+      {Array.from({ length: 10 }).map((_, index) => (
+        <div key={index} className="animate-pulse rounded-lg border border-neutral-200 bg-white p-4">
+          <div className="aspect-square rounded-md bg-neutral-200" />
+          <div className="mt-4 h-3 w-24 rounded bg-neutral-200" />
+          <div className="mt-3 h-4 w-4/5 rounded bg-neutral-200" />
+          <div className="mt-2 h-4 w-3/5 rounded bg-neutral-200" />
+          <div className="mt-6 h-10 rounded bg-neutral-200" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ErrorBanner({ title, message, onRetry }) {
+  return (
+    <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-900">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-sm font-bold">{title}</h2>
+          <p className="mt-1 text-sm">{String(message)}</p>
+        </div>
+        <button
+          className="h-10 rounded-md border border-red-300 bg-white px-4 text-sm font-bold transition hover:bg-red-100"
+          type="button"
+          onClick={onRetry}
+        >
+          Retry
+        </button>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
-import { FormEventHandler } from 'react';
+import type { FormEventHandler } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { IofrmAuthCard, IofrmAuthLayout, IofrmInput } from '@/layouts/IofrmAuthLayout';
 
 type ForgotPasswordProps = {
     status?: string;
@@ -16,35 +17,44 @@ export default function ForgotPassword({ status }: ForgotPasswordProps) {
     };
 
     return (
-        <>
-            <Head title="Forgot password" />
-            <main className="auth-page">
-                <div className="auth-card">
-                    <h1>Forgot password?</h1>
-                    <p>Enter your email address and we will send you a reset link.</p>
-                    {status ? <div className="auth-status">{status}</div> : null}
+        <IofrmAuthLayout>
+            <Head title="Mot de passe oublie" />
 
-                    <form onSubmit={submit} className="auth-form">
-                        <label className="auth-field">
-                            <span>Email</span>
-                            <input
-                                type="email"
-                                value={data.email}
-                                onChange={(e) => setData('email', e.target.value)}
-                            />
-                            {errors.email ? <small>{errors.email}</small> : null}
-                        </label>
-
-                        <button className="auth-button" type="submit" disabled={processing}>
-                            {processing ? 'Sending...' : 'Email reset link'}
-                        </button>
-                    </form>
-
-                    <div className="auth-links">
-                        <Link href={route('login')}>Back to login</Link>
+            <IofrmAuthCard
+                title="Forgot your password?"
+                subtitle="Enter your email address and we will send you a secure reset link."
+            >
+                {status ? (
+                    <div className="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-center text-sm font-semibold text-green-700">
+                        {status}
                     </div>
+                ) : null}
+
+                <form onSubmit={submit}>
+                    <IofrmInput
+                        type="email"
+                        value={data.email}
+                        placeholder="E-mail Address"
+                        autoComplete="email"
+                        onChange={(e) => setData('email', e.target.value)}
+                        error={errors.email}
+                    />
+
+                    <button
+                        className="mt-5 h-12 w-full rounded-md bg-[#58463e] text-base font-bold text-white transition hover:bg-[#44352f] disabled:opacity-60"
+                        type="submit"
+                        disabled={processing}
+                    >
+                        {processing ? 'Sending...' : 'Send reset link'}
+                    </button>
+                </form>
+
+                <div className="mt-6 text-center text-sm font-semibold">
+                    <Link className="text-[#58463e] hover:underline" href={route('login')}>
+                        Back to login
+                    </Link>
                 </div>
-            </main>
-        </>
+            </IofrmAuthCard>
+        </IofrmAuthLayout>
     );
 }

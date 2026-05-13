@@ -1,5 +1,6 @@
 import { FormEventHandler } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { IofrmAuthCard, IofrmAuthLayout, IofrmInput } from '@/layouts/IofrmAuthLayout';
 
 type ResetPasswordProps = {
     token: string;
@@ -22,49 +23,58 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
     };
 
     return (
-        <>
+        <IofrmAuthLayout>
             <Head title="Reset password" />
-            <main className="auth-page">
-                <div className="auth-card">
-                    <h1>Reset password</h1>
-                    <form onSubmit={submit} className="auth-form">
-                        <label className="auth-field">
-                            <span>Email</span>
-                            <input
-                                type="email"
-                                value={data.email}
-                                onChange={(e) => setData('email', e.target.value)}
-                            />
-                            {errors.email ? <small>{errors.email}</small> : null}
-                        </label>
 
-                        <label className="auth-field">
-                            <span>Password</span>
-                            <input
-                                type="password"
-                                value={data.password}
-                                onChange={(e) => setData('password', e.target.value)}
-                            />
-                            {errors.password ? <small>{errors.password}</small> : null}
-                        </label>
+            <IofrmAuthCard
+                title="Create a new password"
+                subtitle="Choose a strong password to keep your Matjari account secure."
+            >
+                <form onSubmit={submit}>
+                    <div className="space-y-4">
+                        <IofrmInput
+                            type="email"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            placeholder="E-mail Address"
+                            autoComplete="username"
+                            error={errors.email}
+                        />
 
-                        <label className="auth-field">
-                            <span>Confirm password</span>
-                            <input
-                                type="password"
-                                value={data.password_confirmation}
-                                onChange={(e) =>
-                                    setData('password_confirmation', e.target.value)
-                                }
-                            />
-                        </label>
+                        <IofrmInput
+                            type="password"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                            placeholder="Password"
+                            autoComplete="new-password"
+                            error={errors.password}
+                        />
 
-                        <button className="auth-button" type="submit" disabled={processing}>
-                            {processing ? 'Resetting...' : 'Reset password'}
-                        </button>
-                    </form>
+                        <IofrmInput
+                            type="password"
+                            value={data.password_confirmation}
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                            placeholder="Confirm Password"
+                            autoComplete="new-password"
+                            error={errors.password_confirmation}
+                        />
+                    </div>
+
+                    <button
+                        className="mt-5 h-12 w-full rounded-md bg-[#58463e] text-base font-bold text-white transition hover:bg-[#44352f] disabled:opacity-60"
+                        type="submit"
+                        disabled={processing}
+                    >
+                        {processing ? 'Resetting...' : 'Reset password'}
+                    </button>
+                </form>
+
+                <div className="mt-6 text-center text-sm font-semibold">
+                    <Link className="text-[#58463e] hover:underline" href={route('login')}>
+                        Back to login
+                    </Link>
                 </div>
-            </main>
-        </>
+            </IofrmAuthCard>
+        </IofrmAuthLayout>
     );
 }

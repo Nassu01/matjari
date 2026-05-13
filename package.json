@@ -3,7 +3,9 @@
     "private": true,
     "type": "module",
     "scripts": {
+        "prebuild": "node scripts/generate-images11-manifest.mjs",
         "build": "tsc && vite build && vite build --ssr",
+        "predev": "node scripts/generate-images11-manifest.mjs",
         "dev": "vite"
     },
     "devDependencies": {

@@ -7,7 +7,7 @@ const fallbackCategories = [
   { icon: "HM", label: "Home, Kitchen & Office", url: "/shop" },
 ];
 
-function ListeCategories({ items = fallbackCategories }) {
+function ListeCategories({ items = fallbackCategories, forceDocumentNavigation = false }) {
   return (
     <div className="liste-categories">
       {items.map((cat, index) => (
@@ -16,6 +16,7 @@ function ListeCategories({ items = fallbackCategories }) {
           icon={cat.icon || cat.label?.slice(0, 2)?.toUpperCase() || "CT"}
           name={cat.name || cat.label}
           url={cat.url || "/shop"}
+          forceDocumentNavigation={forceDocumentNavigation}
         />
       ))}
     </div>

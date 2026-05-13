@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\SiteSetting;
+use App\Support\Images11;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -16,11 +17,14 @@ class StorefrontController extends Controller
         $settings = SiteSetting::current();
         $user = $request->user();
 
+        $logoPath = $this->assetPath($settings->navbar_logo_path);
+        $heroImagePath = $this->assetPath($settings->hero_image_path);
+
         return response()->json([
             'settings' => [
                 'siteName' => $settings->site_name,
                 'navbar' => [
-                    'logoPath' => $this->assetPath($settings->navbar_logo_path),
+                    'logoPath' => $this->image11Fallback($logoPath, 0, ['/images/Logo.png']),
                     'homeLabel' => $settings->navbar_home_label,
                     'categoryLabel' => $settings->navbar_category_label,
                     'searchPlaceholder' => $settings->navbar_search_placeholder,
@@ -34,7 +38,7 @@ class StorefrontController extends Controller
                     'primaryButtonUrl' => $settings->hero_primary_button_url,
                     'secondaryButtonLabel' => $settings->hero_secondary_button_label,
                     'secondaryButtonUrl' => $settings->hero_secondary_button_url,
-                    'imagePath' => $this->assetPath($settings->hero_image_path),
+                    'imagePath' => $this->image11Fallback($heroImagePath, 1, ['/images/HeroPage.png']),
                 ],
                 'footer' => [
                     'description' => $settings->footer_description,
@@ -51,9 +55,10 @@ class StorefrontController extends Controller
             ],
             'auth' => [
                 'isAuthenticated' => (bool) $user,
-                'isVerified' => (bool) $user?->hasVerifiedEmail(),
+                'isVerified' => (bool) $user,
                 'user' => $user ? [
                     'name' => $user->name,
+                    'displayName' => $user->display_name,
                     'email' => $user->email,
                 ] : null,
             ],
@@ -67,14 +72,14 @@ class StorefrontController extends Controller
             ->where('is_active', true)
             ->orderByDesc('id')
             ->get()
-            ->map(function (Product $product) {
+            ->map(function (Product $product, int $index) {
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
                     'slug' => $product->slug,
                     'sku' => $product->sku,
                     'price' => (float) $product->price,
-                    'image' => $this->assetPath($product->featured_image),
+                    'image' => Images11::urlAt($index) ?: $this->assetPath($product->featured_image),
                     'description' => $product->short_description ?: $product->description,
                     'category' => $product->category?->slug ?: $product->category?->name ?: 'other',
                     'categoryName' => $product->category?->name,
@@ -100,5 +105,14 @@ class StorefrontController extends Controller
         }
 
         return Storage::url($path);
+    }
+
+    private function image11Fallback(string $path, int $index, array $legacyPaths = []): string
+    {
+        if ($path === '' || in_array($path, $legacyPaths, true)) {
+            return Images11::urlAt($index) ?: $path;
+        }
+
+        return $path;
     }
 }
