@@ -30,7 +30,7 @@ const defaultContent = {
       quickLinks: [
         { label: "Home", url: "/" },
         { label: "Shop", url: "/shop" },
-        { label: "Favorite", url: "/favorite" },
+        { label: "Favorite", url: "/account/favorites" },
         { label: "Cart", url: "/cart" },
       ],
       socialLinks: [

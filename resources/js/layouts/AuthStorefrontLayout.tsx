@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react';
-import { BrowserRouter } from 'react-router-dom';
 
-import Footer from '../components/layout/footer/Footer';
-import Navbar from '../components/layout/header/Navbar';
-import '../App.css';
+import { JournalFooter, JournalHeader, JournalStyle } from '@/components/layout/home/Home';
 
 type AuthStorefrontLayoutProps = {
     children: ReactNode;
@@ -11,12 +8,11 @@ type AuthStorefrontLayoutProps = {
 
 export default function AuthStorefrontLayout({ children }: AuthStorefrontLayoutProps) {
     return (
-        <BrowserRouter>
-            <div className="min-h-screen bg-white text-black">
-                <Navbar cartCount={0} forceDocumentNavigation />
-                {children}
-                <Footer forceDocumentNavigation />
-            </div>
-        </BrowserRouter>
+        <div className="journal-page min-h-screen bg-white text-black">
+            <JournalHeader forceDocumentNavigation />
+            {children}
+            <JournalFooter />
+            <JournalStyle />
+        </div>
     );
 }

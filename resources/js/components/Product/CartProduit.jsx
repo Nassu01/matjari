@@ -1,11 +1,15 @@
 import "../../App.css";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { addToCart, getCartTotals } from "../../redux/CartSlice";
 import { toggleFavorite } from "../../redux/FavoriteSlice";
+import useStorefrontContent from "../../hooks/useStorefrontContent";
 
 function CartProduit({ id, img, titre, price }) {
   const dispatch = useDispatch();
+  const { auth } = useStorefrontContent();
+  const [showFavoritePrompt, setShowFavoritePrompt] = useState(false);
 
   const isFav = useSelector((state) =>
     state.favorite?.items?.some((product) => product.id === id)
@@ -32,6 +36,11 @@ function CartProduit({ id, img, titre, price }) {
 
   const handleFav = () => {
     if (id == null) return;
+
+    if (!auth?.isAuthenticated) {
+      setShowFavoritePrompt(true);
+      return;
+    }
 
     dispatch(
       toggleFavorite({
@@ -73,6 +82,28 @@ function CartProduit({ id, img, titre, price }) {
         >
           {isFav ? "Saved" : "Save"}
         </button>
+      </div>
+
+      {showFavoritePrompt && (
+        <FavoriteLoginPrompt onClose={() => setShowFavoritePrompt(false)} />
+      )}
+    </div>
+  );
+}
+
+function FavoriteLoginPrompt({ onClose }) {
+  return (
+    <div className="favorite-auth-prompt" role="dialog" aria-modal="true" aria-label="Connexion requise">
+      <div className="favorite-auth-prompt__card">
+        <button className="favorite-auth-prompt__close" type="button" onClick={onClose} aria-label="Fermer">
+          ×
+        </button>
+        <strong>Connexion requise</strong>
+        <p>Vous devez vous connecter ou créer un compte pour ajouter ce produit aux favoris.</p>
+        <div className="favorite-auth-prompt__actions">
+          <a href="/login">Se connecter</a>
+          <a href="/register">Créer un compte</a>
+        </div>
       </div>
     </div>
   );

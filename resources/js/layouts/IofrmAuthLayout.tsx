@@ -17,7 +17,7 @@ type IofrmInputProps = InputHTMLAttributes<HTMLInputElement> & {
 
 export function IofrmAuthLayout({ children }: IofrmAuthLayoutProps) {
     return (
-        <main className="min-h-screen bg-[#dc986f] text-[#3d332f] lg:grid lg:grid-cols-[45%_55%]">
+        <main className="min-h-screen bg-[#eee4dc] text-[#202526] lg:grid lg:grid-cols-[45%_55%]">
             <section className="hidden min-h-screen items-center justify-center bg-white px-10 lg:flex">
                 <img
                     src="/images/graphic10.svg"
@@ -26,7 +26,7 @@ export function IofrmAuthLayout({ children }: IofrmAuthLayoutProps) {
                 />
             </section>
 
-            <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-8">
+            <section className="flex min-h-screen items-center justify-center px-5 py-8 sm:px-8">
                 {children}
             </section>
         </main>
@@ -41,22 +41,26 @@ export function IofrmAuthCard({
 }: IofrmAuthCardProps) {
     return (
         <div
-            className={`w-full max-w-[525px] rounded-[10px] bg-white px-7 shadow-[0_20px_60px_rgba(62,45,35,0.16)] sm:px-11 ${
+            className={`w-full max-w-[525px] rounded-[10px] border border-black/10 bg-white px-7 shadow-[0_24px_70px_rgba(32,37,38,0.10)] sm:px-11 ${
                 compact ? 'py-9' : 'py-12'
             }`}
         >
-            <a href="/" className="mx-auto mb-8 flex w-fit items-center gap-3" aria-label="Go to Matjari home">
-                <span className="flex h-9 w-9 items-center justify-center rounded-md border-2 border-[#a8a19d] text-sm font-bold text-[#3d332f]">
-                    M
-                </span>
-                <span className="text-3xl font-bold tracking-normal text-[#252525]">Matjari</span>
+            <a href="/" className="mx-auto mb-5 flex w-fit items-center justify-center" aria-label="Go to Matjari home">
+                <img
+                    src="/images/Fichier%20logomatjari.PNG"
+                    alt="MATJARI"
+                    className="h-14 w-auto object-contain"
+                    onError={(event) => {
+                        event.currentTarget.src = '/images/logomatjari.png';
+                    }}
+                />
             </a>
 
             <div className="mb-8 text-center">
-                <h1 className="text-[28px] font-bold leading-tight text-[#3b332f] sm:text-[30px]">
+                <h1 className="font-serif text-[30px] font-semibold leading-tight text-[#202526] sm:text-[34px]">
                     {title}
                 </h1>
-                <p className="mx-auto mt-4 max-w-[390px] text-base leading-6 text-[#6b5550] sm:text-lg">
+                <p className="mx-auto mt-3 max-w-[410px] text-base leading-7 text-[#687074]">
                     {subtitle}
                 </p>
             </div>
@@ -71,13 +75,13 @@ export function IofrmInput({ error, className = '', ...props }: IofrmInputProps)
         <div>
             <input
                 {...props}
-                className={`h-14 w-full rounded-xl border bg-white px-6 text-base text-[#5b4a45] outline-none transition placeholder:text-[#7b6b66] focus:ring-0 ${
+                className={`h-14 w-full rounded-lg border bg-[#fffdfb] px-5 text-base text-[#202526] outline-none transition placeholder:text-[#687074]/70 focus:ring-0 ${
                     error
-                        ? 'border-red-400 focus:border-red-500'
-                        : 'border-[#b8aaa5] focus:border-[#58463e]'
+                        ? 'border-[#b91f2c] focus:border-[#b91f2c]'
+                        : 'border-black/15 focus:border-[#202526]'
                 } ${className}`}
             />
-            {error ? <p className="mt-2 text-sm font-medium text-red-600">{error}</p> : null}
+            {error ? <p className="mt-2 text-sm font-semibold text-[#b91f2c]">{error}</p> : null}
         </div>
     );
 }
@@ -91,11 +95,11 @@ export function IofrmSocialLinks({
 }) {
     return (
         <div className="mt-8 flex flex-wrap items-center justify-center gap-5">
-            <span className="text-base text-[#3b332f]">{label}</span>
+            <span className="text-base text-[#687074]">{label}</span>
 
             <button
                 type="button"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#36549d] text-lg font-bold text-white transition hover:brightness-95"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#202526] text-lg font-bold text-white transition hover:bg-[#b91f2c]"
                 aria-label="Continue with Facebook"
             >
                 f
@@ -104,7 +108,7 @@ export function IofrmSocialLinks({
             {googleEnabled ? (
                 <a
                     href={route('auth.google.redirect')}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#dd4c3b] text-lg font-bold text-white transition hover:brightness-95"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#b91f2c] text-lg font-bold text-white transition hover:bg-[#202526]"
                     aria-label="Continue with Google"
                 >
                     G
@@ -112,7 +116,7 @@ export function IofrmSocialLinks({
             ) : (
                 <button
                     type="button"
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#dd4c3b] text-lg font-bold text-white transition hover:brightness-95"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#b91f2c] text-lg font-bold text-white transition hover:bg-[#202526]"
                     aria-label="Continue with Google"
                 >
                     G
@@ -121,7 +125,7 @@ export function IofrmSocialLinks({
 
             <button
                 type="button"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0b79a8] text-sm font-bold text-white transition hover:brightness-95"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#202526] text-sm font-bold text-white transition hover:bg-[#b91f2c]"
                 aria-label="Continue with LinkedIn"
             >
                 in

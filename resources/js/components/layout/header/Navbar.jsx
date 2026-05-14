@@ -5,15 +5,18 @@ import ListeCategories from "../../../pages/categorie/ListeCategories";
 import useStorefrontContent from "../../../hooks/useStorefrontContent";
 
 const linkClass = ({ isActive }) => `nav-link${isActive ? " is-active" : ""}`;
+const languageLabels = { en: "English", fr: "French" };
 
 export default function Navbar({ cartCount = 0, forceDocumentNavigation = false }) {
   const [hover, setHover] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState(() => getInitialLanguage());
   const navigate = useNavigate();
   const location = useLocation();
   const { settings, auth } = useStorefrontContent();
   const navbar = settings?.navbar || {};
+  const languageLabel = languageLabels[currentLanguage] || languageLabels.en;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -63,6 +66,19 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
 
   const goToSearch = () => {
     goTo("/shop");
+  };
+
+  const goToFavorites = () => {
+    window.location.assign("/account/favorites");
+  };
+
+  const toggleLanguage = () => {
+    const nextLanguage = currentLanguage === "fr" ? "en" : "fr";
+    setCurrentLanguage(nextLanguage);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("matjari-language", nextLanguage);
+    }
   };
 
   return (
@@ -135,8 +151,8 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
           )}
 
           <div className="navbar-right">
-            <button className="navbar-meta-trigger" type="button">
-              <span>English</span>
+            <button className="navbar-meta-trigger" type="button" onClick={toggleLanguage}>
+              <span>{languageLabel}</span>
               <ChevronIcon />
             </button>
 
@@ -153,7 +169,7 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
               <UserIcon />
             </IconButton>
 
-            <IconButton label="Wishlist" onClick={() => goTo("/favorite")}>
+            <IconButton label="Wishlist" onClick={goToFavorites}>
               <HeartIcon />
             </IconButton>
 
@@ -168,6 +184,20 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
       </div>
     </header>
   );
+}
+
+function getInitialLanguage() {
+  if (typeof window === "undefined") {
+    return "en";
+  }
+
+  const storedLanguage = window.localStorage.getItem("matjari-language");
+
+  if (storedLanguage === "fr" || storedLanguage === "en") {
+    return storedLanguage;
+  }
+
+  return window.navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en";
 }
 
 function IconButton({ children, label, onClick }) {

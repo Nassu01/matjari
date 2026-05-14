@@ -73,6 +73,8 @@ const menuGroups = {
   currency: ["USD", "EUR", "MAD", "GBP"],
 };
 
+const languageLabels = { en: "English", fr: "French" };
+
 function imageFrom(images, index) {
   return imageUrlFromImages11(images, index);
 }
@@ -168,9 +170,12 @@ function SectionTitle({ script, title, subtitle, dark = false }) {
   );
 }
 
-function Header({ categories, auth }) {
+export function JournalHeader({ categories = categoryTemplates, auth = undefined, forceDocumentNavigation = false }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState(() => getInitialLanguage());
+  const { auth: storefrontAuth } = useStorefrontContent();
+  const languageLabel = languageLabels[currentLanguage] || languageLabels.en;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 18);
@@ -190,7 +195,28 @@ function Header({ categories, auth }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
-  const accountHref = auth?.isAuthenticated ? "/dashboard" : "/login";
+  const activeAuth = auth ?? storefrontAuth;
+  const accountHref = activeAuth?.isAuthenticated ? "/dashboard" : "/login";
+  const favoritesHref = "/account/favorites";
+  const toggleLanguage = () => {
+    const nextLanguage = currentLanguage === "fr" ? "en" : "fr";
+    setCurrentLanguage(nextLanguage);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("matjari-language", nextLanguage);
+    }
+  };
+
+  const StoreLink = ({ to, className, ariaLabel, children }) =>
+    forceDocumentNavigation ? (
+      <a href={to} className={className} aria-label={ariaLabel}>
+        {children}
+      </a>
+    ) : (
+      <Link to={to} className={className} aria-label={ariaLabel}>
+        {children}
+      </Link>
+    );
 
   return (
     <header className={`journal-header ${scrolled ? "is-scrolled" : ""} ${open ? "is-open" : ""}`}>
@@ -199,21 +225,23 @@ function Header({ categories, auth }) {
           <button type="button" onClick={() => setOpen((value) => !value)} aria-label="Open menu" aria-expanded={open}>
             <FiMenu />
           </button>
-          <Link to="/shop">Shop</Link>
+          <StoreLink to="/shop">Shop</StoreLink>
           <a href="#catalog">Catalog <TextChevron /></a>
         </nav>
 
-        <Link to="/" className="journal-logo-link" aria-label="Journal home">
+        <StoreLink to="/" className="journal-logo-link" ariaLabel="Journal home">
           <Logo />
-        </Link>
+        </StoreLink>
 
         <nav className="journal-nav-right" aria-label="Tools">
-          <a href="#language">English <TextChevron /></a>
+          <button className="journal-language-trigger" type="button" onClick={toggleLanguage}>
+            {languageLabel} <TextChevron />
+          </button>
           <a href="#currency">USD <TextChevron /></a>
           <button type="button" aria-label="Search"><FaSearch /></button>
           <a className="journal-icon-link" href={accountHref} aria-label="Account"><FaRegUser /></a>
-          <button type="button" aria-label="Wishlist"><FaRegHeart /></button>
-          <Link to="/cart" aria-label="Cart"><FaShoppingCart /></Link>
+          <a className="journal-icon-link" href={favoritesHref} aria-label="Wishlist"><FaRegHeart /></a>
+          <StoreLink to="/cart" ariaLabel="Cart"><FaShoppingCart /></StoreLink>
         </nav>
       </div>
 
@@ -228,6 +256,20 @@ function Header({ categories, auth }) {
       )}
     </header>
   );
+}
+
+function getInitialLanguage() {
+  if (typeof window === "undefined") {
+    return "en";
+  }
+
+  const storedLanguage = window.localStorage.getItem("matjari-language");
+
+  if (storedLanguage === "fr" || storedLanguage === "en") {
+    return storedLanguage;
+  }
+
+  return window.navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en";
 }
 
 function Hero({ heroSlides }) {
@@ -317,6 +359,18 @@ function CategoryStrip({ categories }) {
 }
 
 function ProductCard({ product, compact = false }) {
+  const { auth } = useStorefrontContent();
+  const [showFavoritePrompt, setShowFavoritePrompt] = useState(false);
+
+  const handleFavorite = () => {
+    if (!auth?.isAuthenticated) {
+      setShowFavoritePrompt(true);
+      return;
+    }
+
+    window.location.assign("/account/favorites");
+  };
+
   return (
     <article className={`journal-product-card ${compact ? "is-compact" : ""}`} data-animate>
       {product.sale && <span className="journal-sale-flag">%</span>}
@@ -329,10 +383,29 @@ function ProductCard({ product, compact = false }) {
       <p className="journal-price"><strong>{product.price}</strong>{product.old && <del>{product.old}</del>}</p>
       <div className="journal-card-actions">
         <button type="button"><FaShoppingCart /> Add to Cart</button>
-        <button type="button" aria-label="Wishlist"><FaRegHeart /></button>
+        <button type="button" aria-label="Wishlist" onClick={handleFavorite}><FaRegHeart /></button>
         <button type="button" aria-label="Compare"><FiRefreshCw /></button>
       </div>
+      {showFavoritePrompt && (
+        <FavoriteLoginPrompt onClose={() => setShowFavoritePrompt(false)} />
+      )}
     </article>
+  );
+}
+
+function FavoriteLoginPrompt({ onClose }) {
+  return (
+    <div className="journal-favorite-prompt" role="dialog" aria-modal="true" aria-label="Connexion requise">
+      <div>
+        <button type="button" onClick={onClose} aria-label="Fermer">×</button>
+        <strong>Connexion requise</strong>
+        <p>Vous devez vous connecter ou créer un compte pour ajouter ce produit aux favoris.</p>
+        <div>
+          <a href="/login">Se connecter</a>
+          <a href="/register">Créer un compte</a>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -516,7 +589,7 @@ function Newsletter() {
   );
 }
 
-function Footer() {
+export function JournalFooter() {
   const columns = [
     ["About Us", ["About Us", "Blog", "FAQ", "Privacy Policy", "Terms & Conditions"]],
     ["My Account", ["Login", "Order History", "Affiliates", "Newsletter", "Gift Certificate", "Returns"]],
@@ -550,6 +623,10 @@ function Footer() {
   );
 }
 
+export function JournalStyle() {
+  return <style>{css}</style>;
+}
+
 export default function Home() {
   useScrollReveal();
   const { images, status } = useImages11();
@@ -558,7 +635,7 @@ export default function Home() {
 
   return (
     <main className="journal-page">
-      <Header categories={content.categories} auth={auth} />
+      <JournalHeader categories={content.categories} auth={auth} />
       <Hero heroSlides={content.heroSlides} />
       <CategoryStrip categories={content.categories} />
       <Products products={content.products} />
@@ -569,8 +646,8 @@ export default function Home() {
       <About image={content.assets.about} />
       <Blog blogPosts={content.blogPosts} />
       <Newsletter />
-      <Footer />
-      <style>{css}</style>
+      <JournalFooter />
+      <JournalStyle />
     </main>
   );
 }
@@ -588,6 +665,7 @@ const css = `
 .journal-nav-left { gap: 28px; font-family: Inter, 'Helvetica Neue', Arial, sans-serif; font-size: 13.5px; font-weight: 400; letter-spacing: .09em; text-transform: uppercase; line-height: 20px; color: #2f3335; }
 .journal-nav-right { justify-content: flex-end; gap: 13px; color: #555b5e; font-family: Inter, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 20px; }
 .journal-nav-left a, .journal-nav-right a { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; box-shadow: none; white-space: nowrap; }
+.journal-nav-right .journal-language-trigger { width: auto; height: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 14px; line-height: 20px; white-space: nowrap; }
 .journal-text-chevron { flex: 0 0 auto; display: inline-block; width: 0; height: 0; margin-top: 1px; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor; opacity: .62; }
 .journal-nav-left button, .journal-nav-right button { appearance: none; -webkit-appearance: none; display: inline-grid; place-items: center; width: 32px; height: 32px; border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 20px; padding: 0; }
 .journal-nav-left button { width: 23px; height: 17px; }
@@ -669,6 +747,14 @@ const css = `
 .journal-price del { margin-left: 10px; color: #e25348; font-size: 15px; }
 .journal-card-actions { margin: auto -20px 0; min-height: 64px; display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 14px; border-top: 1px solid #dbd9d6; padding: 0 20px; }
 .journal-card-actions button { display: inline-flex; align-items: center; gap: 8px; border: 0; background: transparent; color: #5a6164; cursor: pointer; font-size: 16px; }
+.journal-favorite-prompt { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 20px; background: rgba(20,20,20,.42); backdrop-filter: blur(4px); }
+.journal-favorite-prompt > div { position: relative; width: min(430px, 100%); border-radius: 8px; border: 1px solid rgba(0,0,0,.1); background: #fff; padding: 30px; box-shadow: 0 24px 70px rgba(0,0,0,.18); }
+.journal-favorite-prompt button { position: absolute; right: 14px; top: 12px; border: 0; background: transparent; color: #202526; font-size: 24px; cursor: pointer; }
+.journal-favorite-prompt strong { display: block; color: #202526; font: 28px 'Playfair Display', Georgia, serif; }
+.journal-favorite-prompt p { margin: 12px 0 22px; color: #687074; font-size: 15px; line-height: 1.65; }
+.journal-favorite-prompt div div { display: flex; flex-wrap: wrap; gap: 10px; }
+.journal-favorite-prompt a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #000; background: #000; color: #fff; padding: 0 18px; font-weight: 700; }
+.journal-favorite-prompt a + a { background: #fff; color: #202526; border-color: rgba(0,0,0,.16); }
 
 .journal-services { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; padding: 66px 40px; text-align: center; background: var(--cream); }
 .journal-services svg { margin: 0 auto; font-size: 38px; color: #555b5e; }

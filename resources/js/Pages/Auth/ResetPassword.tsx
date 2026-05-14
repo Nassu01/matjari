@@ -61,7 +61,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                     </div>
 
                     <button
-                        className="mt-5 h-12 w-full rounded-md bg-[#58463e] text-base font-bold text-white transition hover:bg-[#44352f] disabled:opacity-60"
+                        className="mt-5 h-12 w-full rounded-md bg-black text-base font-bold text-white transition hover:bg-gray-800 hover:text-white disabled:opacity-60"
                         type="submit"
                         disabled={processing}
                     >
@@ -70,7 +70,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                 </form>
 
                 <div className="mt-6 text-center text-sm font-semibold">
-                    <Link className="text-[#58463e] hover:underline" href={route('login')}>
+                    <Link className="text-[#202526] transition hover:text-[#b91f2c] hover:underline" href={route('login')}>
                         Back to login
                     </Link>
                 </div>

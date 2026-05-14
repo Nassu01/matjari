@@ -19,8 +19,13 @@ const Footer = ({ forceDocumentNavigation = false }) => {
   const footer = settings?.footer || {};
   const quickLinks = footer.quickLinks || [];
   const socialLinks = footer.socialLinks || [];
-  const StoreLink = ({ to, children }) =>
-    forceDocumentNavigation ? <a href={to}>{children}</a> : <Link to={to}>{children}</Link>;
+  const StoreLink = ({ to, children }) => {
+    const target = normalizeStoreUrl(to);
+
+    return forceDocumentNavigation || target.startsWith("/account/")
+      ? <a href={target}>{children}</a>
+      : <Link to={target}>{children}</Link>;
+  };
 
   return (
     <footer className="footer">
@@ -94,3 +99,7 @@ const Footer = ({ forceDocumentNavigation = false }) => {
 };
 
 export default Footer;
+
+function normalizeStoreUrl(url) {
+  return url === "/favorite" ? "/account/favorites" : url || "/";
+}

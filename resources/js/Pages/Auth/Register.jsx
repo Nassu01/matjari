@@ -87,14 +87,14 @@ export default function Register({ googleEnabled }) {
             <button
               type="submit"
               disabled={processing}
-              className="h-12 rounded-md bg-[#58463e] text-base font-bold text-white transition hover:bg-[#44352f] disabled:opacity-60"
+              className="h-12 rounded-md bg-black text-base font-bold text-white transition hover:bg-gray-800 hover:text-white disabled:opacity-60"
             >
               {processing ? 'Creating...' : 'Create account'}
             </button>
 
             <Link
               href={route('login')}
-              className="flex h-12 items-center justify-center rounded-md border border-[#8f817c] bg-white text-base font-bold text-[#3b332f] transition hover:bg-gray-50"
+              className="flex h-12 items-center justify-center rounded-md border border-black/15 bg-white text-base font-bold text-[#202526] transition hover:border-[#b91f2c] hover:bg-white hover:text-[#b91f2c]"
             >
               Login
             </Link>

@@ -370,24 +370,469 @@
   .dashboard-footer-actions button {
     @apply border-black bg-black text-white hover:border-orange-500 hover:bg-black;
   }
+
+  .account-dashboard-page {
+    @apply w-full bg-[#f7f4f0] px-4 py-8 text-black md:px-6 lg:px-8 xl:px-10;
+  }
+
+  .account-dashboard-shell {
+    @apply mx-auto grid w-full max-w-[1580px] gap-7 lg:grid-cols-[356px_minmax(0,1fr)] lg:items-start xl:gap-8;
+  }
+
+  .account-sidebar {
+    @apply rounded-lg bg-black px-5 py-6 text-white shadow-[0_24px_70px_rgba(0,0,0,0.18)] sm:px-6 sm:py-7 lg:sticky lg:top-24;
+  }
+
+  .account-sidebar__identity {
+    @apply flex items-center gap-4;
+  }
+
+  .account-sidebar__avatar {
+    @apply flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-2xl text-black;
+  }
+
+  .account-sidebar__avatar img {
+    @apply h-full w-full object-cover;
+  }
+
+  .account-sidebar__identity span,
+  .account-sidebar__identity strong {
+    @apply block text-[12px] font-semibold uppercase tracking-[0.22em] leading-5 text-white;
+  }
+
+  .account-sidebar__name {
+    @apply mt-5 truncate border-t border-white/10 pt-5 text-sm font-semibold text-white/70;
+  }
+
+  .account-sidebar__section {
+    @apply mt-6 text-[11px] font-bold uppercase tracking-[0.18em] text-white/80;
+  }
+
+  .account-sidebar__nav {
+    @apply mt-5 grid gap-2.5;
+  }
+
+  .account-sidebar__link {
+    @apply flex w-full items-center gap-3.5 rounded-lg border border-transparent px-3 py-3 text-left text-sm font-semibold leading-5 text-white/[0.88] transition hover:border-white/10 hover:bg-[#1a1a1a] hover:text-white;
+  }
+
+  .account-sidebar__link.is-active {
+    @apply border-white/10 bg-[#242424] text-white shadow-[inset_3px_0_0_rgba(255,255,255,0.9)];
+  }
+
+  .account-sidebar__icon {
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[18px] text-black;
+  }
+
+  .account-sidebar__icon svg {
+    @apply h-5 w-5;
+  }
+
+  .account-sidebar__logout {
+    @apply mt-2 cursor-pointer;
+  }
+
+  .account-dashboard-content {
+    @apply grid gap-6;
+  }
+
+  .account-dashboard-heading {
+    @apply rounded-lg border border-black/10 bg-white px-6 py-7 shadow-[0_18px_45px_rgba(32,37,38,0.08)] sm:px-8;
+    background-image: linear-gradient(135deg, #ffffff 0%, #ffffff 58%, #f1e4d8 100%);
+  }
+
+  .account-page-heading {
+    @apply rounded-lg border border-black/10 bg-white px-6 py-7 shadow-[0_18px_45px_rgba(32,37,38,0.08)] sm:px-8;
+    background-image: linear-gradient(135deg, #ffffff 0%, #ffffff 58%, #f1e4d8 100%);
+  }
+
+  .account-dashboard-heading span,
+  .account-page-heading span,
+  .account-card__head span {
+    @apply text-xs font-bold uppercase tracking-[0.22em] text-[#b91f2c];
+  }
+
+  .account-dashboard-heading h1,
+  .account-page-heading h1 {
+    @apply mt-3 text-3xl font-semibold tracking-tight text-[#202526] sm:text-4xl;
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .account-dashboard-heading p,
+  .account-page-heading p {
+    @apply mt-3 max-w-2xl text-sm leading-6 text-[#687074];
+  }
+
+  .account-page-heading {
+    @apply flex flex-col justify-between gap-5 lg:flex-row lg:items-center;
+  }
+
+  .account-page-heading__action a {
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg border border-black bg-black px-5 text-base font-semibold text-white transition hover:-translate-y-0.5 hover:bg-gray-800 hover:text-white;
+  }
+
+  .journal-page .account-page-heading__action a {
+    @apply bg-black text-white hover:bg-gray-800 hover:text-white;
+  }
+
+  .account-card {
+    @apply rounded-lg border border-black/10 bg-white p-5 shadow-[0_16px_38px_rgba(32,37,38,0.07)] sm:p-6;
+  }
+
+  .account-card__head {
+    @apply mb-5 flex flex-col justify-between gap-3 border-b border-black/10 pb-4 sm:flex-row sm:items-start;
+  }
+
+  .account-card__head h2 {
+    @apply mt-2 text-2xl font-semibold text-[#202526];
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .account-card__action a,
+  .account-card-actions a,
+  .account-card-actions button,
+  .account-empty-state__action a,
+  .account-outline-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-black bg-black px-4 text-base font-semibold text-white transition hover:-translate-y-0.5 hover:border-[#b91f2c] hover:bg-gray-800 hover:text-white;
+  }
+
+  .account-card__action a,
+  .account-outline-button {
+    @apply border-black/10 bg-white text-black hover:border-[#b91f2c] hover:bg-white hover:text-[#b91f2c];
+  }
+
+  .journal-page .account-card-actions a,
+  .journal-page .account-card-actions button,
+  .journal-page .account-empty-state__action a {
+    @apply bg-black text-white hover:bg-gray-800 hover:text-white;
+  }
+
+  .journal-page .account-card__action a,
+  .journal-page .account-outline-button {
+    @apply bg-white text-black hover:bg-white hover:text-[#b91f2c];
+  }
+
+  .account-summary-grid {
+    @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-3;
+  }
+
+  .account-summary-item {
+    @apply rounded-lg border border-black/10 bg-[#f7f4f0] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)];
+  }
+
+  .account-summary-item dt {
+    @apply text-xs font-bold uppercase tracking-[0.14em] text-black/45;
+  }
+
+  .account-summary-item dd {
+    @apply mt-2 break-words text-sm font-semibold leading-6 text-[#202526];
+  }
+
+  .account-orders-list {
+    @apply grid gap-3;
+  }
+
+  .account-order-row {
+    @apply grid gap-4 rounded-lg border border-black/10 bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] xl:grid-cols-[1.1fr_0.85fr_0.8fr_1fr_0.8fr_auto] xl:items-center;
+  }
+
+  .account-order-row span {
+    @apply block text-[11px] font-bold uppercase tracking-[0.14em] text-black/40;
+  }
+
+  .account-order-row strong {
+    @apply mt-1 block text-sm font-semibold text-[#202526];
+  }
+
+  .account-status-badge {
+    @apply mt-1 inline-flex w-fit rounded-full bg-[#eee4dc] px-3 py-1 text-xs font-bold text-[#202526];
+  }
+
+  .account-dashboard-grid {
+    @apply grid gap-6 xl:grid-cols-2;
+  }
+
+  .account-cart-summary {
+    @apply mb-4 grid gap-4 sm:grid-cols-2;
+  }
+
+  .account-empty-state {
+    @apply flex gap-4 rounded-lg border border-dashed border-black/20 bg-[#fbfaf8] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)];
+  }
+
+  .account-empty-state.is-compact {
+    @apply p-4;
+  }
+
+  .account-empty-state__icon {
+    @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black text-xl text-white;
+  }
+
+  .account-empty-state h3 {
+    @apply text-base font-semibold text-[#202526];
+  }
+
+  .account-empty-state p {
+    @apply mt-2 text-sm leading-6 text-[#687074];
+  }
+
+  .account-empty-state__action {
+    @apply mt-4;
+  }
+
+  .account-empty-state__action a {
+    @apply min-w-44;
+  }
+
+  .account-card-actions {
+    @apply mt-5 flex flex-wrap gap-3;
+  }
+
+  .account-favorites-grid {
+    @apply grid gap-4 md:grid-cols-2;
+  }
+
+  .account-favorite-card {
+    @apply rounded-lg border border-black/10 bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)];
+  }
+
+  .account-favorite-image {
+    @apply flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg bg-[#eee4dc] text-3xl text-black/40;
+  }
+
+  .account-favorite-image img {
+    @apply h-full w-full object-cover;
+  }
+
+  .account-favorite-card span {
+    @apply mt-4 block text-xs font-bold uppercase tracking-[0.16em] text-black/45;
+  }
+
+  .account-favorite-card h3 {
+    @apply mt-2 text-lg font-semibold text-[#202526];
+  }
+
+  .account-favorite-card p {
+    @apply mt-2 text-sm font-bold text-black;
+  }
+
+  .account-address-grid {
+    @apply grid gap-4 lg:grid-cols-2;
+  }
+
+  .account-address-card {
+    @apply rounded-lg border border-black/10 bg-[#fbfaf8] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)];
+  }
+
+  .account-address-card h2 {
+    @apply text-xl font-semibold text-[#202526];
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .account-address-card span {
+    @apply mt-3 inline-flex rounded-full bg-[#eee4dc] px-3 py-1 text-xs font-bold text-[#202526];
+  }
+
+  .account-address-card p {
+    @apply mt-3 text-sm leading-6 text-[#687074];
+  }
+
+  .account-payment-method {
+    @apply mb-5 flex gap-4 rounded-lg bg-[#fbfaf8] p-5;
+  }
+
+  .account-payment-method span {
+    @apply text-xs font-bold uppercase tracking-[0.18em] text-[#b91f2c];
+  }
+
+  .account-payment-method h2 {
+    @apply mt-2 text-2xl font-semibold text-[#202526];
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .account-payment-method p,
+  .account-muted-text {
+    @apply mt-3 text-sm leading-7 text-[#687074];
+  }
+
+  .account-password-form {
+    @apply max-w-2xl;
+  }
+
+  .account-form-button {
+    @apply w-full sm:w-fit;
+  }
+
+  .account-support-box {
+    @apply flex flex-col justify-between gap-5 rounded-lg bg-[#202526] p-5 text-white sm:p-6 lg:flex-row lg:items-center;
+  }
+
+  .account-support-box h3 {
+    @apply text-2xl font-semibold text-white;
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .account-support-box p {
+    @apply mt-2 max-w-xl text-sm leading-6 text-white/[0.68];
+  }
+
+  .account-support-box .account-card-actions {
+    @apply mt-0;
+  }
+
+  .account-support-box .account-card-actions a {
+    @apply border-white bg-white text-black hover:border-white hover:bg-white;
+  }
+
+  .journal-page .account-support-box .account-card-actions a {
+    @apply bg-white text-black hover:bg-white hover:text-black;
+  }
+
+  .account-favorites-page {
+    @apply w-full bg-[#f7f4f0] px-4 py-8 text-black md:px-6 lg:px-8 xl:px-10;
+  }
+
+  .account-favorites-hero,
+  .account-favorites-catalog,
+  .account-favorites-empty {
+    @apply mx-auto w-full max-w-[1580px];
+  }
+
+  .account-favorites-hero {
+    @apply flex flex-col justify-between gap-5 rounded-lg border border-black/10 bg-white px-6 py-7 shadow-[0_18px_45px_rgba(32,37,38,0.08)] sm:px-8 lg:flex-row lg:items-center;
+    background-image: linear-gradient(135deg, #ffffff 0%, #ffffff 58%, #f1e4d8 100%);
+  }
+
+  .account-favorites-hero span,
+  .account-favorites-empty span,
+  .account-favorites-product__body span {
+    @apply text-xs font-bold uppercase tracking-[0.22em] text-[#b91f2c];
+  }
+
+  .account-favorites-hero h1,
+  .account-favorites-empty h2,
+  .account-favorites-product__body h2 {
+    @apply text-[#202526];
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .account-favorites-hero h1 {
+    @apply mt-3 text-4xl font-semibold tracking-tight sm:text-5xl;
+  }
+
+  .account-favorites-hero p {
+    @apply mt-3 max-w-2xl text-sm leading-6 text-[#687074];
+  }
+
+  .account-favorites-hero a,
+  .account-favorites-empty a,
+  .account-favorites-product__actions a,
+  .account-favorites-product__actions button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-black bg-black px-5 text-base font-semibold text-white transition hover:-translate-y-0.5 hover:border-[#b91f2c] hover:bg-gray-800 hover:text-white;
+  }
+
+  .account-favorites-catalog {
+    @apply mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4;
+  }
+
+  .account-favorites-product {
+    @apply overflow-hidden rounded-lg border border-black/10 bg-white p-4 shadow-[0_16px_38px_rgba(32,37,38,0.07)] transition hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(32,37,38,0.11)];
+  }
+
+  .account-favorites-product__image {
+    @apply flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg bg-[#eee4dc] text-4xl text-black/35;
+  }
+
+  .account-favorites-product__image img {
+    @apply h-full w-full object-cover transition duration-300;
+  }
+
+  .account-favorites-product:hover .account-favorites-product__image img {
+    @apply scale-105;
+  }
+
+  .account-favorites-product__body {
+    @apply px-1 py-4;
+  }
+
+  .account-favorites-product__body h2 {
+    @apply mt-2 text-2xl font-semibold leading-tight;
+  }
+
+  .account-favorites-product__body p {
+    @apply mt-3 text-base font-bold text-black;
+  }
+
+  .account-favorites-product__actions {
+    @apply grid gap-2;
+  }
+
+  .account-favorites-product__actions a:first-child,
+  .account-favorites-product__actions button {
+    @apply border-black/10 bg-white text-black hover:border-[#b91f2c] hover:bg-white hover:text-[#b91f2c];
+  }
+
+  .account-favorites-empty {
+    @apply mt-7 overflow-hidden rounded-lg border border-dashed border-black/20 bg-white px-6 py-14 text-center shadow-[0_16px_38px_rgba(32,37,38,0.07)] sm:px-10;
+    background-image: radial-gradient(circle at top, rgba(238, 228, 220, 0.82), rgba(255,255,255,0) 42%), linear-gradient(180deg, #ffffff, #fbfaf8);
+  }
+
+  .account-favorites-empty__icon {
+    @apply mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-black text-3xl text-white shadow-[0_18px_40px_rgba(32,37,38,0.18)];
+  }
+
+  .account-favorites-empty h2 {
+    @apply mx-auto mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl;
+  }
+
+  .account-favorites-empty p {
+    @apply mx-auto mt-4 max-w-2xl text-sm leading-7 text-[#687074];
+  }
+
+  .account-favorites-empty__actions {
+    @apply mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row;
+  }
+
+  .account-favorites-empty__actions a {
+    @apply mt-0 min-w-56;
+  }
+
+  .account-favorites-empty__actions .account-favorites-empty__secondary {
+    @apply border-black/10 bg-white text-black hover:border-[#b91f2c] hover:bg-white hover:text-[#b91f2c];
+  }
+
+  .journal-page .account-favorites-empty a,
+  .journal-page .account-favorites-product__actions a {
+    @apply bg-black text-white hover:bg-gray-800 hover:text-white;
+  }
+
+  .journal-page .account-favorites-empty__actions .account-favorites-empty__secondary,
+  .journal-page .account-favorites-product__actions button {
+    @apply bg-white text-black hover:bg-white hover:text-[#b91f2c];
+  }
 }
 
 @layer utilities {
   .auth-page *,
   .dashboard-page *,
+  .account-dashboard-page *,
+  .account-favorites-page *,
   .auth-shell *,
   .auth-card *,
   .dashboard-hero *,
   .dashboard-store-home *,
   .dashboard-grid *,
-  .dashboard-content-grid * {
+  .dashboard-content-grid *,
+  .account-dashboard-shell * {
     min-width: 0;
   }
 }
 
 @media (max-width: 640px) {
   .auth-page,
-  .dashboard-page {
+  .dashboard-page,
+  .account-dashboard-page,
+  .account-favorites-page {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
@@ -397,7 +842,14 @@
   .dashboard-hero,
   .dashboard-store-home,
   .dashboard-card,
-  .dashboard-panel {
+  .dashboard-panel,
+  .account-card,
+  .account-sidebar,
+  .account-dashboard-heading,
+  .account-page-heading,
+  .account-favorites-hero,
+  .account-favorites-empty,
+  .account-favorites-product {
     border-radius: 0.75rem;
   }
 
@@ -405,14 +857,23 @@
   .auth-card,
   .dashboard-hero,
   .dashboard-store-home,
-  .dashboard-panel {
+  .dashboard-panel,
+  .account-card,
+  .account-dashboard-heading,
+  .account-page-heading,
+  .account-sidebar,
+  .account-favorites-hero {
     padding-left: 1rem;
     padding-right: 1rem;
   }
 
   .auth-panel--form h2,
   .auth-card h1,
-  .dashboard-profile h1 {
+  .dashboard-profile h1,
+  .account-dashboard-heading h1,
+  .account-page-heading h1,
+  .account-favorites-hero h1,
+  .account-favorites-empty h2 {
     font-size: clamp(1.75rem, 9vw, 2.35rem);
     line-height: 1.08;
     overflow-wrap: anywhere;
@@ -420,7 +881,8 @@
 
   .auth-links,
   .dashboard-hero-actions,
-  .dashboard-footer-actions {
+  .dashboard-footer-actions,
+  .account-card-actions {
     align-items: stretch;
     flex-direction: column;
   }
@@ -430,7 +892,16 @@
   .dashboard-hero-actions a,
   .dashboard-footer-actions button,
   .dashboard-empty a,
-  .dashboard-store-actions a {
+  .dashboard-store-actions a,
+  .account-card-actions a,
+  .account-card-actions button,
+  .account-card__action a,
+  .account-empty-state__action a,
+  .account-outline-button,
+  .account-favorites-hero a,
+  .account-favorites-empty a,
+  .account-favorites-product__actions a,
+  .account-favorites-product__actions button {
     width: 100%;
     min-height: 2.75rem;
     justify-content: center;
