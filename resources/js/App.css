@@ -406,17 +406,28 @@ header.navbar.is-scrolled .navbar-pill {
 /* cart badge */
 .cart-wrapper {
   position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
 }
 
 .cart-badge {
   position: absolute;
-  top: -8px;
-  right: -10px;
-  font-size: 12px;
-  background: #fff;
-  border: 1px solid #ddd;
+  top: -4px;
+  right: -6px;
+  min-width: 17px;
+  height: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: #202526;
+  border: 1px solid #fff;
   border-radius: 999px;
-  padding: 2px 6px;
+  padding: 0 5px;
   line-height: 1;
 }
 

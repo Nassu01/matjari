@@ -1,4 +1,5 @@
-import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
+import { Link as InertiaLink } from "@inertiajs/react";
+import { NavLink, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import ListeCategories from "../../../pages/categorie/ListeCategories";
@@ -145,9 +146,9 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
               <span className="navbar-logo-text">MATJARI</span>
             </a>
           ) : (
-            <Link to="/" className="navbar-center" aria-label="MATJARI home">
+            <RouterLink to="/" className="navbar-center" aria-label="MATJARI home">
               <span className="navbar-logo-text">MATJARI</span>
-            </Link>
+            </RouterLink>
           )}
 
           <div className="navbar-right">
@@ -173,12 +174,21 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
               <HeartIcon />
             </IconButton>
 
-            <IconButton label="Cart" onClick={() => goTo("/cart")}>
-              <div className="cart-wrapper">
-                <CartIcon />
-                {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-              </div>
-            </IconButton>
+            {forceDocumentNavigation ? (
+              <a className="icon-btn" href="/cart" aria-label="Cart" title="Cart">
+                <CartBadge count={cartCount} />
+              </a>
+            ) : (
+              <InertiaLink
+                className="icon-btn"
+                href="/cart"
+                aria-label="Cart"
+                title="Cart"
+                onClick={() => setMobileOpen(false)}
+              >
+                <CartBadge count={cartCount} />
+              </InertiaLink>
+            )}
           </div>
         </div>
       </div>
@@ -211,6 +221,21 @@ function IconButton({ children, label, onClick }) {
     >
       {children}
     </button>
+  );
+}
+
+function CartBadge({ count = 0 }) {
+  const safeCount = Number.isFinite(Number(count)) ? Number(count) : 0;
+
+  return (
+    <span className="cart-wrapper">
+      <CartIcon />
+      {safeCount > 0 && (
+        <span className="cart-badge" aria-label={`${safeCount} items in cart`}>
+          {safeCount > 99 ? "99+" : safeCount}
+        </span>
+      )}
+    </span>
   );
 }
 

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', StorefrontController::class)->name('storefront.home');
 Route::get('/shop', StorefrontController::class)->name('storefront.shop');
-Route::get('/cart', StorefrontController::class)->name('storefront.cart');
+Route::get('/cart', fn () => Inertia::render('Cart'))->name('cart');
 Route::redirect('/favorite', '/account/favorites')->name('storefront.favorite');
 Route::get('/privacy', StorefrontController::class)->name('storefront.privacy');
 Route::get('/terms', StorefrontController::class)->name('storefront.terms');
