@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import type { InputHTMLAttributes, ReactNode } from 'react';
 
 type IofrmAuthLayoutProps = {
@@ -45,7 +46,7 @@ export function IofrmAuthCard({
                 compact ? 'py-9' : 'py-12'
             }`}
         >
-            <a href="/" className="mx-auto mb-5 flex w-fit items-center justify-center" aria-label="Go to Matjari home">
+            <Link href="/" className="mx-auto mb-5 flex w-fit items-center justify-center" aria-label="Go to Matjari home">
                 <img
                     src="/images/Fichier%20logomatjari.PNG"
                     alt="MATJARI"
@@ -54,7 +55,7 @@ export function IofrmAuthCard({
                         event.currentTarget.src = '/images/logomatjari.png';
                     }}
                 />
-            </a>
+            </Link>
 
             <div className="mb-8 text-center">
                 <h1 className="font-serif text-[30px] font-semibold leading-tight text-[#202526] sm:text-[34px]">

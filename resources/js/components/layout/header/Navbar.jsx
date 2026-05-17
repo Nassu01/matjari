@@ -1,5 +1,5 @@
 import { Link as InertiaLink } from "@inertiajs/react";
-import { NavLink, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
 import ListeCategories from "../../../pages/categorie/ListeCategories";
@@ -158,9 +158,9 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
               <span className="navbar-logo-text">MATJARI</span>
             </a>
           ) : (
-            <RouterLink to="/" className="navbar-center" aria-label="MATJARI home">
+            <InertiaLink href="/" className="navbar-center" aria-label="MATJARI home">
               <span className="navbar-logo-text">MATJARI</span>
-            </RouterLink>
+            </InertiaLink>
           )}
 
           <div className="navbar-right">
@@ -169,6 +169,7 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
                 className="navbar-meta-trigger"
                 type="button"
                 aria-label={t.language}
+                aria-haspopup="menu"
                 aria-expanded={languageOpen}
                 onClick={() => setLanguageOpen((value) => !value)}
               >
@@ -184,6 +185,7 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
                       role="menuitemradio"
                       aria-checked={currentLanguage === language.value}
                       className={currentLanguage === language.value ? "is-active" : ""}
+                      dir={language.value === "ar" ? "rtl" : "ltr"}
                       onClick={() => selectLanguage(language.value)}
                     >
                       {language.label}

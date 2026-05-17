@@ -24,6 +24,8 @@ class Product extends Model
         'stock',
         'featured_image',
         'is_active',
+        'external_source',
+        'external_id',
     ];
 
     protected function casts(): array

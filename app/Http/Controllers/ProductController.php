@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Support\Images11;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -143,7 +144,9 @@ class ProductController extends Controller
             'sale' => false,
             'top' => $product->order_items_count > 0,
             'stock' => $product->stock,
-            'image' => $this->imageUrl($product->featured_image),
+            'image' => $this->imageUrl($product->featured_image, $product->id),
+            'thumbnail' => $this->imageUrl($product->featured_image, $product->id),
+            'images' => array_values(array_filter([$this->imageUrl($product->featured_image, $product->id)])),
             'description' => $product->short_description,
             'url' => route('products.show', ['product' => $product->slug]),
         ];
@@ -151,7 +154,7 @@ class ProductController extends Controller
 
     private function detailPayload(Product $product): array
     {
-        $image = $this->imageUrl($product->featured_image);
+        $image = $this->imageUrl($product->featured_image, $product->id);
 
         return [
             ...$this->summaryPayload($product),
@@ -169,16 +172,29 @@ class ProductController extends Controller
         ];
     }
 
-    private function imageUrl(?string $path): ?string
+    private function imageUrl(?string $path, ?int $fallbackIndex = null): ?string
     {
         if (! $path) {
-            return null;
+            return $this->fallbackImageUrl($fallbackIndex);
         }
 
-        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '/')) {
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return $path;
         }
 
-        return Storage::url($path);
+        if (str_starts_with($path, '/')) {
+            return is_file(public_path(ltrim($path, '/'))) ? $path : $this->fallbackImageUrl($fallbackIndex);
+        }
+
+        if (is_file(public_path($path))) {
+            return '/'.ltrim($path, '/');
+        }
+
+        return Storage::exists($path) ? Storage::url($path) : $this->fallbackImageUrl($fallbackIndex);
+    }
+
+    private function fallbackImageUrl(?int $index = null): ?string
+    {
+        return Images11::urlAt((int) ($index ?? 0)) ?: '/images/logomatjari.png';
     }
 }

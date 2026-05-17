@@ -20,10 +20,14 @@ class Images11
         $payload = json_decode((string) file_get_contents($manifest), true);
         $images = is_array($payload['images'] ?? null) ? $payload['images'] : [];
 
-        return self::$images = array_values(array_filter(
+        $images = array_values(array_filter(
             $images,
-            fn ($image) => is_array($image) && ! empty($image['url'])
+            fn ($image) => is_array($image) && ! empty($image['url']) && ($image['extension'] ?? null) !== 'svg'
         ));
+
+        usort($images, fn ($first, $second) => (int) ($second['size'] ?? 0) <=> (int) ($first['size'] ?? 0));
+
+        return self::$images = $images;
     }
 
     public static function urlAt(int $index): string

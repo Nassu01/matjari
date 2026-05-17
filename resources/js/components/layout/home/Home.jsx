@@ -46,6 +46,7 @@ const blogTemplates = [
     month: "Sep",
     category: "Guide d'achat",
     title: "Comment mieux choisir vos essentiels du quotidien",
+    slug: "comment-mieux-choisir-vos-essentiels-du-quotidien",
     excerpt: "Un guide simple pour selectionner des articles utiles, elegants et adaptes a votre style de vie.",
     comments: 12,
     views: 1840,
@@ -55,6 +56,7 @@ const blogTemplates = [
     month: "Aout",
     category: "Tendances",
     title: "Les tendances mode et accessoires a suivre",
+    slug: "les-tendances-mode-et-accessoires-a-suivre",
     excerpt: "Explorez les pieces, details et nouveautes qui apportent une touche moderne a vos achats.",
     comments: 9,
     views: 2310,
@@ -64,6 +66,7 @@ const blogTemplates = [
     month: "Sep",
     category: "Lifestyle",
     title: "Les essentiels lifestyle a ajouter a votre panier",
+    slug: "les-essentiels-lifestyle-a-ajouter-a-votre-panier",
     excerpt: "Une selection pratique pour simplifier vos achats et rendre votre quotidien plus agreable.",
     comments: 7,
     views: 1568,
@@ -73,6 +76,7 @@ const blogTemplates = [
     month: "Sep",
     category: "Conseils",
     title: "Idees cadeaux pour toutes les occasions",
+    slug: "idees-cadeaux-pour-toutes-les-occasions",
     excerpt: "Trouvez l'inspiration pour offrir des produits utiles, raffines et adaptes a chaque moment important.",
     comments: 15,
     views: 2896,
@@ -82,6 +86,7 @@ const blogTemplates = [
     month: "Dec",
     category: "Maison & bureau",
     title: "Creer un espace pratique chez soi ou au bureau",
+    slug: "creer-un-espace-pratique-chez-soi-ou-au-bureau",
     excerpt: "Decouvrez des indispensables maison, rangement, decoration et bureau pour mieux vous organiser.",
     comments: 6,
     views: 1324,
@@ -180,6 +185,31 @@ function buildHomeContent(images) {
   };
 }
 
+function formatHomePrice(value) {
+  const amount = Number(value || 0);
+
+  return `${amount.toFixed(2)} DH`;
+}
+
+function normalizeStorefrontProduct(product, index) {
+  return {
+    brand: product.brand || product.categoryName || "MATJARI",
+    name: product.name || "Produit",
+    price: formatHomePrice(product.price),
+    image: product.image || "",
+    url: product.url || (product.slug ? `/products/${product.slug}` : "/shop"),
+    top: index < 4,
+  };
+}
+
+function mergeHomeProducts(databaseProducts, fallbackProducts) {
+  const realProducts = Array.isArray(databaseProducts)
+    ? databaseProducts.slice(0, 16).map(normalizeStorefrontProduct)
+    : [];
+
+  return realProducts.length > 0 ? realProducts : fallbackProducts;
+}
+
 function useScrollReveal() {
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -240,15 +270,124 @@ function SectionTitle({ script, title, subtitle, dark = false }) {
   );
 }
 
+const catalogMenuCategories = [
+  {
+    name: "Vêtements & Chaussures",
+    slug: "clothing-shoes",
+    groups: [
+      { title: "MODE", links: ["Vêtements femme", "Vêtements homme", "Chaussures", "Sacs & accessoires"] },
+      { title: "ESSENTIELS", links: ["Sneakers", "Montres", "Lunettes", "Bijoux"] },
+    ],
+  },
+  {
+    name: "Beauté & Santé",
+    slug: "beauty-health",
+    groups: [
+      { title: "BEAUTÉ", links: ["Maquillage", "Parfums", "Soins visage", "Soins cheveux"] },
+      { title: "SANTÉ", links: ["Hygiène", "Bien-être", "Accessoires santé"] },
+    ],
+  },
+  {
+    name: "Téléphone & Tablette",
+    slug: "phones-tablets",
+    groups: [
+      { title: "MOBILE", links: ["Smartphones", "Tablettes", "Accessoires téléphone", "Objets connectés"] },
+      { title: "MARQUES", links: ["Apple", "Samsung", "Xiaomi", "Oppo"] },
+    ],
+  },
+  {
+    name: "TV & High Tech",
+    slug: "electronics",
+    groups: [
+      { title: "IMAGE & SON", links: ["Téléviseurs", "Audio", "Casques", "Caméras"] },
+      { title: "HIGH TECH", links: ["Gaming", "Smart Home", "Accessoires tech"] },
+    ],
+  },
+  {
+    name: "Électroménager",
+    slug: "appliances",
+    groups: [
+      { title: "GROS ÉLECTRO", links: ["Réfrigérateurs", "Lave-linge", "Cuisinières"] },
+      { title: "PETIT ÉLECTRO", links: ["Robots cuisine", "Cafetières", "Aspirateurs"] },
+    ],
+  },
+  {
+    name: "Maison, cuisine & bureau",
+    slug: "home-kitchen",
+    groups: [
+      { title: "MAISON", links: ["Matelas, Literie et linge", "Meubles", "Décoration", "Luminaires & Éclairage", "Aspirateurs et entretien", "Salle de bain"] },
+      { title: "CUISINE", links: ["Casseroles & Poêles", "Couverts & Plats", "Ustensiles de cuisine", "Café, Thé & Expresso", "Stockage et organisation"] },
+      { title: "BUREAU & FOURNITURES", links: ["Fournitures Scolaires", "Mobilier de Bureau", "Matériel d’emballage"] },
+    ],
+  },
+  {
+    name: "Informatique",
+    slug: "computing",
+    groups: [
+      { title: "ORDINATEURS", links: ["PC portables", "Ordinateurs bureau", "Écrans", "Imprimantes"] },
+      { title: "ACCESSOIRES", links: ["Claviers", "Souris", "Stockage", "Réseau"] },
+    ],
+  },
+  {
+    name: "Jeux vidéos & Consoles",
+    slug: "gaming-consoles",
+    groups: [
+      { title: "GAMING", links: ["Consoles", "Jeux vidéo", "Manettes", "Accessoires gaming"] },
+    ],
+  },
+  {
+    name: "Sports & Loisirs",
+    slug: "sports-leisure",
+    groups: [
+      { title: "SPORT", links: ["Fitness", "Football", "Running", "Outdoor"] },
+      { title: "LOISIRS", links: ["Voyage", "Camping", "Bagagerie"] },
+    ],
+  },
+  {
+    name: "Bébé & Jouets",
+    slug: "baby-toys",
+    groups: [
+      { title: "BÉBÉ", links: ["Poussettes", "Chambre bébé", "Repas bébé", "Sécurité"] },
+      { title: "JOUETS", links: ["Jeux éducatifs", "Peluches", "Puzzles"] },
+    ],
+  },
+  {
+    name: "Supermarché",
+    slug: "supermarket",
+    groups: [
+      { title: "COURSES", links: ["Épicerie", "Boissons", "Entretien maison", "Animalerie"] },
+    ],
+  },
+  {
+    name: "Autres catégories",
+    slug: "other-categories",
+    groups: [
+      { title: "PLUS", links: ["Nouveautés", "Promotions", "Top ventes", "Toutes les catégories"] },
+    ],
+  },
+];
+
+const slugifyCatalogValue = (value) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 export function JournalHeader({ categories = categoryTemplates, auth = undefined, forceDocumentNavigation = true }) {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [activeCatalogSlug, setActiveCatalogSlug] = useState(catalogMenuCategories[5].slug);
   const searchRef = useRef(null);
   const searchButtonRef = useRef(null);
   const languageRef = useRef(null);
+  const catalogRef = useRef(null);
   const { auth: storefrontAuth } = useStorefrontContent();
   const { currentLanguage, languageLabel, setCurrentLanguage, t } = useStorefrontLanguage();
 
@@ -293,6 +432,28 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
   }, [languageOpen]);
 
   useEffect(() => {
+    if (!catalogOpen) return undefined;
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setCatalogOpen(false);
+    };
+
+    const onPointerDown = (event) => {
+      if (!catalogRef.current?.contains(event.target)) {
+        setCatalogOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("pointerdown", onPointerDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [catalogOpen]);
+
+  useEffect(() => {
     if (!searchOpen) return undefined;
 
     const onKeyDown = (event) => {
@@ -323,6 +484,7 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
   const activeAuth = auth ?? storefrontAuth;
   const accountHref = activeAuth?.isAuthenticated ? "/dashboard" : "/login";
   const favoritesHref = "/account/favorites";
+  const activeCatalog = catalogMenuCategories.find((category) => category.slug === activeCatalogSlug) || catalogMenuCategories[0];
   const selectLanguage = (language) => {
     setCurrentLanguage(language);
     setLanguageOpen(false);
@@ -350,6 +512,18 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
     )
   );
 
+  const CatalogLink = ({ href, className, children, ...props }) => (
+    forceDocumentNavigation ? (
+      <a href={href} className={className} {...props}>
+        {children}
+      </a>
+    ) : (
+      <InertiaLink href={href} className={className} {...props}>
+        {children}
+      </InertiaLink>
+    )
+  );
+
   return (
     <header className={`journal-header ${scrolled ? "is-scrolled" : ""} ${open ? "is-open" : ""}`}>
       <div className="journal-header-inner">
@@ -358,7 +532,66 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
             <FiMenu />
           </button>
           <StoreLink to="/shop">{t.shop}</StoreLink>
-          <a href="#catalog">{t.catalog} <TextChevron /></a>
+          <div
+            className={`journal-catalog-menu ${catalogOpen ? "is-open" : ""}`}
+            ref={catalogRef}
+            onMouseEnter={() => setCatalogOpen(true)}
+          >
+            <button
+              type="button"
+              className="journal-catalog-trigger"
+              aria-haspopup="menu"
+              aria-expanded={catalogOpen}
+              onClick={() => setCatalogOpen((value) => !value)}
+            >
+              {t.catalog} <TextChevron />
+            </button>
+
+            {catalogOpen && (
+              <div className="journal-catalog-dropdown" role="menu">
+                <div className="journal-catalog-list" aria-label="Catalog categories">
+                  {catalogMenuCategories.map((category) => (
+                    <CatalogLink
+                      key={category.slug}
+                      href={`/shop?category=${category.slug}`}
+                      className={`journal-catalog-item ${activeCatalogSlug === category.slug ? "is-active" : ""}`}
+                      role="menuitem"
+                      onMouseEnter={() => setActiveCatalogSlug(category.slug)}
+                      onFocus={() => setActiveCatalogSlug(category.slug)}
+                      onClick={() => setCatalogOpen(false)}
+                    >
+                      <span aria-hidden="true" />
+                      {category.name}
+                    </CatalogLink>
+                  ))}
+                </div>
+
+                <div className="journal-catalog-detail">
+                  <div className="journal-catalog-heading">
+                    <span>Catalogue</span>
+                    <strong>{activeCatalog.name}</strong>
+                  </div>
+
+                  <div className="journal-catalog-columns">
+                    {activeCatalog.groups.map((group) => (
+                      <div key={group.title}>
+                        <h3>{group.title}</h3>
+                        {group.links.map((link) => (
+                          <CatalogLink
+                            key={link}
+                            href={`/shop?subcategory=${slugifyCatalogValue(link)}`}
+                            onClick={() => setCatalogOpen(false)}
+                          >
+                            {link}
+                          </CatalogLink>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </nav>
 
         <StoreLink to="/" className="journal-logo-link" ariaLabel="Journal home">
@@ -371,6 +604,7 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
               className="journal-language-trigger"
               type="button"
               aria-label={t.language}
+              aria-haspopup="menu"
               aria-expanded={languageOpen}
               onClick={() => setLanguageOpen((value) => !value)}
             >
@@ -385,6 +619,7 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
                     role="menuitemradio"
                     aria-checked={currentLanguage === language.value}
                     className={currentLanguage === language.value ? "is-active" : ""}
+                    dir={language.value === "ar" ? "rtl" : "ltr"}
                     onClick={() => selectLanguage(language.value)}
                   >
                     {language.label}
@@ -427,10 +662,17 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
 
       {open && (
         <div className="journal-mobile-panel">
-          {categories.map((category) => (
-            <a key={category.name} href={`#${category.name.replace(/\s+/g, "-").toLowerCase()}`}>
+          {catalogMenuCategories.map((category) => (
+            <CatalogLink
+              key={category.slug}
+              href={`/shop?category=${category.slug}`}
+              onClick={() => {
+                setOpen(false);
+                setCatalogOpen(false);
+              }}
+            >
               {category.name}
-            </a>
+            </CatalogLink>
           ))}
         </div>
       )}
@@ -553,7 +795,7 @@ function ProductCard({ product, compact = false }) {
         <img src={product.image} alt={product.name} />
       </div>
       <a className="journal-product-brand" href="#brand">{product.brand}</a>
-      <h3><a href="/shop">{product.name}</a></h3>
+      <h3><a href={product.url || "/shop"}>{product.name}</a></h3>
       <p className="journal-price"><strong>{product.price}</strong>{product.old && <del>{product.old}</del>}</p>
       <div className="journal-card-actions">
         <button type="button"><FaShoppingCart /> {t.addToCart}</button>
@@ -988,14 +1230,14 @@ function Blog({ blogPosts }) {
           <div className="journal-blog-track">
             {blogPosts.map((post) => (
               <article className="journal-blog-card" key={post.title} data-animate>
-                <div className="journal-blog-image">
+                <InertiaLink className="journal-blog-image" href={`/blog/${post.slug}`} aria-label={post.title}>
                   <img src={post.image} alt={post.title} />
                   <div><strong>{post.day}</strong><span>{post.month}</span></div>
-                </div>
+                </InertiaLink>
                 <p>{post.category} / admin / {post.comments} commentaires / {post.views} vues</p>
-                <h3>{post.title}</h3>
+                <h3><InertiaLink className="journal-blog-title-link" href={`/blog/${post.slug}`}>{post.title}</InertiaLink></h3>
                 <p>{post.excerpt}</p>
-                <a href="#read">Lire l'article <MdOutlineKeyboardArrowRight /></a>
+                <InertiaLink href={`/blog/${post.slug}`}>Lire l'article <MdOutlineKeyboardArrowRight /></InertiaLink>
               </article>
             ))}
           </div>
@@ -1065,7 +1307,40 @@ export default function Home() {
   useScrollReveal();
   const { images, status } = useImages11();
   const { auth } = useStorefrontContent();
-  const content = useMemo(() => buildHomeContent(images), [images]);
+  const [databaseProducts, setDatabaseProducts] = useState([]);
+  const content = useMemo(() => {
+    const baseContent = buildHomeContent(images);
+
+    return {
+      ...baseContent,
+      products: mergeHomeProducts(databaseProducts, baseContent.products),
+    };
+  }, [databaseProducts, images]);
+
+  useEffect(() => {
+    let active = true;
+
+    fetch("/api/storefront/products", {
+      headers: {
+        Accept: "application/json",
+      },
+    })
+      .then((response) => (response.ok ? response.json() : { products: [] }))
+      .then((payload) => {
+        if (!active) return;
+
+        setDatabaseProducts(Array.isArray(payload?.products) ? payload.products : []);
+      })
+      .catch(() => {
+        if (!active) return;
+
+        setDatabaseProducts([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <main className="journal-page">
@@ -1099,14 +1374,43 @@ const css = `
 .journal-nav-left { gap: 28px; font-family: Inter, 'Helvetica Neue', Arial, sans-serif; font-size: 13.5px; font-weight: 400; letter-spacing: .09em; text-transform: uppercase; line-height: 20px; color: #2f3335; }
 .journal-nav-right { justify-content: flex-end; gap: 13px; color: #555b5e; font-family: Inter, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 20px; }
 .journal-nav-left a, .journal-nav-right a { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; box-shadow: none; white-space: nowrap; }
+.journal-catalog-menu { position: relative; display: inline-flex; align-items: center; }
+.journal-nav-left .journal-catalog-trigger { width: auto; height: auto; display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; color: inherit; padding: 0; font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit; line-height: inherit; text-transform: inherit; white-space: nowrap; cursor: pointer; }
+.journal-catalog-dropdown { position: absolute; left: 0; top: calc(100% + 18px); z-index: 260; width: min(1060px, calc(100vw - 52px)); min-height: 438px; display: grid; grid-template-columns: 285px minmax(0, 1fr); gap: 0; overflow: hidden; border: 1px solid rgba(32,37,38,.12); border-radius: 10px; background: rgba(255,255,255,.98); box-shadow: 0 28px 70px rgba(32,37,38,.18); backdrop-filter: blur(14px); animation: journalDropdownIn 170ms ease-out both; }
+.journal-catalog-list { display: grid; align-content: start; gap: 3px; border-right: 1px solid rgba(32,37,38,.1); background: #fbfaf8; padding: 12px; }
+.journal-catalog-item { position: relative; min-height: 38px; display: flex !important; align-items: center; gap: 10px !important; border-radius: 7px; padding: 0 12px 0 10px; color: #394044; font-size: 13px; font-weight: 600; letter-spacing: 0; line-height: 1.2; text-transform: none; transition: background-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease; }
+.journal-catalog-item span { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: rgba(32,37,38,.22); transition: background-color 160ms ease, transform 160ms ease; }
+.journal-catalog-item:hover,
+.journal-catalog-item.is-active { background: #eee4dc; color: #111827; box-shadow: inset 3px 0 0 #202526; transform: translateX(2px); }
+.journal-catalog-item:hover span,
+.journal-catalog-item.is-active span { background: #202526; transform: scale(1.12); }
+.journal-catalog-detail { padding: 28px 32px 30px; background: linear-gradient(135deg, #fff, #fbf7f2); }
+.journal-catalog-heading { margin-bottom: 24px; }
+.journal-catalog-heading span { display: block; margin-bottom: 6px; color: #b91f2c; font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.journal-catalog-heading strong { display: block; color: #202526; font-family: 'Playfair Display', Georgia, serif; font-size: 30px; font-weight: 600; line-height: 1.08; letter-spacing: 0; text-transform: none; }
+.journal-catalog-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+.journal-catalog-columns h3 { margin: 0 0 13px; color: #202526; font-family: Inter, system-ui, sans-serif; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.journal-catalog-columns a { display: flex; width: fit-content; max-width: 100%; margin: 0 0 10px; border-radius: 6px; color: #626a6e; font-size: 14px; font-weight: 500; letter-spacing: 0; line-height: 1.35; text-transform: none; transition: color 160ms ease, background-color 160ms ease, transform 160ms ease; }
+.journal-catalog-columns a:hover { color: #111827; background: rgba(238,228,220,.62); transform: translateX(3px); }
+[dir="rtl"] .journal-catalog-dropdown { left: auto; right: 0; }
+[dir="rtl"] .journal-catalog-list { border-right: 0; border-left: 1px solid rgba(32,37,38,.1); }
+[dir="rtl"] .journal-catalog-item:hover,
+[dir="rtl"] .journal-catalog-item.is-active { box-shadow: inset -3px 0 0 #202526; transform: translateX(-2px); }
+[dir="rtl"] .journal-catalog-columns a:hover { transform: translateX(-3px); }
 .journal-language-menu { position: relative; display: inline-flex; align-items: center; }
 .journal-nav-right .journal-language-trigger { width: auto; height: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 14px; line-height: 20px; white-space: nowrap; }
-.journal-language-dropdown { position: absolute; top: calc(100% + 14px); right: 0; z-index: 100; min-width: 150px; display: grid; gap: 2px; border: 1px solid rgba(32,37,38,.12); border-radius: 8px; background: rgba(255,255,255,.97); box-shadow: 0 20px 48px rgba(32,37,38,.14); padding: 8px; backdrop-filter: blur(12px); }
-.journal-language-dropdown button { width: 100%; height: auto; min-height: 36px; display: flex; align-items: center; justify-content: flex-start; border: 0; border-radius: 6px; background: transparent; color: #303438; padding: 0 10px; font-size: 13px; line-height: 1; text-align: left; }
-.journal-language-dropdown button:hover,
-.journal-language-dropdown button.is-active { background: rgba(238,228,220,.72); color: #111827; }
+.journal-language-dropdown { position: absolute; top: calc(100% + 14px); right: 0; z-index: 240; min-width: 168px; display: grid; gap: 4px; border: 1px solid rgba(32,37,38,.12); border-radius: 10px; background: rgba(255,255,255,.98); box-shadow: 0 22px 54px rgba(32,37,38,.16); padding: 8px; backdrop-filter: blur(12px); animation: journalDropdownIn 160ms ease-out both; }
+.journal-nav-right .journal-language-dropdown button { width: 100%; height: auto; min-height: 38px; display: flex; align-items: center; justify-content: flex-start; border: 0; border-radius: 7px; background: transparent; color: #303438; padding: 0 11px; cursor: pointer; font-family: Inter, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; font-weight: 500; line-height: 1; text-align: left; transition: background-color 160ms ease, color 160ms ease, transform 160ms ease; }
+.journal-nav-right .journal-language-dropdown button:hover { background: rgba(238,228,220,.62); color: #111827; transform: translateX(2px); }
+.journal-nav-right .journal-language-dropdown button.is-active { background: #f0e4d8; color: #111827; box-shadow: inset 3px 0 0 #202526; }
 [dir="rtl"] .journal-language-dropdown { right: auto; left: 0; }
-[dir="rtl"] .journal-language-dropdown button { text-align: right; justify-content: flex-end; }
+[dir="rtl"] .journal-nav-right .journal-language-dropdown button { text-align: right; justify-content: flex-end; }
+[dir="rtl"] .journal-nav-right .journal-language-dropdown button:hover { transform: translateX(-2px); }
+[dir="rtl"] .journal-nav-right .journal-language-dropdown button.is-active { box-shadow: inset -3px 0 0 #202526; }
+@keyframes journalDropdownIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .journal-text-chevron { flex: 0 0 auto; display: inline-block; width: 0; height: 0; margin-top: 1px; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor; opacity: .62; }
 .journal-nav-left button, .journal-nav-right button { appearance: none; -webkit-appearance: none; display: inline-grid; place-items: center; width: 32px; height: 32px; border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 20px; padding: 0; }
 .journal-nav-left button { width: 23px; height: 17px; }
@@ -1408,6 +1712,22 @@ const css = `
   color: var(--accent);
   transform: translateY(-2px);
 }
+.journal-nav-left .journal-catalog-item:hover,
+.journal-nav-left .journal-catalog-item.is-active {
+  color: #111827;
+  transform: translateX(2px);
+}
+.journal-nav-left .journal-catalog-columns a:hover {
+  color: #111827;
+  transform: translateX(3px);
+}
+[dir="rtl"] .journal-nav-left .journal-catalog-item:hover,
+[dir="rtl"] .journal-nav-left .journal-catalog-item.is-active {
+  transform: translateX(-2px);
+}
+[dir="rtl"] .journal-nav-left .journal-catalog-columns a:hover {
+  transform: translateX(-3px);
+}
 .journal-logo-link:hover .journal-logo {
   transform: translateY(-2px);
 }
@@ -1542,6 +1862,8 @@ const css = `
 @media (max-width: 1180px) {
   .journal-header-inner { padding: 0 20px; }
   .journal-nav-left, .journal-nav-right { gap: 14px; }
+  .journal-catalog-dropdown { width: min(940px, calc(100vw - 40px)); grid-template-columns: 260px minmax(0, 1fr); }
+  .journal-catalog-columns { gap: 20px; }
   .journal-blog-track > .journal-blog-card { flex-basis: clamp(380px, 31vw, 440px); }
   .journal-feature-row { grid-template-columns: minmax(220px, 260px) minmax(0, 1fr); gap: 18px; }
   .journal-feature-products { gap: 18px; }
@@ -1554,12 +1876,15 @@ const css = `
   .journal-header { position: relative; }
   .journal-header-inner { height: 76px; grid-template-columns: auto 1fr auto; }
   .journal-nav-left a, .journal-nav-right a:not(.journal-icon-link):not(:last-child) { display: none; }
+  .journal-catalog-menu { display: none; }
   .journal-nav-right button:nth-of-type(n+3) { display: none; }
   .journal-search-popover { left: 16px; right: 16px; top: calc(100% + 8px); width: auto; }
   .journal-search-popover form { grid-template-columns: 22px minmax(0, 1fr); }
   .journal-search-popover button { grid-column: 1 / -1; width: 100%; }
   .journal-logo-link { justify-self: center; }
-  .journal-mobile-panel { display: block; }
+  .journal-mobile-panel { display: grid; gap: 4px; }
+  .journal-mobile-panel a { border-radius: 8px; padding: 12px 14px; color: #303438; font-size: 14px; font-weight: 600; transition: background-color 160ms ease, color 160ms ease, transform 160ms ease; }
+  .journal-mobile-panel a:hover { background: #eee4dc; color: #111827; transform: translateX(2px); }
   .journal-hero { display: block; padding: 0; }
   .journal-hero-peek { display: none; }
   .journal-hero-main { height: 560px; }

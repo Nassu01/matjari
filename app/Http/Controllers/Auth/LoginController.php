@@ -28,7 +28,15 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = $request->user();
+        $destination = match ($user->role) {
+            'admin' => '/admin',
+            'commercant' => $user->status === 'active' ? '/merchant/dashboard' : '/merchant/pending',
+            'livreur' => $user->status === 'active' ? '/delivery/dashboard' : '/delivery/pending',
+            default => '/dashboard',
+        };
+
+        return redirect()->intended($destination);
     }
 
     public function destroy(Request $request): RedirectResponse

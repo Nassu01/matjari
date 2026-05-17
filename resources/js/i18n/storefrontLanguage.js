@@ -306,10 +306,10 @@ const validLanguages = languageOptions.map((language) => language.value);
 
 function getInitialLanguage() {
   if (typeof window === "undefined") {
-    return "fr";
+    return "en";
   }
 
-  const storedLanguage = window.localStorage.getItem(storageKey);
+  const storedLanguage = window.localStorage.getItem("language") || window.localStorage.getItem(storageKey);
 
   return validLanguages.includes(storedLanguage) ? storedLanguage : "en";
 }
@@ -332,7 +332,8 @@ export function useStorefrontLanguage() {
     if (typeof window === "undefined") return undefined;
 
     const syncLanguage = (event) => {
-      const nextLanguage = event.detail?.language || window.localStorage.getItem(storageKey);
+      const nextLanguage =
+        event.detail?.language || window.localStorage.getItem("language") || window.localStorage.getItem(storageKey);
 
       if (validLanguages.includes(nextLanguage)) {
         setCurrentLanguageState(nextLanguage);
@@ -340,7 +341,7 @@ export function useStorefrontLanguage() {
     };
 
     const syncStorage = (event) => {
-      if (event.key === storageKey && validLanguages.includes(event.newValue)) {
+      if ((event.key === storageKey || event.key === "language") && validLanguages.includes(event.newValue)) {
         setCurrentLanguageState(event.newValue);
       }
     };
@@ -360,6 +361,7 @@ export function useStorefrontLanguage() {
     setCurrentLanguageState(language);
 
     if (typeof window !== "undefined") {
+      window.localStorage.setItem("language", language);
       window.localStorage.setItem(storageKey, language);
       window.dispatchEvent(new CustomEvent(languageEvent, { detail: { language } }));
     }

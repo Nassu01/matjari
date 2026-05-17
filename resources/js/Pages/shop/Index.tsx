@@ -19,6 +19,8 @@ type ShopProduct = {
     top?: boolean;
     stock?: number;
     image?: string | null;
+    thumbnail?: string | null;
+    images?: string[];
     description?: string | null;
     url?: string | null;
 };
@@ -36,6 +38,7 @@ type Filters = {
     max_price?: string;
     discount?: string;
     sort?: string;
+    page?: string;
 };
 
 type PaginatedProducts = {
@@ -65,6 +68,7 @@ type StoredCartProduct = {
 };
 
 const CART_STORAGE_KEY = 'matjari_cart';
+const FALLBACK_PRODUCT_IMAGE = '/images/logomatjari.png';
 
 const fallbackCategories: Category[] = [
     { name: 'TV & High Tech', slug: 'tv-high-tech' },
@@ -86,10 +90,10 @@ const discountOptions = [
 ];
 
 const sortOptions = [
-    { label: 'Les plus demandes', value: 'most_demanded' },
+    { label: 'Les plus demandés', value: 'most_demanded' },
     { label: 'Prix croissant', value: 'price_asc' },
-    { label: 'Prix decroissant', value: 'price_desc' },
-    { label: 'Nouveautes', value: 'newest' },
+    { label: 'Prix décroissant', value: 'price_desc' },
+    { label: 'Nouveautés', value: 'newest' },
     { label: 'Meilleures notes', value: 'best_rated' },
 ];
 
@@ -103,6 +107,7 @@ export default function ShopIndex() {
     const [maxPrice, setMaxPrice] = useState(filters.max_price || '');
     const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
     const [showFavoritePrompt, setShowFavoritePrompt] = useState(false);
+    const [cartNotice, setCartNotice] = useState('');
     const activeFilters = useMemo(() => cleanFilters(filters), [filters]);
 
     const visitShop = (nextFilters: Filters = {}) => {
@@ -133,42 +138,48 @@ export default function ShopIndex() {
         );
     };
 
+    const addToCart = (product: ShopProduct) => {
+        addProductToCart(product);
+        setCartNotice('Produit ajouté au panier.');
+        window.setTimeout(() => setCartNotice(''), 2200);
+    };
+
     return (
         <AuthStorefrontLayout>
             <Head title="Boutique" />
 
-            <main className="bg-[#f4f4f3] px-4 py-10 text-[#202526] sm:px-6 lg:px-10 lg:py-14">
-                <div className="mx-auto w-full max-w-[1500px]">
-                    <header className="mb-10 text-center">
-                        <span className="font-['Great_Vibes',cursive] text-[48px] leading-none text-[#cfd0d1]">
+            <main className="w-full bg-[#f4f4f3] px-4 py-10 text-[#202526] sm:px-6 lg:px-10 lg:py-14">
+                <div className="mx-auto w-full max-w-[1600px]">
+                    <header className="mb-9 text-center">
+                        <span className="font-['Great_Vibes',cursive] text-[50px] leading-none text-[#c9cacc]">
                             Boutique
                         </span>
                         <h1 className="-mt-1 font-serif text-[38px] font-bold leading-tight text-[#050505] sm:text-5xl">
                             Tous les produits
                         </h1>
                         <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#687074] sm:text-lg">
-                            Decouvrez notre selection de produits et trouvez ce dont vous avez besoin.
+                            Découvrez notre sélection de produits et trouvez ce dont vous avez besoin.
                         </p>
                     </header>
 
-                    <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
-                        <aside className="h-fit rounded-lg border border-black/10 bg-[#eee4dc] p-4 shadow-[0_16px_38px_rgba(32,37,38,0.06)] lg:sticky lg:top-24">
-                            <FilterSection title="Categories">
-                                <div className="grid gap-1">
-                                    <FilterLink active={!filters.category} href="/shop">
-                                        Tous les produits
-                                    </FilterLink>
+                    <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[292px_minmax(0,1fr)]">
+                        <aside className="h-fit rounded-lg border border-black/10 bg-[#eee4dc] p-4 shadow-[0_20px_46px_rgba(32,37,38,0.07)] lg:sticky lg:top-24">
+                            <CategoryFilterSection title="Catégories">
+                                <div className="grid gap-2">
+                                    <CategoryFilterLink active={!filters.category} href="/shop">
+                                        Toutes les catégories
+                                    </CategoryFilterLink>
                                     {visibleCategories.map((category) => (
-                                        <FilterLink
+                                        <CategoryFilterLink
                                             key={category.slug}
                                             active={filters.category === category.slug}
                                             href={shopUrl({ ...activeFilters, category: category.slug })}
                                         >
                                             {category.name}
-                                        </FilterLink>
+                                        </CategoryFilterLink>
                                     ))}
                                 </div>
-                            </FilterSection>
+                            </CategoryFilterSection>
 
                             <FilterSection title="Prix (DH)">
                                 <form className="grid gap-3" onSubmit={submitPrice}>
@@ -194,7 +205,7 @@ export default function ShopIndex() {
                                 </form>
                             </FilterSection>
 
-                            <FilterSection title="Reduction (%)">
+                            <FilterSection title="Réduction (%)">
                                 <div className="grid gap-1">
                                     {discountOptions.map((option) => (
                                         <FilterLink
@@ -210,7 +221,7 @@ export default function ShopIndex() {
                         </aside>
 
                         <section className="min-w-0">
-                            <div className="mb-5 rounded-lg border border-black/10 bg-white p-4 shadow-[0_16px_38px_rgba(32,37,38,0.05)]">
+                            <div className="mb-5 rounded-lg border border-black/10 bg-white p-4 shadow-[0_18px_42px_rgba(32,37,38,0.05)]">
                                 <form className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto]" onSubmit={submitSearch}>
                                     <div className="relative">
                                         <FiSearch className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#687074]" />
@@ -228,13 +239,13 @@ export default function ShopIndex() {
                                         className="inline-flex min-h-12 items-center justify-center rounded-md border border-black/10 bg-white px-6 text-sm font-semibold text-[#202526] transition hover:bg-neutral-100"
                                         href="/shop"
                                     >
-                                        Reinitialiser
+                                        Réinitialiser
                                     </Link>
                                 </form>
                             </div>
 
-                            <div className="mb-6 flex flex-col gap-3 rounded-lg border border-black/10 bg-white px-4 py-3 shadow-[0_16px_38px_rgba(32,37,38,0.05)] sm:flex-row sm:items-center sm:justify-between">
-                                <p className="text-sm font-semibold text-[#202526]">{resultCount} resultats</p>
+                            <div className="mb-6 flex flex-col gap-3 rounded-lg border border-black/10 bg-white px-5 py-4 shadow-[0_18px_42px_rgba(32,37,38,0.05)] sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-sm font-semibold text-[#202526]">{resultCount} résultats</p>
                                 <label className="flex items-center gap-3 text-sm text-[#687074]">
                                     Trier par :
                                     <select
@@ -253,13 +264,13 @@ export default function ShopIndex() {
 
                             {productList.length > 0 ? (
                                 <>
-                                    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 min-[1530px]:grid-cols-4">
                                         {productList.map((product) => (
                                             <ShopProductCard
                                                 key={product.id}
                                                 favorite={favoriteIds.includes(product.id)}
                                                 product={product}
-                                                onAddToCart={addProductToCart}
+                                                onAddToCart={addToCart}
                                                 onToggleFavorite={toggleFavorite}
                                             />
                                         ))}
@@ -292,24 +303,61 @@ export default function ShopIndex() {
             </main>
 
             {showFavoritePrompt ? <FavoriteAuthPrompt onClose={() => setShowFavoritePrompt(false)} /> : null}
+            {cartNotice ? <CartNotice message={cartNotice} /> : null}
         </AuthStorefrontLayout>
     );
 }
 
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm [&+&]:mt-4">
-            <h2 className="mb-3 font-serif text-2xl font-semibold text-[#202526]">{title}</h2>
+        <section className="rounded-md border border-black/10 bg-white p-4 shadow-sm [&+&]:mt-4">
+            <h2 className="mb-4 font-serif text-2xl font-semibold text-[#202526]">{title}</h2>
             {children}
         </section>
+    );
+}
+
+function CategoryFilterSection({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <section className="rounded-md border border-black/10 bg-white px-4 py-5 shadow-[0_16px_34px_rgba(32,37,38,0.06)]">
+            <div className="mb-4 border-b border-[#dedbd8] pb-3">
+                <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#b91f2c]">Filtrer par</span>
+                <h2 className="mt-1 font-serif text-[26px] font-semibold leading-none text-[#202526]">{title}</h2>
+            </div>
+            {children}
+        </section>
+    );
+}
+
+function CategoryFilterLink({ href, active, children }: { href: string; active?: boolean; children: React.ReactNode }) {
+    return (
+        <Link
+            className={`group flex min-h-11 items-center justify-between rounded-md border px-3.5 py-2.5 text-sm font-medium transition duration-200 ${
+                active
+                    ? 'border-[#202526] bg-[#202526] text-white shadow-[0_12px_24px_rgba(32,37,38,0.16)]'
+                    : 'border-transparent text-[#4f5659] hover:border-[#dedbd8] hover:bg-[#f4f0eb] hover:pl-4 hover:text-[#202526]'
+            }`}
+            href={href}
+            preserveScroll
+        >
+            <span className="truncate">{children}</span>
+            <span
+                aria-hidden="true"
+                className={`ml-3 h-1.5 w-1.5 rounded-full transition ${
+                    active ? 'bg-white' : 'bg-[#dedbd8] opacity-0 group-hover:opacity-100'
+                }`}
+            />
+        </Link>
     );
 }
 
 function FilterLink({ href, active, children }: { href: string; active?: boolean; children: React.ReactNode }) {
     return (
         <Link
-            className={`rounded-md px-3 py-2 text-sm transition ${
-                active ? 'bg-[#202526] font-semibold text-white' : 'text-[#4f5659] hover:bg-[#eee4dc] hover:text-[#202526]'
+            className={`rounded-md px-3 py-2.5 text-sm transition ${
+                active
+                    ? 'bg-[#202526] font-semibold text-white shadow-[0_10px_22px_rgba(32,37,38,0.14)]'
+                    : 'text-[#4f5659] hover:bg-[#eee4dc] hover:text-[#202526]'
             }`}
             href={href}
             preserveScroll
@@ -330,8 +378,11 @@ function ShopProductCard({
     onAddToCart: (product: ShopProduct) => void;
     onToggleFavorite: (id: number) => void;
 }) {
+    const detailsUrl = product.url || `/products/${product.slug || product.id}`;
+    const image = productImage(product);
+
     return (
-        <article className="group relative flex min-h-[418px] flex-col overflow-hidden rounded-md border border-black/10 bg-white p-4 pb-0 shadow-[0_12px_30px_rgba(32,37,38,0.04)] transition hover:-translate-y-1 hover:shadow-[0_22px_45px_rgba(32,37,38,0.12)]">
+        <article className="group relative flex min-h-[470px] flex-col overflow-hidden rounded-md border border-black/10 bg-white p-4 pb-0 shadow-[0_12px_30px_rgba(32,37,38,0.04)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(32,37,38,0.13)]">
             {product.sale || product.discount ? (
                 <span className="absolute left-4 top-4 z-10 bg-[#b91f2c] px-2 py-1 text-xs font-extrabold text-white">
                     {product.discount ? `-${product.discount}%` : '%'}
@@ -343,42 +394,38 @@ function ShopProductCard({
                 </span>
             ) : null}
 
-            <Link className="grid h-[218px] place-items-center overflow-hidden bg-[#f4f4f3]" href={product.url || `/products/${product.slug}`}>
-                {product.image ? (
-                    <img
-                        className="h-[176px] w-[176px] object-contain mix-blend-multiply drop-shadow-[0_14px_16px_rgba(0,0,0,0.15)] transition duration-300 group-hover:scale-[1.04]"
-                        src={product.image}
-                        alt={product.name}
-                    />
-                ) : (
-                    <FiShoppingBag className="h-12 w-12 text-[#687074]" />
-                )}
+            <Link className="grid h-[280px] place-items-center overflow-hidden rounded-sm bg-[#f6f4f1]" href={detailsUrl}>
+                <SafeProductImage
+                    className="max-h-[245px] max-w-[86%] object-contain mix-blend-multiply drop-shadow-[0_14px_16px_rgba(0,0,0,0.14)] transition duration-300 group-hover:scale-[1.035]"
+                    src={image}
+                    alt={product.name}
+                />
             </Link>
 
-            <div className="flex flex-1 flex-col pt-3">
-                <span className="text-xs text-[#697175] underline">{product.brand || product.category || 'Produit'}</span>
-                <h3 className="mt-2 min-h-[42px] font-serif text-lg leading-tight text-[#202526]">
-                    <Link className="transition hover:text-[#b91f2c]" href={product.url || `/products/${product.slug}`}>
+            <div className="flex flex-1 flex-col pt-4">
+                <span className="text-xs font-medium text-[#697175] underline">{product.brand || product.category || 'Produit'}</span>
+                <h3 className="mt-2 min-h-[48px] font-serif text-[19px] leading-tight text-[#202526]">
+                    <Link className="transition hover:text-[#b91f2c]" href={detailsUrl}>
                         {product.name}
                     </Link>
                 </h3>
-                <p className="mt-1 font-serif text-lg text-[#202526]">
+                <p className="mt-1 font-serif text-xl text-[#202526]">
                     <strong>{money(product.price)}</strong>
                     {product.old_price ? <del className="ml-2 text-sm text-[#e25348]">{money(product.old_price)}</del> : null}
                 </p>
             </div>
 
-            <div className="-mx-4 mt-auto grid min-h-[54px] grid-cols-[1fr_auto_auto] items-center gap-2 border-t border-[#dbd9d6] px-4">
+            <div className="-mx-4 mt-auto grid min-h-[58px] grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 border-t border-[#dbd9d6] px-4">
                 <button
                     type="button"
-                    className="inline-flex items-center gap-2 text-left text-sm font-semibold text-[#252b2c] transition hover:-translate-y-0.5 hover:text-[#b91f2c]"
+                    className="inline-flex min-w-0 items-center gap-2 text-left text-sm font-semibold text-[#252b2c] transition hover:-translate-y-0.5 hover:text-[#b91f2c]"
                     onClick={() => onAddToCart(product)}
                 >
-                    <FiShoppingBag /> Ajouter au panier
+                    <FiShoppingBag className="h-4 w-4 shrink-0" /> <span className="truncate">Ajouter au panier</span>
                 </button>
                 <button
                     type="button"
-                    className={`grid h-9 w-9 place-items-center text-[#5a6164] transition hover:-translate-y-0.5 hover:text-[#b91f2c] ${
+                    className={`grid h-10 w-10 place-items-center rounded-full text-[#5a6164] transition hover:-translate-y-0.5 hover:bg-[#f4f4f3] hover:text-[#b91f2c] ${
                         favorite ? 'text-[#b91f2c]' : ''
                     }`}
                     aria-label="Ajouter aux favoris"
@@ -387,8 +434,8 @@ function ShopProductCard({
                     <FiHeart />
                 </button>
                 <Link
-                    className="grid h-9 w-9 place-items-center text-[#5a6164] transition hover:-translate-y-0.5 hover:text-[#b91f2c]"
-                    href={product.url || `/products/${product.slug}`}
+                    className="grid h-10 w-10 place-items-center rounded-full text-[#5a6164] transition hover:-translate-y-0.5 hover:bg-[#f4f4f3] hover:text-[#b91f2c]"
+                    href={detailsUrl}
                     aria-label="Voir le produit"
                 >
                     <FiEye />
@@ -404,14 +451,56 @@ function EmptyState() {
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-full border border-[#dedbd8] bg-[#eee4dc] text-[#202526]">
                 <FiRefreshCw className="h-7 w-7" />
             </div>
-            <h2 className="mt-6 font-serif text-3xl font-semibold text-[#202526]">Aucun produit trouve</h2>
+            <h2 className="mt-6 font-serif text-3xl font-semibold text-[#202526]">Aucun produit trouvé</h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-[#687074]">
-                Essayez un autre mot-cle ou modifiez vos filtres.
+                Essayez un autre mot-clé ou modifiez vos filtres.
             </p>
             <Link className="mt-8 inline-flex min-h-12 items-center justify-center rounded-md bg-black px-7 text-sm font-semibold text-white hover:bg-neutral-800 hover:text-white" href="/shop">
                 Voir tous les produits
             </Link>
         </section>
+    );
+}
+
+function SafeProductImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+    const [currentSrc, setCurrentSrc] = useState(src || FALLBACK_PRODUCT_IMAGE);
+
+    return (
+        <img
+            className={className}
+            src={currentSrc}
+            alt={alt}
+            loading="lazy"
+            onError={() => {
+                if (currentSrc !== FALLBACK_PRODUCT_IMAGE) {
+                    setCurrentSrc(FALLBACK_PRODUCT_IMAGE);
+                }
+            }}
+        />
+    );
+}
+
+function productImage(product: ShopProduct): string {
+    const image = product.image || product.thumbnail || product.images?.find(Boolean) || FALLBACK_PRODUCT_IMAGE;
+    return normalizeImagePath(image);
+}
+
+function normalizeImagePath(path: string): string {
+    const value = String(path || '').trim();
+
+    if (!value) return FALLBACK_PRODUCT_IMAGE;
+    if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/')) return value;
+    if (value.startsWith('storage/')) return `/${value}`;
+    if (value.startsWith('images/')) return `/${value}`;
+
+    return `/storage/${value}`;
+}
+
+function CartNotice({ message }: { message: string }) {
+    return (
+        <div className="fixed bottom-6 left-1/2 z-[120] -translate-x-1/2 rounded-md border border-black/10 bg-[#202526] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
+            {message}
+        </div>
     );
 }
 
@@ -425,14 +514,14 @@ function FavoriteAuthPrompt({ onClose }: { onClose: () => void }) {
                 <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#b91f2c]">Favoris</span>
                 <h2 className="mt-3 font-serif text-3xl font-semibold text-[#202526]">Connexion requise</h2>
                 <p className="mt-4 text-sm leading-7 text-[#687074]">
-                    Vous devez vous connecter ou creer un compte pour ajouter ce produit aux favoris.
+                    Vous devez vous connecter ou créer un compte pour ajouter ce produit aux favoris.
                 </p>
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     <Link className="inline-flex min-h-11 items-center justify-center rounded-md bg-black px-5 text-sm font-semibold text-white hover:bg-neutral-800 hover:text-white" href="/login">
                         Se connecter
                     </Link>
                     <Link className="inline-flex min-h-11 items-center justify-center rounded-md border border-neutral-300 bg-white px-5 text-sm font-semibold text-[#202526] hover:bg-neutral-100" href="/register">
-                        Creer un compte
+                        Créer un compte
                     </Link>
                 </div>
             </div>
@@ -461,7 +550,7 @@ function addProductToCart(product: ShopProduct) {
                   id: product.id,
                   name: product.name,
                   price: Number(product.price || 0),
-                  image: product.image,
+                  image: productImage(product),
                   category: product.category,
                   quantity: 1,
                   totalPrice: Number(product.price || 0),

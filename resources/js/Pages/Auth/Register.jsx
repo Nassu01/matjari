@@ -1,4 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import {
   IofrmAuthCard,
   IofrmAuthLayout,
@@ -7,18 +8,40 @@ import {
 } from '@/layouts/IofrmAuthLayout';
 
 export default function Register({ googleEnabled }) {
+  const [step, setStep] = useState(1);
+
   const { data, setData, post, processing, errors, reset } = useForm({
-    name: '',
+    first_name: '',
+    last_name: '',
     email: '',
+    phone: '',
     password: '',
     password_confirmation: '',
+    role: 'client',
+    // company fields
+    company_name: '',
+    company_type: '',
+    ice: '',
+    patente: '',
+    company_address: '',
+    city: '',
+    company_phone: '',
+    main_category: '',
+    company_logo: null,
+    // delivery fields
+    delivery_zone: '',
+    vehicle_type: '',
+    cin: '',
   });
+
+  const next = () => setStep((s) => Math.min(4, s + 1));
+  const back = () => setStep((s) => Math.max(1, s - 1));
 
   const submit = (e) => {
     e.preventDefault();
 
     post(route('register'), {
-      onFinish: () => reset('password', 'password_confirmation'),
+      onFinish: () => reset('password', 'password_confirmation', 'company_logo'),
     });
   };
 
@@ -28,73 +51,270 @@ export default function Register({ googleEnabled }) {
 
       <IofrmAuthCard
         compact
-        title={
-          <>
-            Create your account
-            <br />
-            and start shopping.
-          </>
-        }
-        subtitle={
-          <>
-            Join Matjari and discover
-            <br />
-            beauty and lifestyle products.
-          </>
-        }
+        title={<>{step === 1 ? 'Create your account' : 'Register'}</>}
+        subtitle={<>Join Matjari and start selling or shopping.</>}
       >
+        <form onSubmit={submit} encType="multipart/form-data">
+          {step === 1 && (
+            <div className="space-y-4">
+              <IofrmInput
+                type="text"
+                value={data.first_name}
+                onChange={(e) => setData('first_name', e.target.value)}
+                placeholder="First name"
+                autoComplete="given-name"
+                error={errors.first_name}
+              />
 
-        <form onSubmit={submit}>
-          <div className="space-y-4">
-            <IofrmInput
-              type="text"
-              value={data.name}
-              onChange={(e) => setData('name', e.target.value)}
-              placeholder="Full Name"
-              autoComplete="name"
-              error={errors.name}
-            />
+              <IofrmInput
+                type="text"
+                value={data.last_name}
+                onChange={(e) => setData('last_name', e.target.value)}
+                placeholder="Last name"
+                autoComplete="family-name"
+                error={errors.last_name}
+              />
 
-            <IofrmInput
-              type="email"
-              value={data.email}
-              onChange={(e) => setData('email', e.target.value)}
-              placeholder="E-mail Address"
-              autoComplete="username"
-              error={errors.email}
-            />
+              <IofrmInput
+                type="email"
+                value={data.email}
+                onChange={(e) => setData('email', e.target.value)}
+                placeholder="E-mail Address"
+                autoComplete="username"
+                error={errors.email}
+              />
 
-            <IofrmInput
-              type="password"
-              value={data.password}
-              onChange={(e) => setData('password', e.target.value)}
-              placeholder="Password"
-              autoComplete="new-password"
-              error={errors.password}
-            />
+              <IofrmInput
+                type="text"
+                value={data.phone}
+                onChange={(e) => setData('phone', e.target.value)}
+                placeholder="Phone"
+                autoComplete="tel"
+                error={errors.phone}
+              />
 
-            <IofrmInput
-              type="password"
-              value={data.password_confirmation}
-              onChange={(e) => setData('password_confirmation', e.target.value)}
-              placeholder="Confirm Password"
-              autoComplete="new-password"
-              error={errors.password_confirmation}
-            />
-          </div>
+              <IofrmInput
+                type="password"
+                value={data.password}
+                onChange={(e) => setData('password', e.target.value)}
+                placeholder="Password"
+                autoComplete="new-password"
+                error={errors.password}
+              />
 
-          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <IofrmInput
+                type="password"
+                value={data.password_confirmation}
+                onChange={(e) => setData('password_confirmation', e.target.value)}
+                placeholder="Confirm Password"
+                autoComplete="new-password"
+                error={errors.password_confirmation}
+              />
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <button
+                  type="button"
+                  onClick={() => setData('role', 'client') || next()}
+                  className={`h-24 rounded-md p-4 text-left border ${data.role === 'client' ? 'border-black bg-black text-white' : 'border-gray-200 bg-white'}`}
+                >
+                  <div className="text-lg font-bold">Client</div>
+                  <div className="text-sm">Shop and place orders</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setData('role', 'commercant') || next()}
+                  className={`h-24 rounded-md p-4 text-left border ${data.role === 'commercant' ? 'border-black bg-black text-white' : 'border-gray-200 bg-white'}`}
+                >
+                  <div className="text-lg font-bold">Commerçant</div>
+                  <div className="text-sm">Sell products on Matjari</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setData('role', 'livreur') || next()}
+                  className={`h-24 rounded-md p-4 text-left border ${data.role === 'livreur' ? 'border-black bg-black text-white' : 'border-gray-200 bg-white'}`}
+                >
+                  <div className="text-lg font-bold">Livreur</div>
+                  <div className="text-sm">Deliver orders</div>
+                </button>
+              </div>
+              {errors.role && <p className="text-red-600 text-sm">{errors.role}</p>}
+            </div>
+          )}
+
+          {step === 3 && data.role === 'commercant' && (
+            <div className="space-y-4">
+              <IofrmInput
+                type="text"
+                value={data.company_name}
+                onChange={(e) => setData('company_name', e.target.value)}
+                placeholder="Company name"
+                error={errors.company_name}
+              />
+
+              <IofrmInput
+                type="text"
+                value={data.company_type}
+                onChange={(e) => setData('company_type', e.target.value)}
+                placeholder="Company type"
+                error={errors.company_type}
+              />
+
+              <IofrmInput
+                type="text"
+                value={data.ice}
+                onChange={(e) => setData('ice', e.target.value)}
+                placeholder="ICE"
+                error={errors.ice}
+              />
+
+              <IofrmInput
+                type="text"
+                value={data.patente}
+                onChange={(e) => setData('patente', e.target.value)}
+                placeholder="Patente"
+                error={errors.patente}
+              />
+
+              <IofrmInput
+                type="text"
+                value={data.company_address}
+                onChange={(e) => setData('company_address', e.target.value)}
+                placeholder="Company address"
+                error={errors.company_address}
+              />
+
+              <IofrmInput
+                type="text"
+                value={data.city}
+                onChange={(e) => setData('city', e.target.value)}
+                placeholder="City"
+                error={errors.city}
+              />
+
+              <IofrmInput
+                type="text"
+                value={data.company_phone}
+                onChange={(e) => setData('company_phone', e.target.value)}
+                placeholder="Company phone"
+                error={errors.company_phone}
+              />
+
+              <IofrmInput
+                type="text"
+                value={data.main_category}
+                onChange={(e) => setData('main_category', e.target.value)}
+                placeholder="Main category"
+                error={errors.main_category}
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Company logo (optional)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setData('company_logo', e.target.files[0])}
+                  className="mt-1 block w-full"
+                />
+                {errors.company_logo && <p className="text-red-600 text-sm">{errors.company_logo}</p>}
+              </div>
+            </div>
+          )}
+
+          {step === 3 && data.role === 'livreur' && (
+            <div className="space-y-4">
+              <IofrmInput
+                type="text"
+                value={data.city}
+                onChange={(e) => setData('city', e.target.value)}
+                placeholder="City"
+                error={errors.city}
+              />
+
+              <IofrmInput
+                type="text"
+                value={data.delivery_zone}
+                onChange={(e) => setData('delivery_zone', e.target.value)}
+                placeholder="Delivery zone"
+                error={errors.delivery_zone}
+              />
+
+              <IofrmInput
+                type="text"
+                value={data.vehicle_type}
+                onChange={(e) => setData('vehicle_type', e.target.value)}
+                placeholder="Vehicle type"
+                error={errors.vehicle_type}
+              />
+
+              <IofrmInput
+                type="text"
+                value={data.cin}
+                onChange={(e) => setData('cin', e.target.value)}
+                placeholder="CIN"
+                error={errors.cin}
+              />
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-4">
+              <p className="text-sm">Please review your information and submit.</p>
+              <dl className="grid grid-cols-1 gap-2 text-sm">
+                <div>
+                  <dt className="font-bold">Name</dt>
+                  <dd>{data.first_name} {data.last_name}</dd>
+                </div>
+                <div>
+                  <dt className="font-bold">Email</dt>
+                  <dd>{data.email}</dd>
+                </div>
+                <div>
+                  <dt className="font-bold">Role</dt>
+                  <dd>{data.role}</dd>
+                </div>
+              </dl>
+            </div>
+          )}
+
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <button
-              type="submit"
-              disabled={processing}
-              className="h-12 rounded-md bg-black text-base font-bold text-white transition hover:bg-gray-800 hover:text-white disabled:opacity-60"
+              type="button"
+              onClick={back}
+              disabled={step === 1}
+              className="h-12 rounded-md border bg-white text-base font-bold text-[#202526]"
             >
-              {processing ? 'Creating...' : 'Create account'}
+              Back
             </button>
+
+            {step < 4 && (
+              <button
+                type="button"
+                onClick={next}
+                className="h-12 rounded-md bg-white border text-base font-bold text-[#202526]"
+              >
+                Next
+              </button>
+            )}
+
+            {step === 4 && (
+              <button
+                type="submit"
+                disabled={processing}
+                className="h-12 rounded-md bg-black text-base font-bold text-white"
+              >
+                {processing ? 'Creating...' : 'Create account'}
+              </button>
+            )}
 
             <Link
               href={route('login')}
-              className="flex h-12 items-center justify-center rounded-md border border-black/15 bg-white text-base font-bold text-[#202526] transition hover:border-[#b91f2c] hover:bg-white hover:text-[#b91f2c]"
+              className="flex h-12 items-center justify-center rounded-md border border-black/15 bg-white text-base font-bold text-[#202526]"
             >
               Login
             </Link>

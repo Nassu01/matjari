@@ -9,6 +9,8 @@ export interface User {
     google_avatar?: string | null;
     email: string;
     phone?: string | null;
+    role?: 'client' | 'commercant' | 'livreur' | 'admin' | string | null;
+    status?: 'active' | 'pending' | 'rejected' | string | null;
     email_verified_at?: string;
     phone_verified_at?: string | null;
 }

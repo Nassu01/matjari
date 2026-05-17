@@ -22,12 +22,15 @@ class User extends Authenticatable implements FilamentUser
      */
     protected $fillable = [
         'name',
+        'first_name',
+        'last_name',
         'display_name',
         'bio',
         'profile_picture_url',
         'email',
         'phone',
         'role',
+        'status',
         'password',
         'phone_verified_at',
         'google_id',
@@ -68,6 +71,16 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Product::class, 'merchant_id');
     }
 
+    public function company()
+    {
+        return $this->hasOne(Company::class);
+    }
+
+    public function deliveryProfile()
+    {
+        return $this->hasOne(DeliveryProfile::class);
+    }
+
     public function merchantOrders(): HasMany
     {
         return $this->hasMany(Order::class, 'merchant_id');
@@ -81,6 +94,21 @@ class User extends Authenticatable implements FilamentUser
     public function isMerchant(): bool
     {
         return $this->role === 'commercant';
+    }
+
+    public function isDelivery(): bool
+    {
+        return $this->role === 'livreur';
+    }
+
+    public function isClient(): bool
+    {
+        return $this->role === 'client';
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
     }
 
     public function canAccessPanel(Panel $panel): bool

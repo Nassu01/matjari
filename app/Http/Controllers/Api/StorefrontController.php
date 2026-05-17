@@ -73,13 +73,16 @@ class StorefrontController extends Controller
             ->orderByDesc('id')
             ->get()
             ->map(function (Product $product, int $index) {
+                $image = $this->assetPath($product->featured_image) ?: Images11::urlAt($index);
+
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
                     'slug' => $product->slug,
                     'sku' => $product->sku,
                     'price' => (float) $product->price,
-                    'image' => Images11::urlAt($index) ?: $this->assetPath($product->featured_image),
+                    'image' => $image,
+                    'url' => route('products.show', ['product' => $product->slug]),
                     'description' => $product->short_description ?: $product->description,
                     'category' => $product->category?->slug ?: $product->category?->name ?: 'other',
                     'categoryName' => $product->category?->name,
@@ -100,11 +103,19 @@ class StorefrontController extends Controller
             return '';
         }
 
-        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '/')) {
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return $path;
         }
 
-        return Storage::url($path);
+        if (str_starts_with($path, '/')) {
+            return is_file(public_path(ltrim($path, '/'))) ? $path : '';
+        }
+
+        if (is_file(public_path($path))) {
+            return '/'.ltrim($path, '/');
+        }
+
+        return Storage::exists($path) ? Storage::url($path) : '';
     }
 
     private function image11Fallback(string $path, int $index, array $legacyPaths = []): string

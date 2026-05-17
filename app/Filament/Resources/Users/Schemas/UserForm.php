@@ -14,7 +14,12 @@ class UserForm
     {
         return $schema
             ->components([
-                TextInput::make('name')
+                TextInput::make('first_name')
+                    ->label('Prénom')
+                    ->required()
+                    ->maxLength(255),
+                TextInput::make('last_name')
+                    ->label('Nom')
                     ->required()
                     ->maxLength(255),
                 TextInput::make('email')
@@ -32,11 +37,16 @@ class UserForm
                     ->label('Rôle')
                     ->required()
                     ->options(fn () => Role::query()->where('is_active', true)->pluck('name', 'slug')->all())
-                    ->default('customer'),
-                DateTimePicker::make('email_verified_at')
-                    ->label('Email vérifié le'),
-                DateTimePicker::make('phone_verified_at')
-                    ->label('Téléphone vérifié le'),
+                    ->default('client'),
+                Select::make('status')
+                    ->label('Statut')
+                    ->required()
+                    ->options([
+                        'active' => 'active',
+                        'pending' => 'pending',
+                        'rejected' => 'rejected',
+                    ])
+                    ->default('pending'),
                 TextInput::make('password')
                     ->label('Mot de passe')
                     ->password()

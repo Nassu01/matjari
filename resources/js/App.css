@@ -374,36 +374,49 @@ header.navbar.is-scrolled .navbar-pill {
   position: absolute;
   top: calc(100% + 14px);
   right: 0;
-  z-index: 220;
-  min-width: 150px;
+  z-index: 240;
+  min-width: 168px;
   display: grid;
-  gap: 2px;
+  gap: 4px;
   padding: 8px;
   border: 1px solid rgba(17, 24, 39, 0.08);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 20px 48px rgba(17, 24, 39, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 22px 54px rgba(17, 24, 39, 0.16);
   backdrop-filter: blur(14px);
+  animation: navbarDropdownIn 160ms ease-out both;
 }
 
-.navbar-language-dropdown button {
-  min-height: 36px;
+.navbar .navbar-language-dropdown button {
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   border: 0;
-  border-radius: 10px;
+  border-radius: 7px;
   background: transparent;
   color: #303438;
   cursor: pointer;
-  padding: 0 10px;
+  padding: 0 11px;
   text-align: left;
   font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
   font-size: 13px;
+  font-weight: 500;
   line-height: 1;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
-.navbar-language-dropdown button:hover,
-.navbar-language-dropdown button.is-active {
-  background: rgba(238, 228, 220, 0.72);
+.navbar .navbar-language-dropdown button:hover {
+  background: rgba(238, 228, 220, 0.62);
   color: #111827;
+  transform: translateX(2px);
+}
+
+.navbar .navbar-language-dropdown button.is-active {
+  background: #f0e4d8;
+  color: #111827;
+  box-shadow: inset 3px 0 0 #202526;
 }
 
 [dir="rtl"] .navbar-language-dropdown {
@@ -411,8 +424,29 @@ header.navbar.is-scrolled .navbar-pill {
   left: 0;
 }
 
-[dir="rtl"] .navbar-language-dropdown button {
+[dir="rtl"] .navbar .navbar-language-dropdown button {
   text-align: right;
+  justify-content: flex-end;
+}
+
+[dir="rtl"] .navbar .navbar-language-dropdown button:hover {
+  transform: translateX(-2px);
+}
+
+[dir="rtl"] .navbar .navbar-language-dropdown button.is-active {
+  box-shadow: inset -3px 0 0 #202526;
+}
+
+@keyframes navbarDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dropdown-menu {
