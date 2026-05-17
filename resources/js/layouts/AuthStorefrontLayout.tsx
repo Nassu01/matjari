@@ -9,7 +9,7 @@ type AuthStorefrontLayoutProps = {
 export default function AuthStorefrontLayout({ children }: AuthStorefrontLayoutProps) {
     return (
         <div className="journal-page min-h-screen bg-white text-black">
-            <JournalHeader forceDocumentNavigation />
+            <JournalHeader forceDocumentNavigation={false} />
             {children}
             <JournalFooter />
             <JournalStyle />

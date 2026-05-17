@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', StorefrontController::class)->name('storefront.home');
-Route::get('/shop', StorefrontController::class)->name('storefront.shop');
+Route::get('/shop', [ProductController::class, 'index'])->name('shop.index');
 Route::get('/search', [ProductController::class, 'search'])->name('search');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/cart', fn () => Inertia::render('Cart'))->name('cart');

@@ -364,6 +364,57 @@ header.navbar.is-scrolled .navbar-pill {
   opacity: 0.72;
 }
 
+.navbar-language-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.navbar-language-dropdown {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 0;
+  z-index: 220;
+  min-width: 150px;
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 20px 48px rgba(17, 24, 39, 0.14);
+  backdrop-filter: blur(14px);
+}
+
+.navbar-language-dropdown button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #303438;
+  cursor: pointer;
+  padding: 0 10px;
+  text-align: left;
+  font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.navbar-language-dropdown button:hover,
+.navbar-language-dropdown button.is-active {
+  background: rgba(238, 228, 220, 0.72);
+  color: #111827;
+}
+
+[dir="rtl"] .navbar-language-dropdown {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .navbar-language-dropdown button {
+  text-align: right;
+}
+
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 10px);

@@ -1,23 +1,24 @@
 import { Link as InertiaLink } from "@inertiajs/react";
 import { NavLink, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import ListeCategories from "../../../pages/categorie/ListeCategories";
 import useStorefrontContent from "../../../hooks/useStorefrontContent";
+import { languageOptions, useStorefrontLanguage } from "../../../i18n/storefrontLanguage";
 
 const linkClass = ({ isActive }) => `nav-link${isActive ? " is-active" : ""}`;
-const languageLabels = { en: "English", fr: "French" };
 
 export default function Navbar({ cartCount = 0, forceDocumentNavigation = false }) {
   const [hover, setHover] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState(() => getInitialLanguage());
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const languageRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { settings, auth } = useStorefrontContent();
   const navbar = settings?.navbar || {};
-  const languageLabel = languageLabels[currentLanguage] || languageLabels.en;
+  const { currentLanguage, languageLabel, setCurrentLanguage, t } = useStorefrontLanguage();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -27,22 +28,37 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
   }, []);
 
   useEffect(() => {
-    if (!hover && !mobileOpen) return undefined;
+    if (!hover && !mobileOpen && !languageOpen) return undefined;
 
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
         setHover(false);
         setMobileOpen(false);
+        setLanguageOpen(false);
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [hover, mobileOpen]);
+  }, [hover, mobileOpen, languageOpen]);
+
+  useEffect(() => {
+    if (!languageOpen) return undefined;
+
+    const onPointerDown = (event) => {
+      if (!languageRef.current?.contains(event.target)) {
+        setLanguageOpen(false);
+      }
+    };
+
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => window.removeEventListener("pointerdown", onPointerDown);
+  }, [languageOpen]);
 
   useEffect(() => {
     setHover(false);
     setMobileOpen(false);
+    setLanguageOpen(false);
   }, [location.pathname]);
 
   const goTo = (url) => {
@@ -73,13 +89,9 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
     window.location.assign("/account/favorites");
   };
 
-  const toggleLanguage = () => {
-    const nextLanguage = currentLanguage === "fr" ? "en" : "fr";
-    setCurrentLanguage(nextLanguage);
-
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("matjari-language", nextLanguage);
-    }
+  const selectLanguage = (language) => {
+    setCurrentLanguage(language);
+    setLanguageOpen(false);
   };
 
   return (
@@ -99,11 +111,11 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
           <div className="navbar-left">
             {forceDocumentNavigation ? (
               <a href="/shop" className="nav-link">
-                SHOP
+                {t.shop}
               </a>
             ) : (
               <NavLink to="/shop" className={linkClass}>
-                SHOP
+                {t.shop}
               </NavLink>
             )}
 
@@ -118,7 +130,7 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
                 aria-expanded={hover}
                 onClick={() => setHover((current) => !current)}
               >
-                <span>{navbar.categoryLabel || "CATEGORY"}</span>
+                <span>{navbar.categoryLabel || t.categories}</span>
                 <ChevronIcon />
               </button>
 
@@ -126,10 +138,10 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
                 <div className="dropdown-menu">
                   <div className="navbar-category-panel-head">
                     <div>
-                      <strong>Shop categories</strong>
-                      <span>Browse popular departments</span>
+                      <strong>{t.categories}</strong>
+                      <span>{t.catalog}</span>
                     </div>
-                    <a href="/shop">View all</a>
+                    <a href="/shop">{t.shop}</a>
                   </div>
 
                   <ListeCategories
@@ -152,38 +164,62 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
           )}
 
           <div className="navbar-right">
-            <button className="navbar-meta-trigger" type="button" onClick={toggleLanguage}>
-              <span>{languageLabel}</span>
-              <ChevronIcon />
-            </button>
+            <div className="navbar-language-menu" ref={languageRef}>
+              <button
+                className="navbar-meta-trigger"
+                type="button"
+                aria-label={t.language}
+                aria-expanded={languageOpen}
+                onClick={() => setLanguageOpen((value) => !value)}
+              >
+                <span>{languageLabel}</span>
+                <ChevronIcon />
+              </button>
+              {languageOpen && (
+                <div className="navbar-language-dropdown" role="menu">
+                  {languageOptions.map((language) => (
+                    <button
+                      key={language.value}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={currentLanguage === language.value}
+                      className={currentLanguage === language.value ? "is-active" : ""}
+                      onClick={() => selectLanguage(language.value)}
+                    >
+                      {language.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <button className="navbar-meta-trigger" type="button">
               <span>USD</span>
               <ChevronIcon />
             </button>
 
-            <IconButton label="Search" onClick={goToSearch}>
+            <IconButton label={t.search} onClick={goToSearch}>
               <SearchIcon />
             </IconButton>
 
-            <IconButton label="Account" onClick={goToAccount}>
+            <IconButton label={t.account} onClick={goToAccount}>
               <UserIcon />
             </IconButton>
 
-            <IconButton label="Wishlist" onClick={goToFavorites}>
+            <IconButton label={t.favorites} onClick={goToFavorites}>
               <HeartIcon />
             </IconButton>
 
             {forceDocumentNavigation ? (
-              <a className="icon-btn" href="/cart" aria-label="Cart" title="Cart">
+              <a className="icon-btn" href="/cart" aria-label={t.cart} title={t.cart}>
                 <CartBadge count={cartCount} />
               </a>
             ) : (
               <InertiaLink
                 className="icon-btn"
                 href="/cart"
-                aria-label="Cart"
-                title="Cart"
+                aria-label={t.cart}
+                title={t.cart}
                 onClick={() => setMobileOpen(false)}
               >
                 <CartBadge count={cartCount} />
@@ -194,20 +230,6 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
       </div>
     </header>
   );
-}
-
-function getInitialLanguage() {
-  if (typeof window === "undefined") {
-    return "en";
-  }
-
-  const storedLanguage = window.localStorage.getItem("matjari-language");
-
-  if (storedLanguage === "fr" || storedLanguage === "en") {
-    return storedLanguage;
-  }
-
-  return window.navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en";
 }
 
 function IconButton({ children, label, onClick }) {

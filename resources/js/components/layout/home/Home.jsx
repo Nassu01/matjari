@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link as InertiaLink } from "@inertiajs/react";
 import {
   FaFacebookF,
   FaInstagram,
@@ -18,6 +19,7 @@ import { TbPackageImport } from "react-icons/tb";
 
 import useImages11, { getDisplayImages11, imageUrlFromImages11, images11ManifestUrl } from "../../../hooks/useImages11";
 import useStorefrontContent from "../../../hooks/useStorefrontContent";
+import { languageOptions, useStorefrontLanguage } from "../../../i18n/storefrontLanguage";
 
 const categoryTemplates = [
   { name: "Skin Care", count: 18, links: ["Moisturizers", "Hand Lotion", "Face Primers", "Body Lotion"] },
@@ -89,18 +91,27 @@ const blogTemplates = [
 const testimonials = [
   {
     quote:
-      "Great toolkit for Opencart. As a base platform, Opencart can be hard to refine, but Journal makes the storefront feel clean and flexible.",
-    author: "KELLYHORNE",
+      "Commande facile, livraison rapide et produits conformes aux photos. J'ai beaucoup aime l'experience d'achat sur MATJARI.",
+    author: "SARA M.",
+    detail: "Cliente verifiee",
   },
   {
     quote:
-      "The shopping experience feels smooth, fast, and modern. The product cards and mobile browsing are exactly what our customers expect.",
-    author: "AMINA",
+      "Le site est clair, les produits sont bien presentes et le panier est simple a utiliser. Je recommande.",
+    author: "YASSINE B.",
+    detail: "Client verifie",
   },
   {
     quote:
-      "Strong visuals, fast navigation, and simple product discovery helped us give the store a much more premium feeling.",
-    author: "YASSINE",
+      "J'ai trouve rapidement ce que je cherchais. Les favoris et le checkout rendent l'achat tres pratique.",
+    author: "AMINA R.",
+    detail: "Cliente verifiee",
+  },
+  {
+    quote:
+      "Tres belle interface, produits varies et navigation fluide. MATJARI donne une vraie impression premium.",
+    author: "MEHDI K.",
+    detail: "Client verifie",
   },
 ];
 
@@ -112,8 +123,6 @@ const menuGroups = {
   language: ["English", "Français", "العربية", "Español"],
   currency: ["USD", "EUR", "MAD", "GBP"],
 };
-
-const languageLabels = { en: "English", fr: "French" };
 
 function imageFrom(images, index) {
   return imageUrlFromImages11(images, index);
@@ -231,16 +240,17 @@ function SectionTitle({ script, title, subtitle, dark = false }) {
   );
 }
 
-export function JournalHeader({ categories = categoryTemplates, auth = undefined, forceDocumentNavigation = false }) {
+export function JournalHeader({ categories = categoryTemplates, auth = undefined, forceDocumentNavigation = true }) {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState(() => getInitialLanguage());
+  const [languageOpen, setLanguageOpen] = useState(false);
   const searchRef = useRef(null);
   const searchButtonRef = useRef(null);
+  const languageRef = useRef(null);
   const { auth: storefrontAuth } = useStorefrontContent();
-  const languageLabel = languageLabels[currentLanguage] || languageLabels.en;
+  const { currentLanguage, languageLabel, setCurrentLanguage, t } = useStorefrontLanguage();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 18);
@@ -259,6 +269,28 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
+
+  useEffect(() => {
+    if (!languageOpen) return undefined;
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setLanguageOpen(false);
+    };
+
+    const onPointerDown = (event) => {
+      if (!languageRef.current?.contains(event.target)) {
+        setLanguageOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("pointerdown", onPointerDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [languageOpen]);
 
   useEffect(() => {
     if (!searchOpen) return undefined;
@@ -291,13 +323,9 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
   const activeAuth = auth ?? storefrontAuth;
   const accountHref = activeAuth?.isAuthenticated ? "/dashboard" : "/login";
   const favoritesHref = "/account/favorites";
-  const toggleLanguage = () => {
-    const nextLanguage = currentLanguage === "fr" ? "en" : "fr";
-    setCurrentLanguage(nextLanguage);
-
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("matjari-language", nextLanguage);
-    }
+  const selectLanguage = (language) => {
+    setCurrentLanguage(language);
+    setLanguageOpen(false);
   };
 
   const submitSearch = (event) => {
@@ -311,9 +339,15 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
   };
 
   const StoreLink = ({ to, className, ariaLabel, children }) => (
-    <a href={to} className={className} aria-label={ariaLabel}>
-      {children}
-    </a>
+    forceDocumentNavigation ? (
+      <a href={to} className={className} aria-label={ariaLabel}>
+        {children}
+      </a>
+    ) : (
+      <InertiaLink href={to} className={className} aria-label={ariaLabel}>
+        {children}
+      </InertiaLink>
+    )
   );
 
   return (
@@ -323,8 +357,8 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
           <button type="button" onClick={() => setOpen((value) => !value)} aria-label="Open menu" aria-expanded={open}>
             <FiMenu />
           </button>
-          <StoreLink to="/shop">Shop</StoreLink>
-          <a href="#catalog">Catalog <TextChevron /></a>
+          <StoreLink to="/shop">{t.shop}</StoreLink>
+          <a href="#catalog">{t.catalog} <TextChevron /></a>
         </nav>
 
         <StoreLink to="/" className="journal-logo-link" ariaLabel="Journal home">
@@ -332,22 +366,46 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
         </StoreLink>
 
         <nav className="journal-nav-right" aria-label="Tools">
-          <button className="journal-language-trigger" type="button" onClick={toggleLanguage}>
-            {languageLabel} <TextChevron />
-          </button>
+          <div className="journal-language-menu" ref={languageRef}>
+            <button
+              className="journal-language-trigger"
+              type="button"
+              aria-label={t.language}
+              aria-expanded={languageOpen}
+              onClick={() => setLanguageOpen((value) => !value)}
+            >
+              {languageLabel} <TextChevron />
+            </button>
+            {languageOpen && (
+              <div className="journal-language-dropdown" role="menu">
+                {languageOptions.map((language) => (
+                  <button
+                    key={language.value}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={currentLanguage === language.value}
+                    className={currentLanguage === language.value ? "is-active" : ""}
+                    onClick={() => selectLanguage(language.value)}
+                  >
+                    {language.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <a href="#currency">USD <TextChevron /></a>
           <button
             type="button"
             ref={searchButtonRef}
-            aria-label="Search"
+            aria-label={t.search}
             aria-expanded={searchOpen}
             onClick={() => setSearchOpen((value) => !value)}
           >
             <FaSearch />
           </button>
-          <a className="journal-icon-link" href={accountHref} aria-label="Account"><FaRegUser /></a>
-          <a className="journal-icon-link" href={favoritesHref} aria-label="Wishlist"><FaRegHeart /></a>
-          <StoreLink to="/cart" ariaLabel="Cart"><FaShoppingCart size={19} /></StoreLink>
+          <a className="journal-icon-link" href={accountHref} aria-label={t.account}><FaRegUser /></a>
+          <a className="journal-icon-link" href={favoritesHref} aria-label={t.favorites}><FaRegHeart /></a>
+          <StoreLink to="/cart" ariaLabel={t.cart}><FaShoppingCart size={19} /></StoreLink>
         </nav>
       </div>
 
@@ -359,10 +417,10 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
               type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Rechercher un produit..."
-              aria-label="Rechercher un produit"
+              placeholder={t.searchPlaceholder}
+              aria-label={t.searchPlaceholder}
             />
-            <button type="submit">Rechercher</button>
+            <button type="submit">{t.search}</button>
           </form>
         </div>
       )}
@@ -378,20 +436,6 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
       )}
     </header>
   );
-}
-
-function getInitialLanguage() {
-  if (typeof window === "undefined") {
-    return "en";
-  }
-
-  const storedLanguage = window.localStorage.getItem("matjari-language");
-
-  if (storedLanguage === "fr" || storedLanguage === "en") {
-    return storedLanguage;
-  }
-
-  return window.navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en";
 }
 
 function Hero({ heroSlides }) {
@@ -472,9 +516,14 @@ function CategoryStrip({ categories }) {
         </button>
       </div>
       <div className="journal-ticker" aria-label="Promotions">
-        <span>On orders over $200</span><b>FREE SHIPPING</b>
-        <span>On orders over $200</span><b>FREE SHIPPING</b>
-        <span>On orders over $200</span><b>FREE SHIPPING</b>
+        <div className="journal-ticker-track">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <span className="journal-ticker-group" key={index}>
+              <b>FREE SHIPPING</b>
+              <span>On orders over $200</span>
+            </span>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -691,38 +740,53 @@ function FeaturedCategoriesOld({ products, featureImage }) {
 }
 
 function FeaturedCategories({ products, featureImage }) {
-  const rowRef = useRef(null);
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
+  const rowRefs = useRef({});
+  const [rowNav, setRowNav] = useState({});
+  const rows = useMemo(
+    () => [
+      {
+        title: "Beauty",
+        links: ["Makeup", "Face", "Eyes", "Lips"],
+        image: featureImage || products[6]?.image,
+        products: [...products.slice(4, 8), ...products.slice(0, 4)],
+      },
+      {
+        title: "Skin Care",
+        links: ["Moisturizers", "Hand Lotion", "Face Primers", "Body Lotion"],
+        image: products[1]?.image || featureImage,
+        products: [...products.slice(0, 4), ...products.slice(4, 8)],
+      },
+    ],
+    [featureImage, products]
+  );
 
-  const category = {
-    title: "Beauty",
-    links: ["Makeup", "Face", "Eyes", "Lips"],
-    image: featureImage || products[6]?.image,
-  };
-  const featuredProducts = useMemo(() => [...products.slice(4, 8), ...products.slice(0, 4)], [products]);
-
-  const updateFeaturedNav = () => {
-    const row = rowRef.current;
+  const updateFeaturedNav = (rowTitle) => {
+    const row = rowRefs.current[rowTitle];
     if (!row) return;
 
-    setCanScrollPrev(row.scrollLeft > 8);
-    setCanScrollNext(row.scrollLeft + row.clientWidth < row.scrollWidth - 8);
+    setRowNav((current) => ({
+      ...current,
+      [rowTitle]: {
+        canScrollPrev: row.scrollLeft > 8,
+        canScrollNext: row.scrollLeft + row.clientWidth < row.scrollWidth - 8,
+      },
+    }));
   };
 
   useEffect(() => {
-    updateFeaturedNav();
-    const timer = window.setTimeout(updateFeaturedNav, 120);
-    window.addEventListener("resize", updateFeaturedNav);
+    const updateAllRows = () => rows.forEach((row) => updateFeaturedNav(row.title));
+    updateAllRows();
+    const timer = window.setTimeout(updateAllRows, 120);
+    window.addEventListener("resize", updateAllRows);
 
     return () => {
       window.clearTimeout(timer);
-      window.removeEventListener("resize", updateFeaturedNav);
+      window.removeEventListener("resize", updateAllRows);
     };
-  }, [featuredProducts]);
+  }, [rows]);
 
-  const scrollFeaturedRow = (direction) => {
-    const row = rowRef.current;
+  const scrollFeaturedRow = (rowTitle, direction) => {
+    const row = rowRefs.current[rowTitle];
     if (!row) return;
 
     row.scrollBy({
@@ -735,39 +799,51 @@ function FeaturedCategories({ products, featureImage }) {
     <section className="journal-section journal-featured" id="featured" data-animate>
       <SectionTitle script="Featured" title="Featured Categories" subtitle="Create custom title modules with accent icons and decorative text." />
       <div className="journal-feature-showcase">
-        <div className="journal-feature-carousel">
-          {canScrollPrev && (
-            <button className="journal-product-nav is-prev" type="button" aria-label="Previous featured categories" onClick={() => scrollFeaturedRow(-1)}>
-              <FiChevronLeft aria-hidden="true" />
-            </button>
-          )}
-          <div className="journal-feature-products" ref={rowRef} tabIndex={0} aria-label="Featured categories carousel" onScroll={updateFeaturedNav}>
-            <div className="journal-feature-track">
-              <article className="journal-feature-tile" data-animate>
-                <div className="journal-feature-copy">
-                  <h3>{category.title}</h3>
-                  <div>
-                    {category.links.map((link) => (
-                      <a key={link} href="/shop">{link}</a>
-                    ))}
-                  </div>
-                  <a className="journal-feature-more" href="/shop">View More <MdOutlineKeyboardArrowRight /></a>
+        {rows.map((row) => {
+          const nav = rowNav[row.title] || {};
+
+          return (
+            <div className="journal-feature-carousel" key={row.title}>
+              {nav.canScrollPrev && (
+                <button className="journal-product-nav is-prev" type="button" aria-label={`Previous ${row.title} products`} onClick={() => scrollFeaturedRow(row.title, -1)}>
+                  <FiChevronLeft aria-hidden="true" />
+                </button>
+              )}
+              <div
+                className="journal-feature-products"
+                ref={(element) => { rowRefs.current[row.title] = element; }}
+                tabIndex={0}
+                aria-label={`${row.title} featured products carousel`}
+                onScroll={() => updateFeaturedNav(row.title)}
+              >
+                <div className="journal-feature-track">
+                  <article className="journal-feature-tile" data-animate>
+                    <div className="journal-feature-copy">
+                      <h3>{row.title}</h3>
+                      <div>
+                        {row.links.map((link) => (
+                          <a key={link} href="/shop">{link}</a>
+                        ))}
+                      </div>
+                      <a className="journal-feature-more" href="/shop">View More <MdOutlineKeyboardArrowRight /></a>
+                    </div>
+                    {row.image && (
+                      <img src={row.image} alt={`${row.title} category`} />
+                    )}
+                  </article>
+                  {row.products.map((product, index) => (
+                    <ProductCard key={`${row.title}-${product.name}-${index}`} product={product} />
+                  ))}
                 </div>
-                {category.image && (
-                  <img src={category.image} alt={`${category.title} category`} />
-                )}
-              </article>
-              {featuredProducts.map((product, index) => (
-                <ProductCard key={`featured-category-${product.name}-${index}`} product={product} />
-              ))}
+              </div>
+              {nav.canScrollNext && (
+                <button className="journal-product-nav is-next" type="button" aria-label={`Next ${row.title} products`} onClick={() => scrollFeaturedRow(row.title, 1)}>
+                  <FiChevronRight aria-hidden="true" />
+                </button>
+              )}
             </div>
-          </div>
-          {canScrollNext && (
-            <button className="journal-product-nav is-next" type="button" aria-label="Next featured categories" onClick={() => scrollFeaturedRow(1)}>
-              <FiChevronRight aria-hidden="true" />
-            </button>
-          )}
-        </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -795,13 +871,21 @@ function Testimonials() {
 
   return (
     <section className="journal-testimonials" data-animate>
-      <SectionTitle script="Testimonials" title="Customer Feedback" subtitle="Journal has the impressive rating of 4.9 stars from more than 3000 reviews (98% customer satisfaction rate)." />
+      <SectionTitle script="Avis clients" title="Ce que disent nos clients" subtitle="MATJARI est apprecie par ses clients pour son experience d'achat simple, ses produits varies et son service fiable." />
       <div className="journal-testimonial-stage">
-        <button className="journal-round-nav" type="button" aria-label="Previous testimonial" onClick={prev}>‹</button>
+        <button className="journal-round-nav" type="button" aria-label="Previous testimonial" onClick={prev}>
+          <FiChevronLeft aria-hidden="true" />
+        </button>
         <div className="journal-testimonial-copy" key={current.author}>
-          <div className="journal-quotes">""</div>
+          <div className="journal-rating" aria-label="4.9 sur 5 base sur les avis clients">
+            <span aria-hidden="true">{Array.from({ length: 5 }).map((_, index) => <FaStar key={index} />)}</span>
+            <strong>4.9/5</strong>
+            <em>base sur les avis clients</em>
+          </div>
+          <div className="journal-quotes" aria-hidden="true">"</div>
           <blockquote>{current.quote}</blockquote>
           <strong>- {current.author}</strong>
+          <small>{current.detail}</small>
           <div className="journal-dots">
             {testimonials.map((item, index) => (
               <button
@@ -814,7 +898,9 @@ function Testimonials() {
             ))}
           </div>
         </div>
-        <button className="journal-round-nav" type="button" aria-label="Next testimonial" onClick={next}>›</button>
+        <button className="journal-round-nav" type="button" aria-label="Next testimonial" onClick={next}>
+          <FiChevronRight aria-hidden="true" />
+        </button>
       </div>
     </section>
   );
@@ -993,7 +1079,14 @@ const css = `
 .journal-nav-left { gap: 28px; font-family: Inter, 'Helvetica Neue', Arial, sans-serif; font-size: 13.5px; font-weight: 400; letter-spacing: .09em; text-transform: uppercase; line-height: 20px; color: #2f3335; }
 .journal-nav-right { justify-content: flex-end; gap: 13px; color: #555b5e; font-family: Inter, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 20px; }
 .journal-nav-left a, .journal-nav-right a { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; box-shadow: none; white-space: nowrap; }
+.journal-language-menu { position: relative; display: inline-flex; align-items: center; }
 .journal-nav-right .journal-language-trigger { width: auto; height: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 14px; line-height: 20px; white-space: nowrap; }
+.journal-language-dropdown { position: absolute; top: calc(100% + 14px); right: 0; z-index: 100; min-width: 150px; display: grid; gap: 2px; border: 1px solid rgba(32,37,38,.12); border-radius: 8px; background: rgba(255,255,255,.97); box-shadow: 0 20px 48px rgba(32,37,38,.14); padding: 8px; backdrop-filter: blur(12px); }
+.journal-language-dropdown button { width: 100%; height: auto; min-height: 36px; display: flex; align-items: center; justify-content: flex-start; border: 0; border-radius: 6px; background: transparent; color: #303438; padding: 0 10px; font-size: 13px; line-height: 1; text-align: left; }
+.journal-language-dropdown button:hover,
+.journal-language-dropdown button.is-active { background: rgba(238,228,220,.72); color: #111827; }
+[dir="rtl"] .journal-language-dropdown { right: auto; left: 0; }
+[dir="rtl"] .journal-language-dropdown button { text-align: right; justify-content: flex-end; }
 .journal-text-chevron { flex: 0 0 auto; display: inline-block; width: 0; height: 0; margin-top: 1px; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor; opacity: .62; }
 .journal-nav-left button, .journal-nav-right button { appearance: none; -webkit-appearance: none; display: inline-grid; place-items: center; width: 32px; height: 32px; border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 20px; padding: 0; }
 .journal-nav-left button { width: 23px; height: 17px; }
@@ -1029,7 +1122,10 @@ const css = `
 .journal-text-link span { font-family: inherit; font-size: 14px; letter-spacing: 0; text-transform: none; color: currentColor; transition: transform 180ms ease; }
 .journal-text-link:hover span { transform: translateX(3px); }
 .journal-light-link { color: #fff; margin-left: 28px; }
-.journal-round-nav { width: 48px; height: 48px; display: inline-grid; place-items: center; border-radius: 50%; border: 1px solid #717679; background: rgba(255,255,255,.78); color: #4f5659; cursor: pointer; font-size: 28px; }
+.journal-round-nav { width: 42px; height: 42px; display: inline-grid; place-items: center; border-radius: 50%; border: 1px solid rgba(32,37,38,.16); background: rgba(255,255,255,.94); color: #202526; box-shadow: 0 12px 28px rgba(32,37,38,.08); cursor: pointer; font-size: 18px; transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+.journal-round-nav:hover { background: #fff; border-color: rgba(32,37,38,.3); box-shadow: 0 16px 34px rgba(32,37,38,.12); }
+.journal-round-nav:first-child:hover { transform: translateX(-2px); }
+.journal-round-nav:last-child:hover { transform: translateX(2px); }
 .journal-hero-nav { position: absolute; right: 38px; top: 50%; z-index: 4; display: grid; gap: 12px; transform: translateY(-50%); }
 .journal-hero-arrow { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.34); border-radius: 50%; background: rgba(10,10,10,.18); color: rgba(255,255,255,.86); cursor: pointer; font-family: Georgia, serif; font-size: 24px; font-weight: 300; line-height: 1; transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease; }
 .journal-hero-arrow:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.56); color: #fff; transform: translateY(-1px); }
@@ -1060,9 +1156,15 @@ const css = `
 .journal-category-card a:hover span { transform: translateX(3px); }
 .journal-category-next { position: absolute; right: 0; top: 50%; z-index: 3; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid rgba(32,37,38,.16); border-radius: 50%; background: rgba(255,255,255,.9); color: #202526; box-shadow: 0 12px 28px rgba(32,37,38,.08); cursor: pointer; font-family: Georgia, serif; font-size: 20px; line-height: 1; transform: translateY(-50%); transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease; }
 .journal-category-next:hover { background: #fff; border-color: rgba(32,37,38,.28); transform: translateY(-50%) translateX(2px); }
-.journal-ticker { margin: 74px -40px 0; min-height: 68px; display: flex; justify-content: center; align-items: center; gap: clamp(24px, 3vw, 42px); white-space: nowrap; overflow: hidden; background: var(--cream); font: 26px Georgia, serif; }
-.journal-ticker span::before, .journal-ticker b::before { content: "•"; margin-right: 28px; color: #111; }
-.journal-ticker b { font-weight: 800; }
+.journal-ticker { margin: 58px -40px 0; height: 42px; display: flex; align-items: center; overflow: hidden; background: var(--cream); color: #202526; white-space: nowrap; }
+.journal-ticker-track { min-width: max-content; display: flex; align-items: center; animation: journalMarquee 32s linear infinite; }
+.journal-ticker-group { display: inline-flex; align-items: center; gap: 22px; padding-right: 22px; font: 15px Inter, system-ui, sans-serif; letter-spacing: .04em; }
+.journal-ticker-group::after { content: "•"; color: rgba(32,37,38,.62); }
+.journal-ticker b { font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+@keyframes journalMarquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
 
 .journal-tabs { display: flex; justify-content: center; gap: 46px; margin: -32px 0 42px; }
 .journal-tabs button { border: 0; border-bottom: 2px solid transparent; background: transparent; padding: 8px 0; color: #777c7f; cursor: pointer; font: 24px Georgia, serif; }
@@ -1180,12 +1282,22 @@ const css = `
 .journal-promo p { max-width: 620px; margin: 0 0 44px; color: #55534f; font-size: 18px; line-height: 1.7; }
 .journal-promo .journal-light-link { color: rgba(32,37,38,.78); }
 
-.journal-testimonials { min-height: 650px; padding: 92px 40px 80px; text-align: center; overflow: hidden; }
-.journal-testimonial-stage { display: grid; grid-template-columns: 56px 1fr 56px; align-items: center; gap: 40px; margin-top: 60px; }
-.journal-quotes { font: 96px Georgia, serif; line-height: .4; color: #626b6f; }
-.journal-testimonials blockquote { max-width: 900px; margin: 38px auto; color: #5e6568; font-size: 22px; line-height: 1.55; font-style: italic; }
-.journal-testimonials strong { color: #737373; font-family: Georgia, serif; letter-spacing: 1px; }
-.journal-dots { margin-top: 70px; display: flex; justify-content: center; gap: 14px; }
+.journal-testimonials { padding: 72px 40px 68px; text-align: center; overflow: hidden; background: linear-gradient(180deg, #fff, #faf8f5); }
+.journal-testimonials .journal-section-title { margin-bottom: 36px; }
+.journal-testimonials .journal-section-title h2 { margin-bottom: 16px; }
+.journal-testimonials .journal-section-title p { max-width: 760px; margin: 0 auto; }
+.journal-testimonial-stage { width: min(100%, 980px); display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 18px; margin: 0 auto; }
+.journal-testimonial-copy { position: relative; min-height: 278px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(32,37,38,.1); border-radius: 8px; background: rgba(255,255,255,.92); padding: 34px 44px 26px; box-shadow: 0 18px 42px rgba(32,37,38,.08); }
+.journal-rating { display: inline-flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 18px; color: #202526; font-size: 13px; }
+.journal-rating span { display: inline-flex; align-items: center; gap: 3px; color: #d6a348; }
+.journal-rating svg { width: 14px; height: 14px; }
+.journal-rating strong { color: #202526; font-family: Georgia, serif; font-size: 17px; letter-spacing: 0; }
+.journal-rating em { color: #687074; font-style: normal; }
+.journal-quotes { width: 34px; height: 34px; display: grid; place-items: center; margin: 0 auto 12px; border-radius: 50%; background: #eadbcb; color: #4f5659; font: 30px Georgia, serif; line-height: 1; }
+.journal-testimonials blockquote { max-width: 760px; margin: 0 auto 18px; color: #3f4649; font-size: 20px; line-height: 1.55; font-style: italic; }
+.journal-testimonials strong { color: #202526; font-family: Georgia, serif; letter-spacing: 1px; }
+.journal-testimonials small { display: block; margin-top: 6px; color: #687074; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.journal-testimonials .journal-dots { margin-top: 20px; display: flex; justify-content: center; gap: 12px; }
 .journal-dots .is-active { opacity: 1; }
 
 .journal-about { display: grid; grid-template-columns: 1fr 1fr; gap: 90px; align-items: center; padding: 130px 40px 80px; background: linear-gradient(90deg, #f1e0cf, #fff 45%, #fff8ef); }
@@ -1447,8 +1559,8 @@ const css = `
   .journal-feature-tile { height: 360px; min-height: 360px; }
   .journal-services { gap: 42px; }
   .journal-promo > div { width: 100%; }
-  .journal-testimonial-stage { grid-template-columns: 1fr; }
-  .journal-testimonial-stage > button { display: none; }
+  .journal-testimonial-stage { grid-template-columns: 42px minmax(0, 1fr) 42px; gap: 10px; }
+  .journal-testimonial-copy { min-height: 260px; padding: 30px 28px 24px; }
   .journal-about { gap: 38px; padding: 70px 20px; }
   .journal-about img { height: 420px; }
   .journal-gallery-row { grid-template-columns: 1fr; }
@@ -1664,10 +1776,7 @@ const css = `
   .journal-ticker {
     margin-left: -16px;
     margin-right: -16px;
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding: 0 16px;
-    font-size: 18px;
+    height: 38px;
   }
 
   .journal-tabs {
@@ -1849,13 +1958,39 @@ const css = `
   }
 
   .journal-testimonial-stage {
-    gap: 18px;
-    margin-top: 34px;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 0;
+  }
+
+  .journal-testimonial-stage .journal-round-nav {
+    grid-row: 2;
+    display: inline-grid;
+  }
+
+  .journal-testimonial-stage .journal-round-nav:first-child {
+    justify-self: end;
+    margin-right: 28px;
+  }
+
+  .journal-testimonial-stage .journal-round-nav:last-child {
+    justify-self: start;
+    margin-left: 28px;
+  }
+
+  .journal-testimonial-copy {
+    min-height: 252px;
+    padding: 28px 20px 22px;
+  }
+
+  .journal-rating {
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .journal-testimonials blockquote {
-    margin: 24px auto;
-    font-size: 18px;
+    margin: 0 auto 16px;
+    font-size: 17px;
   }
 
   .journal-about {
