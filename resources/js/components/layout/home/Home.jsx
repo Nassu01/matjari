@@ -440,6 +440,7 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
 
 function Hero({ heroSlides }) {
   const [active, setActive] = useState(0);
+  const { t } = useStorefrontLanguage();
 
   const nextSlide = () => setActive((current) => (current + 1) % heroSlides.length);
   const prevSlide = () => setActive((current) => (current - 1 + heroSlides.length) % heroSlides.length);
@@ -455,11 +456,11 @@ function Hero({ heroSlides }) {
         <article className={`journal-hero-main ${active === index ? "is-active" : ""}`} key={slide.title}>
           {slide.image && <img src={slide.image} alt={slide.title} />}
           <div className="journal-hero-copy">
-            <span>{slide.label}</span>
-            <h1>{slide.title}</h1>
+            <span>{t.heroSlides?.[index]?.label || slide.label}</span>
+            <h1>{t.heroSlides?.[index]?.title || slide.title}</h1>
             <div>
-              <a className="journal-btn journal-btn-dark" href="/shop">Shop Collection</a>
-              <a className="journal-text-link" href="#about">Learn more <span aria-hidden="true">→</span></a>
+              <a className="journal-btn journal-btn-dark" href="/shop">{t.shopCollection}</a>
+              <a className="journal-text-link" href="#about">{t.learnMore} <span aria-hidden="true">→</span></a>
             </div>
           </div>
         </article>
@@ -485,6 +486,7 @@ function Hero({ heroSlides }) {
 
 function CategoryStrip({ categories }) {
   const rowRef = useRef(null);
+  const { t } = useStorefrontLanguage();
 
   const scrollCategories = () => {
     rowRef.current?.scrollBy({
@@ -495,7 +497,7 @@ function CategoryStrip({ categories }) {
 
   return (
     <section className="journal-section journal-categories" id="catalog" data-animate>
-      <SectionTitle script="Categories" title="Shop by Category" subtitle="Create custom title modules with accent icons and decorative text." />
+      <SectionTitle script={t.categories} title={t.shopByCategory} subtitle={t.categorySectionSubtitle} />
       <div className="journal-category-carousel">
         <div className="journal-category-row" ref={rowRef}>
           {categories.map((category) => (
@@ -505,8 +507,8 @@ function CategoryStrip({ categories }) {
               </div>
               <div className="journal-category-copy">
                 <h3>{category.name}</h3>
-                <p>{category.count} Product(s)</p>
-                <a href="/shop">Shop now <span aria-hidden="true">→</span></a>
+                <p>{category.count} {t.productCount}</p>
+                <a href="/shop">{t.shopCollection} <span aria-hidden="true">→</span></a>
               </div>
             </article>
           ))}
@@ -519,8 +521,8 @@ function CategoryStrip({ categories }) {
         <div className="journal-ticker-track">
           {Array.from({ length: 6 }).map((_, index) => (
             <span className="journal-ticker-group" key={index}>
-              <b>FREE SHIPPING</b>
-              <span>On orders over $200</span>
+              <b>{t.freeShipping}</b>
+              <span>{t.freeShippingDesc}</span>
             </span>
           ))}
         </div>
@@ -531,6 +533,7 @@ function CategoryStrip({ categories }) {
 
 function ProductCard({ product, compact = false }) {
   const { auth } = useStorefrontContent();
+  const { t } = useStorefrontLanguage();
   const [showFavoritePrompt, setShowFavoritePrompt] = useState(false);
 
   const handleFavorite = () => {
@@ -545,7 +548,7 @@ function ProductCard({ product, compact = false }) {
   return (
     <article className={`journal-product-card ${compact ? "is-compact" : ""}`} data-animate>
       {product.sale && <span className="journal-sale-flag">%</span>}
-      {product.top && <span className="journal-top-badge"><FaStar /> Top Brand</span>}
+      {product.top && <span className="journal-top-badge"><FaStar /> {t.topBrand}</span>}
       <div className="journal-product-image">
         <img src={product.image} alt={product.name} />
       </div>
@@ -553,9 +556,9 @@ function ProductCard({ product, compact = false }) {
       <h3><a href="/shop">{product.name}</a></h3>
       <p className="journal-price"><strong>{product.price}</strong>{product.old && <del>{product.old}</del>}</p>
       <div className="journal-card-actions">
-        <button type="button"><FaShoppingCart /> Add to Cart</button>
-        <button type="button" aria-label="Wishlist" onClick={handleFavorite}><FaRegHeart /></button>
-        <button type="button" aria-label="Compare"><FiRefreshCw /></button>
+        <button type="button"><FaShoppingCart /> {t.addToCart}</button>
+        <button type="button" aria-label={t.wishlist} onClick={handleFavorite}><FaRegHeart /></button>
+        <button type="button" aria-label={t.compare}><FiRefreshCw /></button>
       </div>
       {showFavoritePrompt && (
         <FavoriteLoginPrompt onClose={() => setShowFavoritePrompt(false)} />
@@ -565,15 +568,17 @@ function ProductCard({ product, compact = false }) {
 }
 
 function FavoriteLoginPrompt({ onClose }) {
+  const { t } = useStorefrontLanguage();
+
   return (
-    <div className="journal-favorite-prompt" role="dialog" aria-modal="true" aria-label="Connexion requise">
+    <div className="journal-favorite-prompt" role="dialog" aria-modal="true" aria-label={t.loginRequired}>
       <div>
-        <button type="button" onClick={onClose} aria-label="Fermer">×</button>
-        <strong>Connexion requise</strong>
-        <p>Vous devez vous connecter ou créer un compte pour ajouter ce produit aux favoris.</p>
+        <button type="button" onClick={onClose} aria-label={t.close}>×</button>
+        <strong>{t.loginRequired}</strong>
+        <p>{t.loginPrompt}</p>
         <div>
-          <a href="/login">Se connecter</a>
-          <a href="/register">Créer un compte</a>
+          <a href="/login">{t.loginButton}</a>
+          <a href="/register">{t.registerButton}</a>
         </div>
       </div>
     </div>
@@ -581,13 +586,21 @@ function FavoriteLoginPrompt({ onClose }) {
 }
 
 function Products({ products }) {
-  const [tab, setTab] = useState("New Arrivals");
+  const [tab, setTab] = useState("newArrivals");
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
   const rowRef = useRef(null);
+  const { t } = useStorefrontLanguage();
+
+  const tabOptions = [
+    { key: "newArrivals", label: t.productTabs.newArrivals },
+    { key: "bestsellers", label: t.productTabs.bestsellers },
+    { key: "sale", label: t.productTabs.sale },
+  ];
+
   const visible = useMemo(() => {
-    if (tab === "SALE") return products.filter((product) => product.sale);
-    if (tab === "Bestsellers") return [...products].sort((first, second) => Number(Boolean(second.top)) - Number(Boolean(first.top)));
+    if (tab === "sale") return products.filter((product) => product.sale);
+    if (tab === "bestsellers") return [...products].sort((first, second) => Number(Boolean(second.top)) - Number(Boolean(first.top)));
     return products;
   }, [products, tab]);
 
@@ -620,13 +633,15 @@ function Products({ products }) {
     });
   };
 
+  const currentTabLabel = tabOptions.find((item) => item.key === tab)?.label || t.productTabs.newArrivals;
+
   return (
     <section className="journal-section journal-products" id="products" data-animate>
-      <SectionTitle script="Products" title="Featured Products" subtitle="Create custom title modules with accent icons and decorative text." />
+      <SectionTitle script={t.featuredProducts} title={t.featuredProducts} subtitle={t.featuredProductsSubtitle} />
       <div className="journal-tabs">
-        {["New Arrivals", "Bestsellers", "SALE"].map((item) => (
-          <button key={item} type="button" className={tab === item ? "is-active" : ""} onClick={() => setTab(item)}>
-            {item}
+        {tabOptions.map((item) => (
+          <button key={item.key} type="button" className={tab === item.key ? "is-active" : ""} onClick={() => setTab(item.key)}>
+            {item.label}
           </button>
         ))}
       </div>
@@ -636,7 +651,7 @@ function Products({ products }) {
           ‹
           </button>
         )}
-        <div className="journal-products-row" ref={rowRef} tabIndex={0} aria-label={`${tab} product carousel`} onScroll={updateProductNav}>
+        <div className="journal-products-row" ref={rowRef} tabIndex={0} aria-label={`${currentTabLabel} product carousel`} onScroll={updateProductNav}>
           <div className="journal-products-track">
             {visible.map((product) => <ProductCard key={`${tab}-${product.name}`} product={product} />)}
           </div>
@@ -652,18 +667,20 @@ function Products({ products }) {
 }
 
 function Services() {
+  const { t } = useStorefrontLanguage();
+
   return (
     <section className="journal-services" data-animate>
       {[
-        [FaTruck, "Fast Shipping"],
-        [MdOutlineShield, "Secure Shopping"],
-        [TbPackageImport, "Easy Return"],
-        [FiHeadphones, "24h Service"],
-      ].map(([Icon, label]) => (
-        <article key={label} data-animate>
+        [FaTruck, t.fastShipping, t.fastShippingDescription],
+        [MdOutlineShield, t.secureShopping, t.secureShoppingDescription],
+        [TbPackageImport, t.easyReturn, t.easyReturnDescription],
+        [FiHeadphones, t.service24h, t.service24hDescription],
+      ].map(([Icon, label, description]) => (
+        <article key={label} className="journal-service-item" data-animate>
           <Icon />
           <h3>{label}</h3>
-          <p>Optional secondary info block text</p>
+          <p>{description}</p>
         </article>
       ))}
     </section>
@@ -850,14 +867,16 @@ function FeaturedCategories({ products, featureImage }) {
 }
 
 function PromoBanner({ image }) {
+  const { t } = useStorefrontLanguage();
+
   return (
     <section className="journal-promo" data-animate style={{ backgroundImage: `linear-gradient(90deg, rgba(231,216,200,.96), rgba(231,216,200,.78) 42%, rgba(231,216,200,.24) 78%), url(${image})` }}>
       <div>
-        <span>Discover</span>
-        <h2>Everything You Love, All in One Place</h2>
-        <p>Explore fashion, beauty, accessories, home essentials, and more in one elegant shopping experience.</p>
-        <a className="journal-btn journal-btn-light" href="/shop">Shop Collection</a>
-        <a className="journal-text-link journal-light-link" href="#catalog">Learn more</a>
+        <span>{t.shop}</span>
+        <h2>{t.promoHeadline}</h2>
+        <p>{t.promoText}</p>
+        <a className="journal-btn journal-btn-light" href="/shop">{t.promoShopCollection}</a>
+        <a className="journal-text-link journal-light-link" href="#catalog">{t.promoLearnMore}</a>
       </div>
     </section>
   );
@@ -865,22 +884,23 @@ function PromoBanner({ image }) {
 
 function Testimonials() {
   const [active, setActive] = useState(0);
+  const { t } = useStorefrontLanguage();
   const current = testimonials[active];
   const next = () => setActive((value) => (value + 1) % testimonials.length);
   const prev = () => setActive((value) => (value - 1 + testimonials.length) % testimonials.length);
 
   return (
     <section className="journal-testimonials" data-animate>
-      <SectionTitle script="Avis clients" title="Ce que disent nos clients" subtitle="MATJARI est apprecie par ses clients pour son experience d'achat simple, ses produits varies et son service fiable." />
+      <SectionTitle script={t.testimonialsScript} title={t.testimonialsTitle} subtitle={t.testimonialsSubtitle} />
       <div className="journal-testimonial-stage">
-        <button className="journal-round-nav" type="button" aria-label="Previous testimonial" onClick={prev}>
+        <button className="journal-round-nav" type="button" aria-label={t.testimonialPrevious} onClick={prev}>
           <FiChevronLeft aria-hidden="true" />
         </button>
         <div className="journal-testimonial-copy" key={current.author}>
-          <div className="journal-rating" aria-label="4.9 sur 5 base sur les avis clients">
+          <div className="journal-rating" aria-label={`${t.testimonialRating} ${t.testimonialRatingLabel}`}>
             <span aria-hidden="true">{Array.from({ length: 5 }).map((_, index) => <FaStar key={index} />)}</span>
-            <strong>4.9/5</strong>
-            <em>base sur les avis clients</em>
+            <strong>{t.testimonialRating}</strong>
+            <em>{t.testimonialRatingLabel}</em>
           </div>
           <div className="journal-quotes" aria-hidden="true">"</div>
           <blockquote>{current.quote}</blockquote>
@@ -898,7 +918,7 @@ function Testimonials() {
             ))}
           </div>
         </div>
-        <button className="journal-round-nav" type="button" aria-label="Next testimonial" onClick={next}>
+        <button className="journal-round-nav" type="button" aria-label={t.testimonialNext} onClick={next}>
           <FiChevronRight aria-hidden="true" />
         </button>
       </div>
@@ -1239,10 +1259,17 @@ const css = `
 .journal-favorite-prompt a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #000; background: #000; color: #fff; padding: 0 18px; font-weight: 700; }
 .journal-favorite-prompt a + a { background: #fff; color: #202526; border-color: rgba(0,0,0,.16); }
 
-.journal-services { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; padding: 66px 40px; text-align: center; background: var(--cream); }
-.journal-services svg { margin: 0 auto; font-size: 38px; color: #555b5e; }
-.journal-services h3 { margin: 18px 0 10px; font: 26px 'Playfair Display', Georgia, serif; }
-.journal-services p { margin: 0; color: #554f4a; }
+.journal-services { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 40px 30px; text-align: center; background: var(--cream); }
+.journal-services article { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px 18px; border-radius: 20px; background: rgba(255,255,255,.20); border: 1px solid transparent; transition: transform 300ms ease-out, box-shadow 300ms ease-out, background-color 300ms ease-out, border-color 300ms ease-out; }
+.journal-services svg { margin: 0 auto; font-size: 32px; color: #555b5e; transition: transform 300ms ease-out, color 300ms ease-out; }
+.journal-services h3 { margin: 12px 0 6px; font: 22px 'Playfair Display', Georgia, serif; color: #2b2b28; transition: color 300ms ease-out; }
+.journal-services h3::after { content: ""; display: block; width: 0; height: 2px; margin: 8px auto 0; border-radius: 999px; background: rgba(46,34,24,.18); transition: width 300ms ease-out, background-color 300ms ease-out; }
+.journal-services p { margin: 0; font-size: 14px; color: #554f4a; transition: color 300ms ease-out; }
+.journal-services article:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(32,37,38,.10); background: rgba(255,255,255,.92); border-color: rgba(32,37,38,.08); }
+.journal-services article:hover svg { transform: translateY(-3px); color: #23211d; }
+.journal-services article:hover h3 { color: #12110f; }
+.journal-services article:hover h3::after { width: 24px; background: rgba(46,34,24,.40); }
+.journal-services article:hover p { color: #4c493f; }
 .journal-feature-showcase { width: min(100%, 1320px); margin: 0 auto; display: grid; gap: 24px; }
 .journal-feature-row { display: grid; grid-template-columns: minmax(230px, 260px) minmax(0, 1fr); gap: 22px; align-items: stretch; }
 .journal-feature-carousel { position: relative; min-width: 0; }
@@ -1450,15 +1477,13 @@ const css = `
 .journal-product-card,
 .journal-feature-tile,
 .journal-blog-card,
-.journal-services article,
 .journal-gallery-row img {
   transition: transform 260ms ease, box-shadow 260ms ease, filter 260ms ease;
 }
 .journal-category-card:hover,
 .journal-product-card:hover,
 .journal-feature-tile:hover,
-.journal-blog-card:hover,
-.journal-services article:hover {
+.journal-blog-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 22px 45px rgba(32,37,38,.12);
 }
@@ -1557,7 +1582,7 @@ const css = `
   .journal-product-nav.is-next { right: -4px; }
   .journal-feature-row { grid-template-columns: 1fr; }
   .journal-feature-tile { height: 360px; min-height: 360px; }
-  .journal-services { gap: 42px; }
+  .journal-services { gap: 28px; }
   .journal-promo > div { width: 100%; }
   .journal-testimonial-stage { grid-template-columns: 42px minmax(0, 1fr) 42px; gap: 10px; }
   .journal-testimonial-copy { min-height: 260px; padding: 30px 28px 24px; }
@@ -1932,8 +1957,26 @@ const css = `
   }
 
   .journal-services {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding: 32px 16px;
+    gap: 20px;
+  }
+
+  .journal-services article {
+    padding: 20px 14px;
+    gap: 10px;
+  }
+
+  .journal-services svg {
+    font-size: 28px;
+  }
+
+  .journal-services h3 {
+    margin: 10px 0 4px;
+    font-size: 18px;
+  }
+
+  .journal-services p {
+    font-size: 13px;
   }
 
   .journal-promo {
