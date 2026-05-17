@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   FaFacebookF,
   FaInstagram,
@@ -13,7 +12,7 @@ import {
   FaTwitter,
   FaYoutube,
 } from "react-icons/fa";
-import { FiAtSign, FiHeadphones, FiMail, FiMapPin, FiMenu, FiPhone, FiRefreshCw, FiSend } from "react-icons/fi";
+import { FiAtSign, FiChevronLeft, FiChevronRight, FiHeadphones, FiMail, FiMapPin, FiMenu, FiPhone, FiRefreshCw, FiSend } from "react-icons/fi";
 import { MdOutlineKeyboardArrowRight, MdOutlineShield } from "react-icons/md";
 import { TbPackageImport } from "react-icons/tb";
 
@@ -40,10 +39,51 @@ const productTemplates = [
 ];
 
 const blogTemplates = [
-  { day: "12", month: "Dec", title: "Journal Blog is Here", meta: "admin  36  17352" },
-  { day: "09", month: "Sep", title: "Best theme options, period.", meta: "admin  10  5938" },
-  { day: "02", month: "Aug", title: "Another Blog Post", meta: "admin  9  4708" },
-  { day: "30", month: "Sep", title: "Office Essentials", meta: "admin  3  12766" },
+  {
+    day: "09",
+    month: "Sep",
+    category: "Guide d'achat",
+    title: "Comment choisir les bons produits pour votre quotidien",
+    excerpt: "Decouvrez nos conseils pour selectionner des articles utiles, elegants et adaptes a votre style de vie.",
+    comments: 12,
+    views: 1840,
+  },
+  {
+    day: "02",
+    month: "Aout",
+    category: "Tendances",
+    title: "Les tendances shopping a suivre cette saison",
+    excerpt: "Mode, accessoires, beaute et maison : explorez les nouveautes qui apportent une touche moderne a votre quotidien.",
+    comments: 9,
+    views: 2310,
+  },
+  {
+    day: "30",
+    month: "Sep",
+    category: "Lifestyle",
+    title: "Les essentiels a avoir dans votre panier",
+    excerpt: "Une selection d'articles pratiques et elegants pour simplifier vos achats et ameliorer votre experience.",
+    comments: 7,
+    views: 1568,
+  },
+  {
+    day: "15",
+    month: "Sep",
+    category: "Conseils",
+    title: "Idees cadeaux pour toutes les occasions",
+    excerpt: "Trouvez l'inspiration pour offrir des produits utiles, raffines et adaptes a chaque moment important.",
+    comments: 15,
+    views: 2896,
+  },
+  {
+    day: "12",
+    month: "Dec",
+    category: "Maison",
+    title: "Creer un espace pratique et elegant chez soi",
+    excerpt: "Decouvrez des articles pour organiser, decorer et ameliorer votre interieur au quotidien.",
+    comments: 6,
+    views: 1324,
+  },
 ];
 
 const testimonials = [
@@ -79,6 +119,16 @@ function imageFrom(images, index) {
   return imageUrlFromImages11(images, index);
 }
 
+function imageByPath(images, keywords, fallbackIndex = 0) {
+  const terms = keywords.map((keyword) => keyword.toLowerCase());
+  const match = images.find((image) => {
+    const path = image.path?.toLowerCase() || "";
+    return terms.some((keyword) => path.includes(keyword));
+  });
+
+  return match?.url || imageFrom(images, fallbackIndex);
+}
+
 function buildHomeContent(images) {
   const sources = getDisplayImages11(images);
 
@@ -86,7 +136,7 @@ function buildHomeContent(images) {
     imageCount: images.length,
     assets: {
       about: imageFrom(sources, 2),
-      promo: imageFrom(sources, 7),
+      promo: imageByPath(sources, ["fashion-accessories/fashion-bags/totes", "home-furniture/home-decor", "fashion/men/casual-wear"], 7),
       feature: imageFrom(sources, 12),
     },
     categories: categoryTemplates.map((category, index) => ({
@@ -104,7 +154,18 @@ function buildHomeContent(images) {
     ],
     blogPosts: blogTemplates.map((post, index) => ({
       ...post,
-      image: imageFrom(sources, index + 18),
+      image: imageByPath(
+        sources,
+        [
+          "fashion-accessories/fashion-bags/totes",
+          "fashion/men/casual-wear",
+          "home-furniture/home-decor",
+          "fashion-accessories/jewelry",
+          "home-furniture/home-lighting",
+          "electronics/computing",
+        ],
+        index + 18
+      ),
     })),
     galleryImages: images,
   };
@@ -172,8 +233,12 @@ function SectionTitle({ script, title, subtitle, dark = false }) {
 
 export function JournalHeader({ categories = categoryTemplates, auth = undefined, forceDocumentNavigation = false }) {
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState(() => getInitialLanguage());
+  const searchRef = useRef(null);
+  const searchButtonRef = useRef(null);
   const { auth: storefrontAuth } = useStorefrontContent();
   const languageLabel = languageLabels[currentLanguage] || languageLabels.en;
 
@@ -195,6 +260,34 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
+  useEffect(() => {
+    if (!searchOpen) return undefined;
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setSearchOpen(false);
+    };
+
+    const onPointerDown = (event) => {
+      const clickedSearch = searchRef.current?.contains(event.target);
+      const clickedTrigger = searchButtonRef.current?.contains(event.target);
+
+      if (!clickedSearch && !clickedTrigger) {
+        setSearchOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("pointerdown", onPointerDown);
+
+    const input = searchRef.current?.querySelector("input");
+    window.setTimeout(() => input?.focus(), 0);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [searchOpen]);
+
   const activeAuth = auth ?? storefrontAuth;
   const accountHref = activeAuth?.isAuthenticated ? "/dashboard" : "/login";
   const favoritesHref = "/account/favorites";
@@ -207,16 +300,21 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
     }
   };
 
-  const StoreLink = ({ to, className, ariaLabel, children }) =>
-    forceDocumentNavigation ? (
-      <a href={to} className={className} aria-label={ariaLabel}>
-        {children}
-      </a>
-    ) : (
-      <Link to={to} className={className} aria-label={ariaLabel}>
-        {children}
-      </Link>
-    );
+  const submitSearch = (event) => {
+    event.preventDefault();
+    const query = searchQuery.trim();
+
+    if (!query) return;
+
+    setSearchOpen(false);
+    window.location.assign(`/search?query=${encodeURIComponent(query)}`);
+  };
+
+  const StoreLink = ({ to, className, ariaLabel, children }) => (
+    <a href={to} className={className} aria-label={ariaLabel}>
+      {children}
+    </a>
+  );
 
   return (
     <header className={`journal-header ${scrolled ? "is-scrolled" : ""} ${open ? "is-open" : ""}`}>
@@ -238,12 +336,36 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
             {languageLabel} <TextChevron />
           </button>
           <a href="#currency">USD <TextChevron /></a>
-          <button type="button" aria-label="Search"><FaSearch /></button>
+          <button
+            type="button"
+            ref={searchButtonRef}
+            aria-label="Search"
+            aria-expanded={searchOpen}
+            onClick={() => setSearchOpen((value) => !value)}
+          >
+            <FaSearch />
+          </button>
           <a className="journal-icon-link" href={accountHref} aria-label="Account"><FaRegUser /></a>
           <a className="journal-icon-link" href={favoritesHref} aria-label="Wishlist"><FaRegHeart /></a>
-          <StoreLink to="/cart" ariaLabel="Cart"><FaShoppingCart /></StoreLink>
+          <StoreLink to="/cart" ariaLabel="Cart"><FaShoppingCart size={19} /></StoreLink>
         </nav>
       </div>
+
+      {searchOpen && (
+        <div className="journal-search-popover" ref={searchRef}>
+          <form onSubmit={submitSearch}>
+            <FaSearch aria-hidden="true" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Rechercher un produit..."
+              aria-label="Rechercher un produit"
+            />
+            <button type="submit">Rechercher</button>
+          </form>
+        </div>
+      )}
 
       {open && (
         <div className="journal-mobile-panel">
@@ -292,7 +414,7 @@ function Hero({ heroSlides }) {
             <span>{slide.label}</span>
             <h1>{slide.title}</h1>
             <div>
-              <Link className="journal-btn journal-btn-dark" to="/shop">Shop Collection</Link>
+              <a className="journal-btn journal-btn-dark" href="/shop">Shop Collection</a>
               <a className="journal-text-link" href="#about">Learn more <span aria-hidden="true">→</span></a>
             </div>
           </div>
@@ -340,7 +462,7 @@ function CategoryStrip({ categories }) {
               <div className="journal-category-copy">
                 <h3>{category.name}</h3>
                 <p>{category.count} Product(s)</p>
-                <Link to="/shop">Shop now <span aria-hidden="true">→</span></Link>
+                <a href="/shop">Shop now <span aria-hidden="true">→</span></a>
               </div>
             </article>
           ))}
@@ -379,7 +501,7 @@ function ProductCard({ product, compact = false }) {
         <img src={product.image} alt={product.name} />
       </div>
       <a className="journal-product-brand" href="#brand">{product.brand}</a>
-      <h3><Link to="/shop">{product.name}</Link></h3>
+      <h3><a href="/shop">{product.name}</a></h3>
       <p className="journal-price"><strong>{product.price}</strong>{product.old && <del>{product.old}</del>}</p>
       <div className="journal-card-actions">
         <button type="button"><FaShoppingCart /> Add to Cart</button>
@@ -411,7 +533,43 @@ function FavoriteLoginPrompt({ onClose }) {
 
 function Products({ products }) {
   const [tab, setTab] = useState("New Arrivals");
-  const visible = useMemo(() => (tab === "SALE" ? products.filter((product) => product.sale) : products.slice(0, 4)), [tab]);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+  const rowRef = useRef(null);
+  const visible = useMemo(() => {
+    if (tab === "SALE") return products.filter((product) => product.sale);
+    if (tab === "Bestsellers") return [...products].sort((first, second) => Number(Boolean(second.top)) - Number(Boolean(first.top)));
+    return products;
+  }, [products, tab]);
+
+  const updateProductNav = () => {
+    const row = rowRef.current;
+    if (!row) return;
+
+    setCanScrollPrev(row.scrollLeft > 8);
+    setCanScrollNext(row.scrollLeft + row.clientWidth < row.scrollWidth - 8);
+  };
+
+  useEffect(() => {
+    rowRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+    window.setTimeout(updateProductNav, 120);
+  }, [tab]);
+
+  useEffect(() => {
+    updateProductNav();
+    window.addEventListener("resize", updateProductNav);
+    return () => window.removeEventListener("resize", updateProductNav);
+  }, [visible]);
+
+  const scrollProducts = (direction) => {
+    const row = rowRef.current;
+    if (!row) return;
+
+    row.scrollBy({
+      left: direction * Math.max(row.clientWidth - 90, 260),
+      behavior: "smooth",
+    });
+  };
 
   return (
     <section className="journal-section journal-products" id="products" data-animate>
@@ -423,8 +581,22 @@ function Products({ products }) {
           </button>
         ))}
       </div>
-      <div className="journal-products-row">
-        {visible.map((product) => <ProductCard key={product.name} product={product} />)}
+      <div className="journal-products-carousel">
+        {canScrollPrev && (
+          <button className="journal-product-nav is-prev" type="button" aria-label="Previous products" onClick={() => scrollProducts(-1)}>
+          ‹
+          </button>
+        )}
+        <div className="journal-products-row" ref={rowRef} tabIndex={0} aria-label={`${tab} product carousel`} onScroll={updateProductNav}>
+          <div className="journal-products-track">
+            {visible.map((product) => <ProductCard key={`${tab}-${product.name}`} product={product} />)}
+          </div>
+        </div>
+        {canScrollNext && (
+          <button className="journal-product-nav is-next" type="button" aria-label="Next products" onClick={() => scrollProducts(1)}>
+          ›
+          </button>
+        )}
       </div>
     </section>
   );
@@ -449,20 +621,153 @@ function Services() {
   );
 }
 
-function FeaturedCategories({ products, featureImage }) {
+function FeaturedCategoriesOld({ products, featureImage }) {
+  const rowRefs = useRef({});
+  const rows = [
+    {
+      title: "Beauty",
+      links: ["Makeup", "Face", "Eyes", "Lips"],
+      image: featureImage || products[6]?.image,
+      products: [...products.slice(4, 8), ...products.slice(0, 4)],
+    },
+    {
+      title: "Skin Care",
+      links: ["Moisturizers", "Hand Lotion", "Face Primer", "Body Lotion"],
+      image: products[1]?.image || featureImage,
+      products: [...products.slice(0, 4), ...products.slice(4, 8)],
+    },
+  ];
+
+  const scrollFeaturedRow = (rowTitle, direction) => {
+    const row = rowRefs.current[rowTitle];
+    if (!row) return;
+
+    row.scrollBy({
+      left: direction * Math.max(row.clientWidth - 72, 240),
+      behavior: "smooth",
+    });
+  };
+
   return (
     <section className="journal-section journal-featured" id="featured" data-animate>
       <SectionTitle script="Featured" title="Featured Categories" subtitle="Create custom title modules with accent icons and decorative text." />
-      <div className="journal-feature-grid">
-        <article className="journal-feature-tile" data-animate style={{ backgroundImage: `linear-gradient(90deg, rgba(232,211,193,.88), rgba(232,211,193,.3)), url(${featureImage})` }}>
-          <h3>Beauty</h3>
-          <p>Makeup</p>
-          <p>Face</p>
-          <p>Eyes</p>
-          <p>Lips</p>
-          <Link to="/shop">View More <MdOutlineKeyboardArrowRight /></Link>
-        </article>
-        {products.slice(4, 8).map((product) => <ProductCard key={`feature-${product.name}`} product={product} compact />)}
+      <div className="journal-feature-showcase">
+        {rows.map((row) => (
+          <div className="journal-feature-row" key={row.title}>
+            <article className="journal-feature-tile" data-animate>
+              <div className="journal-feature-copy">
+                <h3>{row.title}</h3>
+                <div>
+                  {row.links.map((link) => (
+                    <a key={link} href="/shop">{link}</a>
+                  ))}
+                </div>
+                <a className="journal-feature-more" href="/shop">View More <MdOutlineKeyboardArrowRight /></a>
+              </div>
+              {row.image && (
+                <img src={row.image} alt={`${row.title} category`} />
+              )}
+            </article>
+            <div className="journal-feature-carousel">
+              <button className="journal-product-nav is-prev" type="button" aria-label={`Previous ${row.title} products`} onClick={() => scrollFeaturedRow(row.title, -1)}>
+                â€¹
+              </button>
+              <div className="journal-feature-products" ref={(element) => { rowRefs.current[row.title] = element; }} tabIndex={0} aria-label={`${row.title} product carousel`}>
+                <div className="journal-feature-track">
+                  {row.products.map((product, index) => (
+                    <ProductCard key={`${row.title}-${product.name}-${index}`} product={product} />
+                  ))}
+                </div>
+              </div>
+              <button className="journal-product-nav is-next" type="button" aria-label={`Next ${row.title} products`} onClick={() => scrollFeaturedRow(row.title, 1)}>
+                â€º
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FeaturedCategories({ products, featureImage }) {
+  const rowRef = useRef(null);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const category = {
+    title: "Beauty",
+    links: ["Makeup", "Face", "Eyes", "Lips"],
+    image: featureImage || products[6]?.image,
+  };
+  const featuredProducts = useMemo(() => [...products.slice(4, 8), ...products.slice(0, 4)], [products]);
+
+  const updateFeaturedNav = () => {
+    const row = rowRef.current;
+    if (!row) return;
+
+    setCanScrollPrev(row.scrollLeft > 8);
+    setCanScrollNext(row.scrollLeft + row.clientWidth < row.scrollWidth - 8);
+  };
+
+  useEffect(() => {
+    updateFeaturedNav();
+    const timer = window.setTimeout(updateFeaturedNav, 120);
+    window.addEventListener("resize", updateFeaturedNav);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("resize", updateFeaturedNav);
+    };
+  }, [featuredProducts]);
+
+  const scrollFeaturedRow = (direction) => {
+    const row = rowRef.current;
+    if (!row) return;
+
+    row.scrollBy({
+      left: direction * Math.max(row.clientWidth - 90, 260),
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <section className="journal-section journal-featured" id="featured" data-animate>
+      <SectionTitle script="Featured" title="Featured Categories" subtitle="Create custom title modules with accent icons and decorative text." />
+      <div className="journal-feature-showcase">
+        <div className="journal-feature-carousel">
+          {canScrollPrev && (
+            <button className="journal-product-nav is-prev" type="button" aria-label="Previous featured categories" onClick={() => scrollFeaturedRow(-1)}>
+              <FiChevronLeft aria-hidden="true" />
+            </button>
+          )}
+          <div className="journal-feature-products" ref={rowRef} tabIndex={0} aria-label="Featured categories carousel" onScroll={updateFeaturedNav}>
+            <div className="journal-feature-track">
+              <article className="journal-feature-tile" data-animate>
+                <div className="journal-feature-copy">
+                  <h3>{category.title}</h3>
+                  <div>
+                    {category.links.map((link) => (
+                      <a key={link} href="/shop">{link}</a>
+                    ))}
+                  </div>
+                  <a className="journal-feature-more" href="/shop">View More <MdOutlineKeyboardArrowRight /></a>
+                </div>
+                {category.image && (
+                  <img src={category.image} alt={`${category.title} category`} />
+                )}
+              </article>
+              {featuredProducts.map((product, index) => (
+                <ProductCard key={`featured-category-${product.name}-${index}`} product={product} />
+              ))}
+            </div>
+          </div>
+          {canScrollNext && (
+            <button className="journal-product-nav is-next" type="button" aria-label="Next featured categories" onClick={() => scrollFeaturedRow(1)}>
+              <FiChevronRight aria-hidden="true" />
+            </button>
+          )}
+        </div>
       </div>
     </section>
   );
@@ -470,12 +775,13 @@ function FeaturedCategories({ products, featureImage }) {
 
 function PromoBanner({ image }) {
   return (
-    <section className="journal-promo" data-animate style={{ backgroundImage: `linear-gradient(90deg, rgba(144,133,122,.98), rgba(144,133,122,.56)), url(${image})` }}>
+    <section className="journal-promo" data-animate style={{ backgroundImage: `linear-gradient(90deg, rgba(231,216,200,.96), rgba(231,216,200,.78) 42%, rgba(231,216,200,.24) 78%), url(${image})` }}>
       <div>
-        <span>Renew</span>
-        <h2>Healthier Skin, Happier You</h2>
-        <Link className="journal-btn journal-btn-light" to="/shop">Shop Collection</Link>
-        <a className="journal-text-link journal-light-link" href="#about">Learn more</a>
+        <span>Discover</span>
+        <h2>Everything You Love, All in One Place</h2>
+        <p>Explore fashion, beauty, accessories, home essentials, and more in one elegant shopping experience.</p>
+        <a className="journal-btn journal-btn-light" href="/shop">Shop Collection</a>
+        <a className="journal-text-link journal-light-link" href="#catalog">Learn more</a>
       </div>
     </section>
   );
@@ -553,22 +859,44 @@ function Gallery({ images, status }) {
 }
 
 function Blog({ blogPosts }) {
+  const rowRef = useRef(null);
+
+  const scrollBlog = (direction) => {
+    const row = rowRef.current;
+    if (!row) return;
+
+    row.scrollBy({
+      left: direction * Math.max(row.clientWidth - 96, 280),
+      behavior: "smooth",
+    });
+  };
+
   return (
     <section className="journal-section journal-blog" id="blog" data-animate>
-      <SectionTitle script="Blog" title="Latest News" />
-      <div className="journal-blog-row">
-        {blogPosts.map((post) => (
-          <article className="journal-blog-card" key={post.title} data-animate>
-            <div className="journal-blog-image">
-              <img src={post.image} alt={post.title} />
-              <div><strong>{post.day}</strong><span>{post.month}</span></div>
-            </div>
-            <p>{post.meta}</p>
-            <h3>{post.title}</h3>
-            <p>The Journal 3 blog has been greatly improved and now comes with advanced typography tools, cards and article previews.</p>
-            <a href="#read">Continue reading <MdOutlineKeyboardArrowRight /></a>
-          </article>
-        ))}
+      <SectionTitle script="Blog" title="Latest News" subtitle="Decouvrez nos conseils, inspirations et nouveautes pour mieux choisir vos produits." />
+      <div className="journal-blog-carousel">
+        <button className="journal-product-nav is-prev" type="button" aria-label="Previous blog posts" onClick={() => scrollBlog(-1)}>
+          â€¹
+        </button>
+        <div className="journal-blog-row" ref={rowRef} tabIndex={0} aria-label="Latest news carousel">
+          <div className="journal-blog-track">
+            {blogPosts.map((post) => (
+              <article className="journal-blog-card" key={post.title} data-animate>
+                <div className="journal-blog-image">
+                  <img src={post.image} alt={post.title} />
+                  <div><strong>{post.day}</strong><span>{post.month}</span></div>
+                </div>
+                <p>{post.category} / admin / {post.comments} commentaires / {post.views} vues</p>
+                <h3>{post.title}</h3>
+                <p>{post.excerpt}</p>
+                <a href="#read">Lire l'article <MdOutlineKeyboardArrowRight /></a>
+              </article>
+            ))}
+          </div>
+        </div>
+        <button className="journal-product-nav is-next" type="button" aria-label="Next blog posts" onClick={() => scrollBlog(1)}>
+          â€º
+        </button>
       </div>
     </section>
   );
@@ -674,6 +1002,13 @@ const css = `
 .journal-nav-right button svg, .journal-nav-right > a[aria-label="Cart"] svg, .journal-icon-link svg { width: 19px; height: 19px; stroke-width: 1.65; }
 .journal-logo-link { width: 158px; height: 32px; display: grid; place-items: center; }
 .journal-logo { display: inline-block; color: #121212; font-family: 'Bodoni 72', Didot, 'Cormorant Garamond', Georgia, serif; font-size: 32px; font-weight: 500; letter-spacing: .065em; transform: none; line-height: 1; }
+.journal-search-popover { position: absolute; right: 38px; top: calc(100% + 10px); z-index: 90; width: min(520px, calc(100vw - 32px)); border: 1px solid rgba(32,37,38,.12); border-radius: 8px; background: #fff; box-shadow: 0 24px 70px rgba(32,37,38,.16); padding: 12px; }
+.journal-search-popover form { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.journal-search-popover svg { color: var(--muted); font-size: 18px; }
+.journal-search-popover input { width: 100%; height: 46px; border: 1px solid var(--line); border-radius: 6px; background: var(--soft); color: var(--ink); padding: 0 14px; font: 500 15px Inter, system-ui, sans-serif; outline: 0; }
+.journal-search-popover input:focus { border-color: var(--accent); background: #fff; }
+.journal-search-popover button { min-height: 46px; border: 0; border-radius: 6px; background: #000; color: #fff; padding: 0 18px; cursor: pointer; font: 700 14px Inter, system-ui, sans-serif; transition: background-color 180ms ease, transform 180ms ease; }
+.journal-search-popover button:hover { background: #262626; transform: translateY(-1px); }
 .journal-mobile-panel { display: none; border-top: 1px solid var(--line); padding: 12px 24px; background: white; }
 .journal-mobile-panel a { display: block; padding: 12px 0; }
 
@@ -733,20 +1068,65 @@ const css = `
 .journal-tabs button { border: 0; border-bottom: 2px solid transparent; background: transparent; padding: 8px 0; color: #777c7f; cursor: pointer; font: 24px Georgia, serif; }
 .journal-tabs button.is-active { color: #171b1c; border-color: #171b1c; }
 .journal-tabs button:last-child { color: var(--accent); }
-.journal-products-row, .journal-feature-grid, .journal-blog-row { display: grid; grid-template-columns: repeat(4, minmax(240px, 1fr)); gap: 26px; }
-.journal-product-card { position: relative; min-height: 575px; display: flex; flex-direction: column; padding: 20px 20px 0; overflow: hidden; background: var(--soft); border-radius: 6px; }
-.journal-product-card.is-compact { min-height: 585px; }
-.journal-product-image { height: 365px; display: grid; place-items: center; }
-.journal-product-image img { width: 82%; height: 82%; object-fit: contain; mix-blend-mode: multiply; filter: drop-shadow(0 14px 16px rgba(0,0,0,.15)); }
+.journal-blog-carousel { position: relative; width: min(100%, 1320px); margin: 0 auto; }
+.journal-blog-row { overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; padding: 2px 3px 12px; }
+.journal-blog-row::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.journal-blog-track { display: flex; gap: 22px; align-items: stretch; }
+.journal-blog-track > .journal-blog-card { flex: 0 0 calc((100% - 66px) / 4); scroll-snap-align: start; }
+.journal-products-carousel { position: relative; width: min(100%, 1320px); margin: 0 auto; }
+.journal-products-row { overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; padding: 2px 3px 10px; }
+.journal-products-row::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.journal-products-track, .journal-feature-track { display: flex; gap: 22px; align-items: stretch; }
+.journal-products-track > .journal-product-card,
+.journal-feature-track > .journal-product-card { flex: 0 0 calc((100% - 66px) / 4); scroll-snap-align: start; }
+.journal-product-card { position: relative; height: 455px; min-width: 0; display: flex; flex-direction: column; padding: 16px 16px 0; overflow: hidden; background: var(--soft); border: 1px solid rgba(32,37,38,.08); border-radius: 6px; box-shadow: 0 12px 30px rgba(32,37,38,.04); }
+.journal-product-card.is-compact { height: 430px; min-height: 430px; padding: 16px 16px 0; }
+.journal-product-image { flex: 0 0 248px; height: 248px; display: grid; place-items: center; overflow: hidden; }
+.journal-product-image img { width: min(82%, 205px); height: min(82%, 205px); object-fit: contain; mix-blend-mode: multiply; filter: drop-shadow(0 14px 16px rgba(0,0,0,.15)); }
 .journal-sale-flag { position: absolute; left: 22px; top: 20px; z-index: 2; padding: 9px 7px; background: var(--accent); color: white; font-weight: 800; }
-.journal-top-badge { position: absolute; right: 20px; top: 20px; z-index: 2; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #555; border-radius: 3px; padding: 7px 10px; background: #fafafa; font-size: 14px; }
+.journal-top-badge { position: absolute; right: 16px; top: 16px; z-index: 2; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #555; border-radius: 3px; padding: 6px 9px; background: #fafafa; font-size: 12px; }
 .journal-top-badge svg { color: #f5bf22; }
-.journal-product-brand { color: #697175; font-size: 14px; text-decoration: underline; }
-.journal-product-card h3 { margin: 10px 0 8px; font: 22px Georgia, serif; font-weight: 400; }
-.journal-price { margin: 0 0 22px; font: 20px Georgia, serif; }
+.journal-product-brand { color: #697175; font-size: 13px; text-decoration: underline; }
+.journal-product-card h3 { min-height: 46px; margin: 8px 0 7px; font: 19px Georgia, serif; font-weight: 400; line-height: 1.22; }
+.journal-price { margin: 0 0 16px; font: 18px Georgia, serif; }
 .journal-price del { margin-left: 10px; color: #e25348; font-size: 15px; }
-.journal-card-actions { margin: auto -20px 0; min-height: 64px; display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 14px; border-top: 1px solid #dbd9d6; padding: 0 20px; }
-.journal-card-actions button { display: inline-flex; align-items: center; gap: 8px; border: 0; background: transparent; color: #5a6164; cursor: pointer; font-size: 16px; }
+.journal-card-actions { margin: auto -16px 0; min-height: 58px; display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; border-top: 1px solid #dbd9d6; padding: 0 16px; }
+.journal-card-actions button { display: inline-flex; align-items: center; gap: 8px; border: 0; background: transparent; color: #5a6164; cursor: pointer; font-size: 14px; }
+.journal-card-actions button:first-child { min-width: 0; justify-content: flex-start; color: #252b2c; font-weight: 600; }
+.journal-product-nav { position: absolute; top: 50%; z-index: 4; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid rgba(32,37,38,.16); border-radius: 50%; background: rgba(255,255,255,.94); color: #202526; box-shadow: 0 12px 28px rgba(32,37,38,.08); cursor: pointer; font-family: Georgia, serif; font-size: 30px; font-weight: 300; line-height: 1; transform: translateY(-50%); transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+.journal-product-nav:hover { background: #fff; border-color: rgba(32,37,38,.3); box-shadow: 0 16px 34px rgba(32,37,38,.12); }
+.journal-product-nav.is-prev { left: -18px; }
+.journal-product-nav.is-next { right: -18px; }
+.journal-product-nav.is-prev:hover { transform: translateY(-50%) translateX(-2px); }
+.journal-product-nav.is-next:hover { transform: translateY(-50%) translateX(2px); }
+.journal-blog-carousel .journal-product-nav { top: 48%; }
+.journal-product-card.is-compact .journal-product-image { flex-basis: 220px; height: 220px; }
+.journal-product-card.is-compact .journal-product-image img { width: 86%; height: 86%; object-fit: contain; }
+.journal-product-card.is-compact h3 { min-height: 45px; margin: 8px 0 7px; font-size: 18px; line-height: 1.25; }
+.journal-product-card.is-compact .journal-product-brand { font-size: 12px; }
+.journal-product-card.is-compact .journal-price { margin-bottom: 14px; font-size: 17px; }
+.journal-product-card.is-compact .journal-card-actions { margin-left: -16px; margin-right: -16px; min-height: 56px; gap: 10px; padding: 0 14px; }
+.journal-product-card.is-compact .journal-card-actions button { font-size: 13px; }
+.journal-products { padding-top: 74px; padding-bottom: 66px; }
+.journal-products .journal-section-title { margin-bottom: 42px; }
+.journal-products .journal-section-title h2 { margin-bottom: 16px; }
+.journal-products .journal-tabs { gap: 34px; margin: -18px 0 30px; }
+.journal-products .journal-tabs button { font-size: 20px; padding: 7px 0; }
+.journal-products-carousel { width: min(100%, 1500px); }
+.journal-products .journal-products-row { padding: 2px 48px 12px 3px; }
+.journal-products .journal-products-track { gap: 20px; }
+.journal-products .journal-products-track > .journal-product-card { flex: 0 0 clamp(300px, 21vw, 330px); }
+.journal-products .journal-product-card { height: 418px; padding: 14px 14px 0; }
+.journal-products .journal-product-image { flex-basis: 218px; height: 218px; }
+.journal-products .journal-product-image img { width: min(80%, 176px); height: min(80%, 176px); object-fit: contain; }
+.journal-products .journal-product-brand { font-size: 12px; }
+.journal-products .journal-product-card h3 { min-height: 42px; margin: 7px 0 6px; font-size: 18px; line-height: 1.2; }
+.journal-products .journal-price { margin-bottom: 12px; font-size: 17px; }
+.journal-products .journal-price del { font-size: 14px; }
+.journal-products .journal-card-actions { margin-left: -14px; margin-right: -14px; min-height: 54px; gap: 10px; padding: 0 14px; }
+.journal-products .journal-card-actions button { font-size: 13px; }
+.journal-products .journal-top-badge { right: 14px; top: 14px; padding: 5px 8px; font-size: 11px; }
+.journal-products .journal-sale-flag { left: 16px; top: 14px; padding: 8px 6px; }
 .journal-favorite-prompt { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 20px; background: rgba(20,20,20,.42); backdrop-filter: blur(4px); }
 .journal-favorite-prompt > div { position: relative; width: min(430px, 100%); border-radius: 8px; border: 1px solid rgba(0,0,0,.1); background: #fff; padding: 30px; box-shadow: 0 24px 70px rgba(0,0,0,.18); }
 .journal-favorite-prompt button { position: absolute; right: 14px; top: 12px; border: 0; background: transparent; color: #202526; font-size: 24px; cursor: pointer; }
@@ -760,13 +1140,44 @@ const css = `
 .journal-services svg { margin: 0 auto; font-size: 38px; color: #555b5e; }
 .journal-services h3 { margin: 18px 0 10px; font: 26px 'Playfair Display', Georgia, serif; }
 .journal-services p { margin: 0; color: #554f4a; }
-.journal-feature-tile { min-height: 580px; padding: 40px; background-size: cover; background-position: center; border-radius: 2px; }
-.journal-feature-tile p { margin: 8px 0; color: #4f5659; }
-.journal-feature-tile a { margin-top: 10px; }
-.journal-promo { min-height: 570px; display: flex; align-items: center; padding: 86px 40px; background-size: cover; background-position: center right; color: white; }
+.journal-feature-showcase { width: min(100%, 1320px); margin: 0 auto; display: grid; gap: 24px; }
+.journal-feature-row { display: grid; grid-template-columns: minmax(230px, 260px) minmax(0, 1fr); gap: 22px; align-items: stretch; }
+.journal-feature-carousel { position: relative; min-width: 0; }
+.journal-feature-products { overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; padding: 2px 48px 12px 3px; }
+.journal-feature-products::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.journal-feature-tile { position: relative; height: 455px; min-height: 455px; display: flex; overflow: hidden; padding: 28px 24px; background: linear-gradient(135deg, #f1e4d8, #f8f5f1); border: 1px solid rgba(32,37,38,.08); border-radius: 6px; box-shadow: 0 12px 30px rgba(32,37,38,.04); }
+.journal-feature-tile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0)); pointer-events: none; }
+.journal-feature-copy { position: relative; z-index: 2; width: 58%; display: flex; flex-direction: column; align-items: flex-start; }
+.journal-feature-tile h3 { margin-bottom: 18px; font-size: 25px; }
+.journal-feature-copy div { display: grid; gap: 8px; }
+.journal-feature-tile .journal-feature-copy div a { display: block; color: #4f5659; font-size: 14px; font-weight: 400; letter-spacing: 0; line-height: 1.35; text-transform: none; }
+.journal-feature-more { margin-top: auto; padding-top: 18px; }
+.journal-feature-tile img { position: absolute; right: -18px; bottom: 0; z-index: 1; width: 70%; height: 78%; object-fit: contain; object-position: right bottom; mix-blend-mode: multiply; filter: drop-shadow(0 18px 18px rgba(70,55,45,.13)); }
+.journal-featured .journal-feature-showcase { width: min(100%, 1500px); }
+.journal-featured .journal-feature-track { gap: 20px; }
+.journal-featured .journal-feature-track > .journal-product-card,
+.journal-featured .journal-feature-tile { flex: 0 0 calc((100% - 60px) / 4); scroll-snap-align: start; }
+.journal-featured .journal-feature-tile { height: 418px; min-height: 418px; padding: 24px 22px; }
+.journal-featured .journal-feature-tile h3 { margin-bottom: 16px; font-size: 24px; }
+.journal-featured .journal-feature-tile img { right: -20px; width: 68%; height: 72%; }
+.journal-featured .journal-product-card { height: 418px; padding: 14px 14px 0; }
+.journal-featured .journal-product-image { flex-basis: 218px; height: 218px; }
+.journal-featured .journal-product-image img { width: min(80%, 176px); height: min(80%, 176px); object-fit: contain; }
+.journal-featured .journal-product-brand { font-size: 12px; }
+.journal-featured .journal-product-card h3 { min-height: 42px; margin: 7px 0 6px; font-size: 18px; line-height: 1.2; }
+.journal-featured .journal-price { margin-bottom: 12px; font-size: 17px; }
+.journal-featured .journal-price del { font-size: 14px; }
+.journal-featured .journal-card-actions { margin-left: -14px; margin-right: -14px; min-height: 54px; gap: 10px; padding: 0 14px; }
+.journal-featured .journal-card-actions button { font-size: 13px; }
+.journal-featured .journal-top-badge { right: 14px; top: 14px; padding: 5px 8px; font-size: 11px; }
+.journal-featured .journal-sale-flag { left: 16px; top: 14px; padding: 8px 6px; }
+.journal-featured .journal-product-nav svg { width: 18px; height: 18px; stroke-width: 2; }
+.journal-promo { min-height: 570px; display: flex; align-items: center; padding: 86px 40px; background-size: cover; background-position: center right; color: var(--ink); }
 .journal-promo > div { width: min(850px, 58vw); }
-.journal-promo span { color: rgba(255,255,255,.9); }
-.journal-promo h2 { margin: 20px 0 50px; font: clamp(50px, 5vw, 74px) 'Playfair Display', Georgia, serif; line-height: 1.04; color: white; }
+.journal-promo span { color: rgba(88,77,67,.54); }
+.journal-promo h2 { margin: 20px 0 22px; font: clamp(50px, 5vw, 74px) 'Playfair Display', Georgia, serif; line-height: 1.04; color: #141819; max-width: 12.8ch; }
+.journal-promo p { max-width: 620px; margin: 0 0 44px; color: #55534f; font-size: 18px; line-height: 1.7; }
+.journal-promo .journal-light-link { color: rgba(32,37,38,.78); }
 
 .journal-testimonials { min-height: 650px; padding: 92px 40px 80px; text-align: center; overflow: hidden; }
 .journal-testimonial-stage { display: grid; grid-template-columns: 56px 1fr 56px; align-items: center; gap: 40px; margin-top: 60px; }
@@ -789,14 +1200,18 @@ const css = `
 .journal-gallery-item figcaption { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 9px 10px; color: rgba(255,255,255,.72); font-size: 12px; }
 .journal-gallery-status { grid-column: 1 / -1; color: rgba(255,255,255,.72); text-align: center; }
 
-.journal-blog-image { position: relative; height: 320px; overflow: hidden; border-radius: 6px; background: var(--soft); }
+.journal-blog-card { height: 462px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(32,37,38,.08); border-radius: 6px; background: #fff; box-shadow: 0 12px 30px rgba(32,37,38,.04); }
+.journal-blog-image { position: relative; flex: 0 0 228px; height: 228px; overflow: hidden; border-radius: 6px 6px 0 0; background: var(--soft); }
 .journal-blog-image img { width: 100%; height: 100%; object-fit: cover; }
 .journal-blog-image div { position: absolute; left: 10px; top: 10px; width: 60px; height: 62px; display: grid; place-items: center; align-content: center; border-radius: 7px; background: #eadbcb; font-family: Georgia, serif; line-height: 1; }
 .journal-blog-image strong { font-size: 23px; }
 .journal-blog-image span { font-size: 13px; }
-.journal-blog-card > p:first-of-type { margin: 0; padding: 12px; background: rgba(237,232,226,.86); color: #687074; font-size: 13px; }
-.journal-blog-card h3 { margin: 24px 0 14px; font: 25px Georgia, serif; font-weight: 400; }
-.journal-blog-card > p:not(:first-of-type) { color: #666d70; line-height: 1.55; }
+.journal-blog-card > p:first-of-type { margin: 0; padding: 11px 16px; background: rgba(237,232,226,.86); color: #687074; font-size: 12px; line-height: 1.35; }
+.journal-blog-card h3 { min-height: 58px; margin: 16px 16px 10px; font: 21px Georgia, serif; font-weight: 400; line-height: 1.25; }
+.journal-blog-card > p:not(:first-of-type) { margin: 0 16px 16px; color: #666d70; font-size: 14px; line-height: 1.5; }
+.journal-blog-card > a { margin: auto 16px 18px; }
+.journal-blog-card > a svg { transition: transform 180ms ease; }
+.journal-blog-card > a:hover svg { transform: translateX(3px); }
 
 .journal-newsletter { padding: 96px 20px 82px; text-align: center; background: var(--cream); }
 .journal-newsletter > svg { margin: 0 auto 22px; font-size: 46px; color: #202526; }
@@ -988,7 +1403,9 @@ const css = `
 @media (max-width: 1180px) {
   .journal-header-inner { padding: 0 20px; }
   .journal-nav-left, .journal-nav-right { gap: 14px; }
-  .journal-products-row, .journal-feature-grid, .journal-blog-row { grid-template-columns: repeat(2, minmax(250px, 1fr)); }
+  .journal-blog-track > .journal-blog-card { flex-basis: calc((100% - 44px) / 3); }
+  .journal-feature-row { grid-template-columns: minmax(220px, 260px) minmax(0, 1fr); gap: 18px; }
+  .journal-feature-products { gap: 18px; }
   .journal-gallery-row { grid-template-columns: repeat(3, 1fr); }
   .journal-footer-main { grid-template-columns: 1fr 1fr; }
   .journal-footer-brand { margin: 0; }
@@ -999,6 +1416,9 @@ const css = `
   .journal-header-inner { height: 76px; grid-template-columns: auto 1fr auto; }
   .journal-nav-left a, .journal-nav-right a:not(.journal-icon-link):not(:last-child) { display: none; }
   .journal-nav-right button:nth-of-type(n+3) { display: none; }
+  .journal-search-popover { left: 16px; right: 16px; top: calc(100% + 8px); width: auto; }
+  .journal-search-popover form { grid-template-columns: 22px minmax(0, 1fr); }
+  .journal-search-popover button { grid-column: 1 / -1; width: 100%; }
   .journal-logo-link { justify-self: center; }
   .journal-mobile-panel { display: block; }
   .journal-hero { display: block; padding: 0; }
@@ -1009,7 +1429,19 @@ const css = `
   .journal-hero-copy div { flex-wrap: wrap; gap: 20px; }
   .journal-section { padding: 64px 20px; }
   .journal-category-row { grid-auto-columns: minmax(300px, 86vw); }
-  .journal-products-row, .journal-feature-grid, .journal-blog-row, .journal-services, .journal-about { grid-template-columns: 1fr; }
+  .journal-services, .journal-about { grid-template-columns: 1fr; }
+  .journal-blog-track > .journal-blog-card { flex-basis: calc((100% - 22px) / 2); }
+  .journal-products-track > .journal-product-card,
+  .journal-feature-track > .journal-product-card { flex-basis: calc((100% - 22px) / 2); }
+  .journal-products .journal-products-track > .journal-product-card { flex-basis: calc((100% - 20px) / 2); }
+  .journal-featured .journal-feature-track > .journal-product-card,
+  .journal-featured .journal-feature-tile { flex-basis: calc((100% - 20px) / 2); }
+  .journal-products .journal-products-row { padding-right: 34px; }
+  .journal-featured .journal-feature-products { padding-right: 34px; }
+  .journal-product-nav.is-prev { left: -4px; }
+  .journal-product-nav.is-next { right: -4px; }
+  .journal-feature-row { grid-template-columns: 1fr; }
+  .journal-feature-tile { height: 360px; min-height: 360px; }
   .journal-services { gap: 42px; }
   .journal-promo > div { width: 100%; }
   .journal-testimonial-stage { grid-template-columns: 1fr; }
@@ -1059,16 +1491,20 @@ const css = `
     padding: 20px;
   }
 
-  .journal-products-row,
-  .journal-feature-grid,
-  .journal-blog-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .journal-feature-row {
+    grid-template-columns: 1fr;
   }
 
-  .journal-product-card,
-  .journal-product-card.is-compact,
+  .journal-product-card {
+    min-height: 455px;
+  }
+
+  .journal-product-card.is-compact {
+    min-height: 430px;
+  }
+
   .journal-feature-tile {
-    min-height: auto;
+    min-height: 360px;
   }
 }
 
@@ -1243,16 +1679,123 @@ const css = `
     font-size: 19px;
   }
 
-  .journal-products-row,
-  .journal-feature-grid,
-  .journal-blog-row,
+  .journal-products {
+    padding-top: 54px;
+    padding-bottom: 52px;
+  }
+
+  .journal-products .journal-section-title {
+    margin-bottom: 30px;
+  }
+
+  .journal-products .journal-tabs {
+    margin: -14px 0 24px;
+    gap: 18px;
+  }
+
+  .journal-products .journal-tabs button {
+    font-size: 18px;
+  }
+
   .journal-services,
   .journal-about {
     grid-template-columns: 1fr;
   }
 
+  .journal-blog-track {
+    gap: 16px;
+  }
+
+  .journal-blog-track > .journal-blog-card {
+    flex-basis: min(100%, 340px);
+  }
+
+  .journal-blog-card {
+    height: 448px;
+  }
+
+  .journal-blog-image {
+    flex-basis: 218px;
+    height: 218px;
+  }
+
+  .journal-feature-tile {
+    height: 340px;
+    min-height: 340px;
+    padding: 26px 24px;
+  }
+
+  .journal-feature-tile img {
+    width: 62%;
+    height: 72%;
+  }
+
   .journal-product-image {
-    height: 260px;
+    flex-basis: 238px;
+    height: 238px;
+  }
+
+  .journal-products-track,
+  .journal-feature-track {
+    gap: 16px;
+  }
+
+  .journal-products-track > .journal-product-card,
+  .journal-feature-track > .journal-product-card {
+    flex-basis: min(100%, 340px);
+  }
+
+  .journal-products .journal-products-track > .journal-product-card {
+    flex-basis: min(100%, 320px);
+  }
+
+  .journal-featured .journal-feature-track > .journal-product-card,
+  .journal-featured .journal-feature-tile {
+    flex-basis: min(100%, 320px);
+  }
+
+  .journal-products .journal-products-row {
+    padding-right: 24px;
+  }
+
+  .journal-featured .journal-feature-products {
+    padding-right: 24px;
+  }
+
+  .journal-product-card {
+    height: 440px;
+    min-height: 440px;
+  }
+
+  .journal-products .journal-product-card {
+    height: 405px;
+    min-height: 405px;
+  }
+
+  .journal-products .journal-product-image {
+    flex-basis: 205px;
+    height: 205px;
+  }
+
+  .journal-featured .journal-product-card,
+  .journal-featured .journal-feature-tile {
+    height: 405px;
+    min-height: 405px;
+  }
+
+  .journal-featured .journal-product-image {
+    flex-basis: 205px;
+    height: 205px;
+  }
+
+  .journal-product-card.is-compact {
+    height: 430px;
+    min-height: 430px;
+  }
+
+  .journal-product-card h3 {
+    min-height: 44px;
+    font-size: 18px;
   }
 
   .journal-card-actions {
@@ -1267,6 +1810,15 @@ const css = `
     font-size: 14px;
   }
 
+  .journal-product-card.is-compact .journal-card-actions {
+    grid-template-columns: 1fr 38px 38px;
+  }
+
+  .journal-product-card.is-compact .journal-card-actions button {
+    min-height: 40px;
+    font-size: 12px;
+  }
+
   .journal-services {
     padding-left: 16px;
     padding-right: 16px;
@@ -1279,8 +1831,13 @@ const css = `
   }
 
   .journal-promo h2 {
-    margin-bottom: 28px;
+    margin-bottom: 18px;
     font-size: clamp(38px, 12vw, 54px);
+  }
+
+  .journal-promo p {
+    margin-bottom: 28px;
+    font-size: 15px;
   }
 
   .journal-light-link {
@@ -1370,6 +1927,24 @@ const css = `
 
   .journal-card-actions {
     grid-template-columns: 1fr;
+  }
+
+  .journal-products-track > .journal-product-card,
+  .journal-feature-track > .journal-product-card {
+    flex-basis: 100%;
+  }
+
+  .journal-products .journal-products-track > .journal-product-card {
+    flex-basis: 100%;
+  }
+
+  .journal-featured .journal-feature-track > .journal-product-card,
+  .journal-featured .journal-feature-tile {
+    flex-basis: 100%;
+  }
+
+  .journal-blog-track > .journal-blog-card {
+    flex-basis: 100%;
   }
 }
 `;

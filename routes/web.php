@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StorefrontController;
 use Inertia\Inertia;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', StorefrontController::class)->name('storefront.home');
 Route::get('/shop', StorefrontController::class)->name('storefront.shop');
+Route::get('/search', [ProductController::class, 'search'])->name('search');
+Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/cart', fn () => Inertia::render('Cart'))->name('cart');
 Route::redirect('/favorite', '/account/favorites')->name('storefront.favorite');
 Route::get('/privacy', StorefrontController::class)->name('storefront.privacy');

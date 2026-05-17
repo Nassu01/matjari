@@ -70,7 +70,7 @@ export default function Favorites() {
                         </p>
                         <div className="account-favorites-empty__actions">
                             <Link href="/shop">Découvrir les produits</Link>
-                            <Link href="/shop" className="account-favorites-empty__secondary">
+                            <Link href="/" className="account-favorites-empty__secondary">
                                 Retour à la boutique
                             </Link>
                         </div>
