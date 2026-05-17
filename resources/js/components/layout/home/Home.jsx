@@ -43,8 +43,8 @@ const blogTemplates = [
     day: "09",
     month: "Sep",
     category: "Guide d'achat",
-    title: "Comment choisir les bons produits pour votre quotidien",
-    excerpt: "Decouvrez nos conseils pour selectionner des articles utiles, elegants et adaptes a votre style de vie.",
+    title: "Comment mieux choisir vos essentiels du quotidien",
+    excerpt: "Un guide simple pour selectionner des articles utiles, elegants et adaptes a votre style de vie.",
     comments: 12,
     views: 1840,
   },
@@ -52,8 +52,8 @@ const blogTemplates = [
     day: "02",
     month: "Aout",
     category: "Tendances",
-    title: "Les tendances shopping a suivre cette saison",
-    excerpt: "Mode, accessoires, beaute et maison : explorez les nouveautes qui apportent une touche moderne a votre quotidien.",
+    title: "Les tendances mode et accessoires a suivre",
+    excerpt: "Explorez les pieces, details et nouveautes qui apportent une touche moderne a vos achats.",
     comments: 9,
     views: 2310,
   },
@@ -61,8 +61,8 @@ const blogTemplates = [
     day: "30",
     month: "Sep",
     category: "Lifestyle",
-    title: "Les essentiels a avoir dans votre panier",
-    excerpt: "Une selection d'articles pratiques et elegants pour simplifier vos achats et ameliorer votre experience.",
+    title: "Les essentiels lifestyle a ajouter a votre panier",
+    excerpt: "Une selection pratique pour simplifier vos achats et rendre votre quotidien plus agreable.",
     comments: 7,
     views: 1568,
   },
@@ -78,9 +78,9 @@ const blogTemplates = [
   {
     day: "12",
     month: "Dec",
-    category: "Maison",
-    title: "Creer un espace pratique et elegant chez soi",
-    excerpt: "Decouvrez des articles pour organiser, decorer et ameliorer votre interieur au quotidien.",
+    category: "Maison & bureau",
+    title: "Creer un espace pratique chez soi ou au bureau",
+    excerpt: "Decouvrez des indispensables maison, rangement, decoration et bureau pour mieux vous organiser.",
     comments: 6,
     views: 1324,
   },
@@ -876,7 +876,7 @@ function Blog({ blogPosts }) {
       <SectionTitle script="Blog" title="Latest News" subtitle="Decouvrez nos conseils, inspirations et nouveautes pour mieux choisir vos produits." />
       <div className="journal-blog-carousel">
         <button className="journal-product-nav is-prev" type="button" aria-label="Previous blog posts" onClick={() => scrollBlog(-1)}>
-          â€¹
+          <FiChevronLeft aria-hidden="true" />
         </button>
         <div className="journal-blog-row" ref={rowRef} tabIndex={0} aria-label="Latest news carousel">
           <div className="journal-blog-track">
@@ -895,7 +895,7 @@ function Blog({ blogPosts }) {
           </div>
         </div>
         <button className="journal-product-nav is-next" type="button" aria-label="Next blog posts" onClick={() => scrollBlog(1)}>
-          â€º
+          <FiChevronRight aria-hidden="true" />
         </button>
       </div>
     </section>
@@ -1068,11 +1068,11 @@ const css = `
 .journal-tabs button { border: 0; border-bottom: 2px solid transparent; background: transparent; padding: 8px 0; color: #777c7f; cursor: pointer; font: 24px Georgia, serif; }
 .journal-tabs button.is-active { color: #171b1c; border-color: #171b1c; }
 .journal-tabs button:last-child { color: var(--accent); }
-.journal-blog-carousel { position: relative; width: min(100%, 1320px); margin: 0 auto; }
-.journal-blog-row { overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; padding: 2px 3px 12px; }
+.journal-blog-carousel { position: relative; width: min(100%, 1500px); margin: 0 auto; }
+.journal-blog-row { overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; padding: 2px 52px 14px; }
 .journal-blog-row::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .journal-blog-track { display: flex; gap: 22px; align-items: stretch; }
-.journal-blog-track > .journal-blog-card { flex: 0 0 calc((100% - 66px) / 4); scroll-snap-align: start; }
+.journal-blog-track > .journal-blog-card { flex: 0 0 clamp(400px, 29vw, 460px); scroll-snap-align: start; }
 .journal-products-carousel { position: relative; width: min(100%, 1320px); margin: 0 auto; }
 .journal-products-row { overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; padding: 2px 3px 10px; }
 .journal-products-row::-webkit-scrollbar { display: none; width: 0; height: 0; }
@@ -1099,7 +1099,8 @@ const css = `
 .journal-product-nav.is-next { right: -18px; }
 .journal-product-nav.is-prev:hover { transform: translateY(-50%) translateX(-2px); }
 .journal-product-nav.is-next:hover { transform: translateY(-50%) translateX(2px); }
-.journal-blog-carousel .journal-product-nav { top: 48%; }
+.journal-blog-carousel .journal-product-nav { top: 50%; }
+.journal-blog-carousel .journal-product-nav svg { width: 18px; height: 18px; stroke-width: 2; }
 .journal-product-card.is-compact .journal-product-image { flex-basis: 220px; height: 220px; }
 .journal-product-card.is-compact .journal-product-image img { width: 86%; height: 86%; object-fit: contain; }
 .journal-product-card.is-compact h3 { min-height: 45px; margin: 8px 0 7px; font-size: 18px; line-height: 1.25; }
@@ -1200,17 +1201,18 @@ const css = `
 .journal-gallery-item figcaption { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 9px 10px; color: rgba(255,255,255,.72); font-size: 12px; }
 .journal-gallery-status { grid-column: 1 / -1; color: rgba(255,255,255,.72); text-align: center; }
 
-.journal-blog-card { height: 462px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(32,37,38,.08); border-radius: 6px; background: #fff; box-shadow: 0 12px 30px rgba(32,37,38,.04); }
-.journal-blog-image { position: relative; flex: 0 0 228px; height: 228px; overflow: hidden; border-radius: 6px 6px 0 0; background: var(--soft); }
+.journal-blog-card { height: 364px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(32,37,38,.08); border-radius: 6px; background: #fff; box-shadow: 0 12px 30px rgba(32,37,38,.04); }
+.journal-blog-image { position: relative; flex: 0 0 164px; height: 164px; overflow: hidden; border-radius: 6px 6px 0 0; background: var(--soft); }
 .journal-blog-image img { width: 100%; height: 100%; object-fit: cover; }
-.journal-blog-image div { position: absolute; left: 10px; top: 10px; width: 60px; height: 62px; display: grid; place-items: center; align-content: center; border-radius: 7px; background: #eadbcb; font-family: Georgia, serif; line-height: 1; }
-.journal-blog-image strong { font-size: 23px; }
-.journal-blog-image span { font-size: 13px; }
-.journal-blog-card > p:first-of-type { margin: 0; padding: 11px 16px; background: rgba(237,232,226,.86); color: #687074; font-size: 12px; line-height: 1.35; }
-.journal-blog-card h3 { min-height: 58px; margin: 16px 16px 10px; font: 21px Georgia, serif; font-weight: 400; line-height: 1.25; }
-.journal-blog-card > p:not(:first-of-type) { margin: 0 16px 16px; color: #666d70; font-size: 14px; line-height: 1.5; }
-.journal-blog-card > a { margin: auto 16px 18px; }
-.journal-blog-card > a svg { transition: transform 180ms ease; }
+.journal-blog-image div { position: absolute; left: 10px; top: 10px; width: 54px; height: 56px; display: grid; place-items: center; align-content: center; border-radius: 7px; background: #eadbcb; font-family: Georgia, serif; line-height: 1; box-shadow: 0 10px 22px rgba(32,37,38,.1); }
+.journal-blog-image strong { font-size: 21px; }
+.journal-blog-image span { font-size: 12px; }
+.journal-blog-card > p:first-of-type { margin: 0; padding: 9px 16px; background: rgba(237,232,226,.86); color: #687074; font-size: 11px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.journal-blog-card h3 { display: -webkit-box; min-height: 0; margin: 12px 16px 7px; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font: 20px Georgia, serif; font-weight: 400; line-height: 1.2; }
+.journal-blog-card > p:not(:first-of-type) { display: -webkit-box; margin: 0 16px 8px; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; color: #666d70; font-size: 13px; line-height: 1.45; }
+.journal-blog-card > a { margin: auto 12px 12px; padding: 12px 14px; border-radius: 999px; transition: gap 180ms ease, background-color 180ms ease, color 180ms ease; }
+.journal-blog-card > a svg { flex: 0 0 auto; transition: transform 180ms ease; }
+.journal-blog-card > a:hover { gap: 10px; background: rgba(237,232,226,.78); color: #15191a; }
 .journal-blog-card > a:hover svg { transform: translateX(3px); }
 
 .journal-newsletter { padding: 96px 20px 82px; text-align: center; background: var(--cream); }
@@ -1403,7 +1405,7 @@ const css = `
 @media (max-width: 1180px) {
   .journal-header-inner { padding: 0 20px; }
   .journal-nav-left, .journal-nav-right { gap: 14px; }
-  .journal-blog-track > .journal-blog-card { flex-basis: calc((100% - 44px) / 3); }
+  .journal-blog-track > .journal-blog-card { flex-basis: clamp(380px, 31vw, 440px); }
   .journal-feature-row { grid-template-columns: minmax(220px, 260px) minmax(0, 1fr); gap: 18px; }
   .journal-feature-products { gap: 18px; }
   .journal-gallery-row { grid-template-columns: repeat(3, 1fr); }
@@ -1430,6 +1432,7 @@ const css = `
   .journal-section { padding: 64px 20px; }
   .journal-category-row { grid-auto-columns: minmax(300px, 86vw); }
   .journal-services, .journal-about { grid-template-columns: 1fr; }
+  .journal-blog-row { padding-left: 34px; padding-right: 34px; }
   .journal-blog-track > .journal-blog-card { flex-basis: calc((100% - 22px) / 2); }
   .journal-products-track > .journal-product-card,
   .journal-feature-track > .journal-product-card { flex-basis: calc((100% - 22px) / 2); }
@@ -1707,16 +1710,16 @@ const css = `
   }
 
   .journal-blog-track > .journal-blog-card {
-    flex-basis: min(100%, 340px);
+    flex-basis: calc((100% - 16px) / 2);
   }
 
   .journal-blog-card {
-    height: 448px;
+    height: 356px;
   }
 
   .journal-blog-image {
-    flex-basis: 218px;
-    height: 218px;
+    flex-basis: 158px;
+    height: 158px;
   }
 
   .journal-feature-tile {
