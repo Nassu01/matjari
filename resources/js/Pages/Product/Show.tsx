@@ -112,7 +112,14 @@ export default function ProductShow() {
                         <div>
                             <div className="grid min-h-[520px] place-items-center rounded-lg border border-black/10 bg-white p-6 shadow-[0_22px_60px_rgba(32,37,38,0.08)]">
                                 {mainImage ? (
-                                    <img src={mainImage} alt={product.name} className="max-h-[470px] w-full object-contain mix-blend-multiply" />
+                                    <img
+                                        src={mainImage}
+                                        alt={product.name}
+                                        className="max-h-[470px] w-full object-contain mix-blend-multiply"
+                                        onError={(event) => {
+                                            event.currentTarget.src = '/images/logomatjari.png';
+                                        }}
+                                    />
                                 ) : (
                                     <FiShoppingBag className="h-16 w-16 text-[#687074]" />
                                 )}
@@ -128,7 +135,16 @@ export default function ProductShow() {
                                         }`}
                                         onClick={() => setMainImage(image)}
                                     >
-                                        {image ? <img src={image} alt="" className="h-full w-full object-contain mix-blend-multiply" /> : <FiShoppingBag />}
+                                        {image ? (
+                                            <img
+                                                src={image}
+                                                alt=""
+                                                className="h-full w-full object-contain mix-blend-multiply"
+                                                onError={(event) => {
+                                                    event.currentTarget.src = '/images/logomatjari.png';
+                                                }}
+                                            />
+                                        ) : <FiShoppingBag />}
                                     </button>
                                 ))}
                             </div>
@@ -259,7 +275,14 @@ export default function ProductShow() {
                                         onClick={() => router.visit(relatedProduct.url || `/products/${relatedProduct.slug}`)}
                                     >
                                         {relatedProduct.image ? (
-                                            <img src={relatedProduct.image} alt={relatedProduct.name} className="h-full w-full object-contain mix-blend-multiply" />
+                                            <img
+                                                src={relatedProduct.image}
+                                                alt={relatedProduct.name}
+                                                className="h-full w-full object-contain mix-blend-multiply"
+                                                onError={(event) => {
+                                                    event.currentTarget.src = '/images/logomatjari.png';
+                                                }}
+                                            />
                                         ) : (
                                             <FiShoppingBag className="h-10 w-10 text-[#687074]" />
                                         )}

@@ -7,6 +7,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -71,12 +72,12 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Product::class, 'merchant_id');
     }
 
-    public function company()
+    public function company(): HasOne
     {
         return $this->hasOne(Company::class);
     }
 
-    public function deliveryProfile()
+    public function deliveryProfile(): HasOne
     {
         return $this->hasOne(DeliveryProfile::class);
     }

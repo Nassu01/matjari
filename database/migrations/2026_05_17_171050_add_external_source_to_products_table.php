@@ -12,8 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->string('external_source')->nullable()->after('is_active');
-            $table->string('external_id')->nullable()->after('external_source');
+            if (! Schema::hasColumn('products', 'external_source')) {
+                $table->string('external_source')->nullable()->after('is_active');
+            }
+
+            if (! Schema::hasColumn('products', 'external_id')) {
+                $table->string('external_id')->nullable()->after('external_source');
+            }
+        });
+
+        Schema::table('products', function (Blueprint $table) {
             $table->unique(['external_source', 'external_id']);
         });
     }

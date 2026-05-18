@@ -48,6 +48,8 @@ const defaultContent = {
       termsLabel: "Terms & Conditions",
     },
   },
+  categories: [],
+  products: [],
 };
 
 let cachedContent = null;
@@ -95,6 +97,8 @@ async function loadStorefrontContent() {
             ...defaultContent.auth,
             ...(payload.auth || {}),
           },
+          categories: Array.isArray(payload.categories) ? payload.categories : [],
+          products: Array.isArray(payload.products) ? payload.products : [],
         };
 
         return cachedContent;

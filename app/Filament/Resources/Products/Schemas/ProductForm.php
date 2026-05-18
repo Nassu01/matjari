@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -70,12 +69,10 @@ class ProductForm
                     ->required()
                     ->numeric()
                     ->default(0),
-                FileUpload::make('featured_image')
-                    ->image()
-                    ->disk('public')
-                    ->directory('products')
-                    ->visibility('public')
-                    ->imageEditor(),
+                TextInput::make('featured_image')
+                    ->label('Featured image URL or path')
+                    ->helperText('Supports http(s), /storage/..., /images/..., or a public storage path.')
+                    ->maxLength(2048),
                 Toggle::make('is_active')
                     ->required()
                     ->default(true),

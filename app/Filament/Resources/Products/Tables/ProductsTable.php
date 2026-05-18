@@ -43,7 +43,8 @@ class ProductsTable
                 TextColumn::make('stock')
                     ->numeric()
                     ->sortable(),
-                ImageColumn::make('featured_image'),
+                ImageColumn::make('featured_image')
+                    ->getStateUsing(fn ($record) => static::imageUrl($record->featured_image)),
                 IconColumn::make('is_active')
                     ->boolean(),
                 TextColumn::make('created_at')
@@ -67,5 +68,24 @@ class ProductsTable
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    private static function imageUrl(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        if (str_starts_with($path, '/storage/') || str_starts_with($path, '/images/')) {
+            return $path;
+        }
+
+        return str_starts_with($path, 'storage/') || str_starts_with($path, 'images/')
+            ? '/'.$path
+            : '/storage/'.$path;
     }
 }

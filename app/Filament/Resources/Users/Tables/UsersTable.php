@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -22,34 +22,32 @@ class UsersTable
                     ->label('ID')
                     ->sortable(),
                 TextColumn::make('first_name')
-                    ->label('Prénom')
+                    ->label('First name')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('last_name')
-                    ->label('Nom')
+                    ->label('Last name')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('email')
-                    ->label('Adresse email')
+                    ->label('Email')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('phone')
-                    ->label('Téléphone')
                     ->searchable()
-                    ->placeholder('-')
-                    ->sortable(),
+                    ->hidden(),
                 TextColumn::make('role')
-                    ->label('Rôle')
+                    ->label('Role')
                     ->badge()
                     ->colors([
-                        'secondary' => 'client',
+                        'info' => 'client',
                         'warning' => 'commercant',
                         'success' => 'livreur',
                         'danger' => 'admin',
                     ])
                     ->sortable(),
                 TextColumn::make('status')
-                    ->label('Statut')
+                    ->label('Status')
                     ->badge()
                     ->colors([
                         'success' => 'active',
@@ -58,13 +56,13 @@ class UsersTable
                     ])
                     ->sortable(),
                 TextColumn::make('created_at')
-                    ->label('Créé le')
+                    ->label('Created at')
                     ->dateTime()
                     ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('role')
-                    ->label('Rôle')
+                    ->label('Role')
                     ->options([
                         'client' => 'client',
                         'commercant' => 'commercant',
@@ -72,7 +70,7 @@ class UsersTable
                         'admin' => 'admin',
                     ]),
                 SelectFilter::make('status')
-                    ->label('Statut')
+                    ->label('Status')
                     ->options([
                         'active' => 'active',
                         'pending' => 'pending',
@@ -83,29 +81,38 @@ class UsersTable
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('approve')
-                    ->label('Approuver')
-                    ->visible(fn ($record) => $record->status === 'pending')
+                    ->label('Valider')
+                    ->visible(fn ($record) => self::canModerateAccount($record))
+                    ->authorize(fn () => auth()->user()?->isAdmin() ?? false)
                     ->action(function ($record) {
                         $record->update(['status' => 'active']);
 
                         if ($record->role === 'commercant' && $record->company) {
                             $record->company->update(['status' => 'active']);
                         }
+
+                        if ($record->role === 'livreur' && $record->deliveryProfile) {
+                            $record->deliveryProfile->update(['status' => 'active']);
+                        }
                     })
-                    ->requiresConfirmation()
                     ->color('success')
-                    ->successNotificationTitle('Compte approuvé avec succès'),
+                    ->successNotificationTitle('Compte validé avec succès'),
                 Action::make('reject')
                     ->label('Refuser')
-                    ->visible(fn ($record) => $record->status === 'pending')
+                    ->visible(fn ($record) => self::canModerateAccount($record))
+                    ->authorize(fn () => auth()->user()?->isAdmin() ?? false)
+                    ->requiresConfirmation()
                     ->action(function ($record) {
                         $record->update(['status' => 'rejected']);
 
                         if ($record->role === 'commercant' && $record->company) {
                             $record->company->update(['status' => 'rejected']);
                         }
+
+                        if ($record->role === 'livreur' && $record->deliveryProfile) {
+                            $record->deliveryProfile->update(['status' => 'rejected']);
+                        }
                     })
-                    ->requiresConfirmation()
                     ->color('danger')
                     ->successNotificationTitle('Compte refusé'),
             ])
@@ -114,5 +121,11 @@ class UsersTable
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    private static function canModerateAccount($record): bool
+    {
+        return $record->status === 'pending'
+            && in_array($record->role, ['commercant', 'livreur'], true);
     }
 }

@@ -61,6 +61,7 @@ class ProductController extends Controller
 
         $categories = Category::query()
             ->where('is_active', true)
+            ->whereHas('products', fn ($query) => $query->where('is_active', true))
             ->orderBy('name')
             ->get(['id', 'name', 'slug'])
             ->map(fn (Category $category) => [
@@ -179,6 +180,10 @@ class ProductController extends Controller
         }
 
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        if (str_starts_with($path, '/storage/') || str_starts_with($path, '/images/')) {
             return $path;
         }
 

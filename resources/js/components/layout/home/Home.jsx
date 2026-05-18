@@ -13,32 +13,13 @@ import {
   FaTwitter,
   FaYoutube,
 } from "react-icons/fa";
-import { FiAtSign, FiChevronLeft, FiChevronRight, FiHeadphones, FiMail, FiMapPin, FiMenu, FiPhone, FiRefreshCw, FiSend } from "react-icons/fi";
+import { FiAtSign, FiChevronLeft, FiChevronRight, FiHeadphones, FiMail, FiMenu, FiRefreshCw, FiSend } from "react-icons/fi";
 import { MdOutlineKeyboardArrowRight, MdOutlineShield } from "react-icons/md";
 import { TbPackageImport } from "react-icons/tb";
 
 import useImages11, { getDisplayImages11, imageUrlFromImages11, images11ManifestUrl } from "../../../hooks/useImages11";
 import useStorefrontContent from "../../../hooks/useStorefrontContent";
 import { languageOptions, useStorefrontLanguage } from "../../../i18n/storefrontLanguage";
-
-const categoryTemplates = [
-  { name: "Skin Care", count: 18, links: ["Moisturizers", "Hand Lotion", "Face Primers", "Body Lotion"] },
-  { name: "Beauty", count: 47, links: ["Makeup", "Face", "Eyes", "Lips"] },
-  { name: "Fragrance", count: 26, links: ["Women Fragrance", "Men Fragrance", "Unisex Fragrance"] },
-  { name: "Hair Care", count: 14, links: ["Shampoo", "Conditioner", "Hair Styling"] },
-  { name: "Oral Care", count: 4, links: ["Mouthwash", "Tooth Paste", "Tooth Brushes"] },
-];
-
-const productTemplates = [
-  { brand: "Kent Madisson", name: "Body Lotion 01", price: "$821.22" },
-  { brand: "Breally", name: "Cleanser No 1", price: "$332.70", old: "$639.80", sale: true, top: true },
-  { brand: "Breally", name: "Cleanser No 2", price: "$78.24", old: "$200.59", sale: true, top: true },
-  { brand: "Breally", name: "Cleanser No 3", price: "$178.36", top: true },
-  { brand: "Jane Austin", name: "Premium Line Lotion", price: "$324.65" },
-  { brand: "FYT", name: "Lotion No 1", price: "$139.58", old: "$232.62", sale: true },
-  { brand: "Rose", name: "Makeup Product 02", price: "$0.00" },
-  { brand: "Walk", name: "Makeup Product 03", price: "$717.06" },
-];
 
 const blogTemplates = [
   {
@@ -122,7 +103,7 @@ const testimonials = [
 
 const menuGroups = {
   shop: ["New Arrivals", "Bestsellers", "SALE", "Skin Care", "Beauty"],
-  catalog: categoryTemplates.map((category) => category.name),
+  catalog: [],
   demos: ["Beauty Demo", "Skincare Demo", "Fragrance Demo", "Minimal Demo"],
   more: ["About Us", "Gallery", "Blog", "Contact"],
   language: ["English", "Français", "العربية", "Español"],
@@ -143,8 +124,11 @@ function imageByPath(images, keywords, fallbackIndex = 0) {
   return match?.url || imageFrom(images, fallbackIndex);
 }
 
-function buildHomeContent(images) {
+function buildHomeContent(images, databaseProducts = [], databaseCategories = [], settings = {}) {
   const sources = getDisplayImages11(images);
+  const hero = settings.hero || {};
+  const primaryHeroTitle = hero.title || "MATJARI";
+  const primaryHeroImage = hero.imagePath || imageFrom(sources, 0);
 
   return {
     imageCount: images.length,
@@ -153,16 +137,19 @@ function buildHomeContent(images) {
       promo: imageByPath(sources, ["fashion-accessories/fashion-bags/totes", "home-furniture/home-decor", "fashion/men/casual-wear"], 7),
       feature: imageFrom(sources, 12),
     },
-    categories: categoryTemplates.map((category, index) => ({
-      ...category,
-      image: imageFrom(sources, index + 3),
-    })),
-    products: productTemplates.map((product, index) => ({
-      ...product,
-      image: imageFrom(sources, index + 10),
-    })),
+    categories: normalizeStorefrontCategories(databaseCategories, sources),
+    products: normalizeStorefrontProducts(databaseProducts),
     heroSlides: [
-      { label: "Local Collection", title: "Images From Folder 11", image: imageFrom(sources, 0) },
+      {
+        label: hero.badge || "Local Collection",
+        title: primaryHeroTitle,
+        image: primaryHeroImage,
+        description: hero.description || "",
+        primaryButtonLabel: hero.primaryButtonLabel || "Shop Now",
+        primaryButtonUrl: hero.primaryButtonUrl || "/shop",
+        secondaryButtonLabel: hero.secondaryButtonLabel || "Learn More",
+        secondaryButtonUrl: hero.secondaryButtonUrl || "#about",
+      },
       { label: "Full Gallery", title: "Every File, One Storefront", image: imageFrom(sources, 1) },
       { label: "Fresh Source", title: "Browse the Complete Set", image: imageFrom(sources, 2) },
     ],
@@ -198,16 +185,28 @@ function normalizeStorefrontProduct(product, index) {
     price: formatHomePrice(product.price),
     image: product.image || "",
     url: product.url || (product.slug ? `/products/${product.slug}` : "/shop"),
+    category: product.category || "",
+    categoryName: product.categoryName || "",
     top: index < 4,
   };
 }
 
-function mergeHomeProducts(databaseProducts, fallbackProducts) {
-  const realProducts = Array.isArray(databaseProducts)
-    ? databaseProducts.slice(0, 16).map(normalizeStorefrontProduct)
+function normalizeStorefrontProducts(databaseProducts) {
+  return Array.isArray(databaseProducts)
+    ? databaseProducts.slice(0, 96).map(normalizeStorefrontProduct)
     : [];
+}
 
-  return realProducts.length > 0 ? realProducts : fallbackProducts;
+function normalizeStorefrontCategories(databaseCategories, images) {
+  return Array.isArray(databaseCategories)
+    ? databaseCategories.map((category, index) => ({
+        name: category.name || "Categorie",
+        slug: category.slug || "",
+        count: Number(category.count || 0),
+        url: category.url || (category.slug ? `/shop?category=${category.slug}` : "/shop"),
+        image: category.image || imageFrom(images, index + 3),
+      }))
+    : [];
 }
 
 function useScrollReveal() {
@@ -253,7 +252,9 @@ function useScrollReveal() {
 }
 
 function Logo() {
-  return <span className="journal-logo">MATJARI</span>;
+  const { settings } = useStorefrontContent();
+
+  return <span className="journal-logo">{settings?.siteName || "MATJARI"}</span>;
 }
 
 function TextChevron() {
@@ -376,20 +377,39 @@ const slugifyCatalogValue = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-export function JournalHeader({ categories = categoryTemplates, auth = undefined, forceDocumentNavigation = true }) {
+function buildCatalogMenuCategories(categories) {
+  if (!Array.isArray(categories)) return [];
+
+  return categories
+    .filter((category) => category?.slug && category?.name)
+    .map((category) => ({
+      name: category.name,
+      slug: category.slug,
+      groups: [
+        {
+          title: "Catalogue",
+          links: [category.name],
+        },
+      ],
+    }));
+}
+
+export function JournalHeader({ categories = [], auth = undefined, forceDocumentNavigation = true }) {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
-  const [activeCatalogSlug, setActiveCatalogSlug] = useState(catalogMenuCategories[5].slug);
+  const [activeCatalogSlug, setActiveCatalogSlug] = useState("");
   const searchRef = useRef(null);
   const searchButtonRef = useRef(null);
   const languageRef = useRef(null);
   const catalogRef = useRef(null);
-  const { auth: storefrontAuth } = useStorefrontContent();
+  const { auth: storefrontAuth, categories: storefrontCategories = [] } = useStorefrontContent();
   const { currentLanguage, languageLabel, setCurrentLanguage, t } = useStorefrontLanguage();
+  const headerCategories = categories.length > 0 ? categories : storefrontCategories;
+  const catalogCategories = useMemo(() => buildCatalogMenuCategories(headerCategories), [headerCategories]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 18);
@@ -484,7 +504,18 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
   const activeAuth = auth ?? storefrontAuth;
   const accountHref = activeAuth?.isAuthenticated ? "/dashboard" : "/login";
   const favoritesHref = "/account/favorites";
-  const activeCatalog = catalogMenuCategories.find((category) => category.slug === activeCatalogSlug) || catalogMenuCategories[0];
+  useEffect(() => {
+    if (!catalogCategories.length) {
+      setActiveCatalogSlug("");
+      return;
+    }
+
+    if (!catalogCategories.some((category) => category.slug === activeCatalogSlug)) {
+      setActiveCatalogSlug(catalogCategories[0].slug);
+    }
+  }, [activeCatalogSlug, catalogCategories]);
+
+  const activeCatalog = catalogCategories.find((category) => category.slug === activeCatalogSlug) || catalogCategories[0];
   const selectLanguage = (language) => {
     setCurrentLanguage(language);
     setLanguageOpen(false);
@@ -550,7 +581,7 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
             {catalogOpen && (
               <div className="journal-catalog-dropdown" role="menu">
                 <div className="journal-catalog-list" aria-label="Catalog categories">
-                  {catalogMenuCategories.map((category) => (
+                  {catalogCategories.map((category) => (
                     <CatalogLink
                       key={category.slug}
                       href={`/shop?category=${category.slug}`}
@@ -566,6 +597,7 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
                   ))}
                 </div>
 
+                {activeCatalog && (
                 <div className="journal-catalog-detail">
                   <div className="journal-catalog-heading">
                     <span>Catalogue</span>
@@ -579,7 +611,7 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
                         {group.links.map((link) => (
                           <CatalogLink
                             key={link}
-                            href={`/shop?subcategory=${slugifyCatalogValue(link)}`}
+                            href={`/shop?category=${activeCatalog.slug}`}
                             onClick={() => setCatalogOpen(false)}
                           >
                             {link}
@@ -589,6 +621,7 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
                     ))}
                   </div>
                 </div>
+                )}
               </div>
             )}
           </div>
@@ -662,7 +695,7 @@ export function JournalHeader({ categories = categoryTemplates, auth = undefined
 
       {open && (
         <div className="journal-mobile-panel">
-          {catalogMenuCategories.map((category) => (
+          {catalogCategories.map((category) => (
             <CatalogLink
               key={category.slug}
               href={`/shop?category=${category.slug}`}
@@ -696,13 +729,22 @@ function Hero({ heroSlides }) {
     <section className="journal-hero" id="home" data-animate>
       {heroSlides.map((slide, index) => (
         <article className={`journal-hero-main ${active === index ? "is-active" : ""}`} key={slide.title}>
-          {slide.image && <img src={slide.image} alt={slide.title} />}
+          {slide.image && (
+            <img
+              src={slide.image}
+              alt={slide.title}
+              onError={(event) => {
+                event.currentTarget.src = "/images/logomatjari.png";
+              }}
+            />
+          )}
           <div className="journal-hero-copy">
-            <span>{t.heroSlides?.[index]?.label || slide.label}</span>
-            <h1>{t.heroSlides?.[index]?.title || slide.title}</h1>
+            <span>{index === 0 ? slide.label : t.heroSlides?.[index]?.label || slide.label}</span>
+            <h1>{index === 0 ? slide.title : t.heroSlides?.[index]?.title || slide.title}</h1>
+            {slide.description && <p>{slide.description}</p>}
             <div>
-              <a className="journal-btn journal-btn-dark" href="/shop">{t.shopCollection}</a>
-              <a className="journal-text-link" href="#about">{t.learnMore} <span aria-hidden="true">→</span></a>
+              <a className="journal-btn journal-btn-dark" href={slide.primaryButtonUrl || "/shop"}>{slide.primaryButtonLabel || t.shopCollection}</a>
+              <a className="journal-text-link" href={slide.secondaryButtonUrl || "#about"}>{slide.secondaryButtonLabel || t.learnMore} <span aria-hidden="true">→</span></a>
             </div>
           </div>
         </article>
@@ -740,6 +782,9 @@ function CategoryStrip({ categories }) {
   return (
     <section className="journal-section journal-categories" id="catalog" data-animate>
       <SectionTitle script={t.categories} title={t.shopByCategory} subtitle={t.categorySectionSubtitle} />
+      {categories.length === 0 ? (
+        <p className="journal-empty-state">No categories are available yet.</p>
+      ) : (
       <div className="journal-category-carousel">
         <div className="journal-category-row" ref={rowRef}>
           {categories.map((category) => (
@@ -750,7 +795,7 @@ function CategoryStrip({ categories }) {
               <div className="journal-category-copy">
                 <h3>{category.name}</h3>
                 <p>{category.count} {t.productCount}</p>
-                <a href="/shop">{t.shopCollection} <span aria-hidden="true">→</span></a>
+                <a href={category.url || `/shop?category=${category.slug}`}>{t.shopCollection} <span aria-hidden="true">→</span></a>
               </div>
             </article>
           ))}
@@ -759,6 +804,7 @@ function CategoryStrip({ categories }) {
           →
         </button>
       </div>
+      )}
       <div className="journal-ticker" aria-label="Promotions">
         <div className="journal-ticker-track">
           {Array.from({ length: 6 }).map((_, index) => (
@@ -792,7 +838,13 @@ function ProductCard({ product, compact = false }) {
       {product.sale && <span className="journal-sale-flag">%</span>}
       {product.top && <span className="journal-top-badge"><FaStar /> {t.topBrand}</span>}
       <div className="journal-product-image">
-        <img src={product.image} alt={product.name} />
+        <img
+          src={product.image || "/images/logomatjari.png"}
+          alt={product.name}
+          onError={(event) => {
+            event.currentTarget.src = "/images/logomatjari.png";
+          }}
+        />
       </div>
       <a className="journal-product-brand" href="#brand">{product.brand}</a>
       <h3><a href={product.url || "/shop"}>{product.name}</a></h3>
@@ -880,6 +932,10 @@ function Products({ products }) {
   return (
     <section className="journal-section journal-products" id="products" data-animate>
       <SectionTitle script={t.featuredProducts} title={t.featuredProducts} subtitle={t.featuredProductsSubtitle} />
+      {products.length === 0 ? (
+        <p className="journal-empty-state">No products are available yet.</p>
+      ) : (
+      <>
       <div className="journal-tabs">
         {tabOptions.map((item) => (
           <button key={item.key} type="button" className={tab === item.key ? "is-active" : ""} onClick={() => setTab(item.key)}>
@@ -904,6 +960,8 @@ function Products({ products }) {
           </button>
         )}
       </div>
+      </>
+      )}
     </section>
   );
 }
@@ -955,6 +1013,10 @@ function FeaturedCategoriesOld({ products, featureImage }) {
       behavior: "smooth",
     });
   };
+
+  if (products.length === 0) {
+    return null;
+  }
 
   return (
     <section className="journal-section journal-featured" id="featured" data-animate>
@@ -1266,33 +1328,42 @@ function Newsletter() {
 }
 
 export function JournalFooter() {
-  const columns = [
-    ["About Us", ["About Us", "Blog", "FAQ", "Privacy Policy", "Terms & Conditions"]],
-    ["My Account", ["Login", "Order History", "Affiliates", "Newsletter", "Gift Certificate", "Returns"]],
-    ["Customer Service", ["Contact Us", "Store Locations", "Our Brands", "Site Map", "Delivery Information", "Unlimited Links"]],
-  ];
+  const { settings } = useStorefrontContent();
+  const footer = settings?.footer || {};
+  const quickLinks = footer.quickLinks?.length
+    ? footer.quickLinks
+    : [
+        { label: "About Us", url: "/about" },
+        { label: "Blog", url: "/blog" },
+        { label: footer.policyLabel || "Privacy Policy", url: "/privacy" },
+        { label: footer.termsLabel || "Terms & Conditions", url: "/terms" },
+      ];
+  const socialLinks = footer.socialLinks?.length ? footer.socialLinks : [];
 
   return (
     <footer className="journal-footer">
       <div className="journal-footer-main">
         <div className="journal-footer-brand">
           <Logo />
-          <p><FiMapPin /> 123 Main Str, London, UK</p>
-          <p><FiPhone /> 1.800.555.8899</p>
+          <p>{footer.description || "Your one-stop destination for daily essentials, curated accessories, and a clean shopping experience."}</p>
           <p><FiMail /> Contact Us</p>
           <div className="journal-socials">
-            {[FaFacebookF, FaInstagram, FaTwitter, FaTiktok, FaYoutube].map((Icon, index) => <span key={index}><Icon /></span>)}
+            {socialLinks.length > 0
+              ? socialLinks.map((link) => <a key={`${link.label}-${link.url}`} href={link.url || "#"} aria-label={link.label}>{link.icon || link.label?.slice(0, 2)}</a>)
+              : [FaFacebookF, FaInstagram, FaTwitter, FaTiktok, FaYoutube].map((Icon, index) => <span key={index}><Icon /></span>)}
           </div>
         </div>
-        {columns.map(([title, items]) => (
-          <div className="journal-footer-col" key={title}>
-            <h3>{title}</h3>
-            {items.map((item) => <a key={item} href={`#${item}`}>{item}</a>)}
-          </div>
-        ))}
+        <div className="journal-footer-col">
+          <h3>Links</h3>
+          {quickLinks.map((item) => <a key={`${item.label}-${item.url}`} href={item.url || "#"}>{item.label}</a>)}
+        </div>
+        <div className="journal-footer-col">
+          <h3>{footer.newsletterTitle || "Newsletter"}</h3>
+          <p>{footer.newsletterText || "Get updates and special offers in your inbox."}</p>
+        </div>
       </div>
       <div className="journal-copyright">
-        <p>Copyright © 2024, Your Store, All Rights Reserved</p>
+        <p>{footer.copyright || "All rights reserved."}</p>
         <div><span>VISA</span><span>MC</span><span>AMEX</span><span>DISC</span><span>PayPal</span><span>stripe</span></div>
       </div>
     </footer>
@@ -1306,41 +1377,10 @@ export function JournalStyle() {
 export default function Home() {
   useScrollReveal();
   const { images, status } = useImages11();
-  const { auth } = useStorefrontContent();
-  const [databaseProducts, setDatabaseProducts] = useState([]);
+  const { auth, settings, products: databaseProducts = [], categories: databaseCategories = [] } = useStorefrontContent();
   const content = useMemo(() => {
-    const baseContent = buildHomeContent(images);
-
-    return {
-      ...baseContent,
-      products: mergeHomeProducts(databaseProducts, baseContent.products),
-    };
-  }, [databaseProducts, images]);
-
-  useEffect(() => {
-    let active = true;
-
-    fetch("/api/storefront/products", {
-      headers: {
-        Accept: "application/json",
-      },
-    })
-      .then((response) => (response.ok ? response.json() : { products: [] }))
-      .then((payload) => {
-        if (!active) return;
-
-        setDatabaseProducts(Array.isArray(payload?.products) ? payload.products : []);
-      })
-      .catch(() => {
-        if (!active) return;
-
-        setDatabaseProducts([]);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
+    return buildHomeContent(images, databaseProducts, databaseCategories, settings);
+  }, [databaseCategories, databaseProducts, images, settings]);
 
   return (
     <main className="journal-page">
@@ -1368,6 +1408,7 @@ const css = `
 .journal-page * { box-sizing: border-box; }
 .journal-page a { color: inherit; text-decoration: none; }
 .journal-page img { display: block; max-width: 100%; }
+.journal-empty-state { margin: 26px auto 0; max-width: 520px; color: var(--muted); text-align: center; font-size: 15px; line-height: 1.7; }
 .journal-header { position: relative; top: 0; z-index: 60; width: 100%; padding: 0 !important; background: #fff; border-top: 0; box-shadow: none; }
 .journal-header-inner { height: 81px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 24px; padding: 0 38px; }
 .journal-nav-left, .journal-nav-right { display: flex; align-items: center; }
@@ -1673,7 +1714,7 @@ const css = `
 .journal-footer-brand .journal-logo { margin-bottom: 36px; font-size: 30px; }
 .journal-footer-brand p { display: flex; align-items: center; gap: 12px; color: #526067; font-size: 18px; }
 .journal-socials { display: flex; gap: 14px; margin-top: 38px; }
-.journal-socials span { width: 54px; height: 54px; display: grid; place-items: center; border: 1px solid #e1e1e1; border-radius: 50%; background: white; color: #4e5b62; font-size: 20px; }
+.journal-socials span, .journal-socials a { width: 54px; height: 54px; display: grid; place-items: center; border: 1px solid #e1e1e1; border-radius: 50%; background: white; color: #4e5b62; font-size: 20px; }
 .journal-footer-col h3 { margin: 0 0 28px; font: 24px Georgia, serif; color: #070707; }
 .journal-footer-col a { display: block; margin: 17px 0; color: #42515a; }
 .journal-copyright { min-height: 86px; display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 0 42px; background: var(--cream); color: #514b47; }
@@ -1702,7 +1743,8 @@ const css = `
 .journal-text-link,
 .journal-round-nav,
 .journal-card-actions button,
-.journal-socials span {
+.journal-socials span,
+.journal-socials a {
   transition: transform 220ms ease, color 220ms ease, background-color 220ms ease, border-color 220ms ease, opacity 220ms ease, box-shadow 220ms ease;
 }
 .journal-nav-left a:hover,
@@ -1733,7 +1775,7 @@ const css = `
 }
 .journal-btn:hover,
 .journal-card-actions button:hover,
-.journal-socials span:hover {
+.journal-socials span:hover, .journal-socials a:hover {
   transform: translateY(-3px);
 }
 .journal-hero-main {

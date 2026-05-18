@@ -70,18 +70,6 @@ type StoredCartProduct = {
 const CART_STORAGE_KEY = 'matjari_cart';
 const FALLBACK_PRODUCT_IMAGE = '/images/logomatjari.png';
 
-const fallbackCategories: Category[] = [
-    { name: 'TV & High Tech', slug: 'tv-high-tech' },
-    { name: 'Sports & Leisure', slug: 'sports-leisure' },
-    { name: 'Phone & Tablet', slug: 'phone-tablet' },
-    { name: 'Clothing & Shoes', slug: 'clothing-shoes' },
-    { name: 'Home & Kitchen', slug: 'home-kitchen' },
-    { name: 'Beauty & Health', slug: 'beauty-health' },
-    { name: 'Fast Delivery', slug: 'fast-delivery' },
-    { name: "Men's Watch", slug: 'mens-watch' },
-    { name: "Women's Watch", slug: 'womens-watch' },
-];
-
 const discountOptions = [
     { label: '50% et plus', value: '50' },
     { label: '40% et plus', value: '40' },
@@ -101,7 +89,7 @@ export default function ShopIndex() {
     const { auth, products, filters = {}, categories = [] } = usePage<ShopProps>().props;
     const productList = products?.data || [];
     const resultCount = products?.total || productList.length;
-    const visibleCategories = categories.length > 0 ? categories : fallbackCategories;
+    const visibleCategories = categories;
     const [search, setSearch] = useState(filters.search || '');
     const [minPrice, setMinPrice] = useState(filters.min_price || '');
     const [maxPrice, setMaxPrice] = useState(filters.max_price || '');
@@ -162,10 +150,10 @@ export default function ShopIndex() {
                         </p>
                     </header>
 
-                    <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[292px_minmax(0,1fr)]">
-                        <aside className="h-fit rounded-lg border border-black/10 bg-[#eee4dc] p-4 shadow-[0_20px_46px_rgba(32,37,38,0.07)] lg:sticky lg:top-24">
+                    <div className="grid gap-6 lg:grid-cols-[264px_minmax(0,1fr)] xl:grid-cols-[282px_minmax(0,1fr)]">
+                        <aside className="h-fit rounded-lg border border-black/10 bg-[#eee4dc] p-3 shadow-[0_18px_42px_rgba(32,37,38,0.07)] sm:p-4 lg:sticky lg:top-24">
                             <CategoryFilterSection title="Catégories">
-                                <div className="grid gap-2">
+                                <div className="grid gap-1.5">
                                     <CategoryFilterLink active={!filters.category} href="/shop">
                                         Toutes les catégories
                                     </CategoryFilterLink>
@@ -173,7 +161,7 @@ export default function ShopIndex() {
                                         <CategoryFilterLink
                                             key={category.slug}
                                             active={filters.category === category.slug}
-                                            href={shopUrl({ ...activeFilters, category: category.slug })}
+                                            href={`/shop?category=${category.slug}`}
                                         >
                                             {category.name}
                                         </CategoryFilterLink>
@@ -182,24 +170,24 @@ export default function ShopIndex() {
                             </CategoryFilterSection>
 
                             <FilterSection title="Prix (DH)">
-                                <form className="grid gap-3" onSubmit={submitPrice}>
+                                <form className="grid gap-2.5" onSubmit={submitPrice}>
                                     <div className="grid grid-cols-2 gap-2">
                                         <input
-                                            className="min-h-11 rounded-md border border-black/10 bg-white px-3 text-sm outline-none transition focus:border-[#202526]"
+                                            className="h-[42px] min-w-0 rounded-md border border-black/10 bg-[#fbfaf8] px-3 text-sm outline-none transition placeholder:text-[#9a928a] focus:border-[#202526] focus:bg-white focus:shadow-[0_0_0_3px_rgba(32,37,38,0.06)]"
                                             inputMode="decimal"
                                             placeholder="Min"
                                             value={minPrice}
                                             onChange={(event) => setMinPrice(event.target.value)}
                                         />
                                         <input
-                                            className="min-h-11 rounded-md border border-black/10 bg-white px-3 text-sm outline-none transition focus:border-[#202526]"
+                                            className="h-[42px] min-w-0 rounded-md border border-black/10 bg-[#fbfaf8] px-3 text-sm outline-none transition placeholder:text-[#9a928a] focus:border-[#202526] focus:bg-white focus:shadow-[0_0_0_3px_rgba(32,37,38,0.06)]"
                                             inputMode="decimal"
                                             placeholder="Max"
                                             value={maxPrice}
                                             onChange={(event) => setMaxPrice(event.target.value)}
                                         />
                                     </div>
-                                    <button className="min-h-11 rounded-md bg-black px-4 text-sm font-semibold text-white transition hover:bg-neutral-800 hover:text-white" type="submit">
+                                    <button className="h-11 rounded-md bg-[#202526] px-4 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(32,37,38,0.14)] transition hover:-translate-y-0.5 hover:bg-black hover:text-white" type="submit">
                                         OK
                                     </button>
                                 </form>
@@ -310,8 +298,10 @@ export default function ShopIndex() {
 
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <section className="rounded-md border border-black/10 bg-white p-4 shadow-sm [&+&]:mt-4">
-            <h2 className="mb-4 font-serif text-2xl font-semibold text-[#202526]">{title}</h2>
+        <section className="rounded-md border border-black/10 bg-white p-3.5 shadow-[0_12px_28px_rgba(32,37,38,0.045)] [&+&]:mt-3.5 sm:p-4">
+            <div className="mb-3 border-b border-[#eee7df] pb-2.5">
+                <h2 className="font-serif text-[21px] font-semibold leading-tight text-[#202526]">{title}</h2>
+            </div>
             {children}
         </section>
     );
@@ -319,10 +309,10 @@ function FilterSection({ title, children }: { title: string; children: React.Rea
 
 function CategoryFilterSection({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <section className="rounded-md border border-black/10 bg-white px-4 py-5 shadow-[0_16px_34px_rgba(32,37,38,0.06)]">
-            <div className="mb-4 border-b border-[#dedbd8] pb-3">
-                <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#b91f2c]">Filtrer par</span>
-                <h2 className="mt-1 font-serif text-[26px] font-semibold leading-none text-[#202526]">{title}</h2>
+        <section className="rounded-md border border-black/10 bg-white px-3.5 py-4 shadow-[0_14px_30px_rgba(32,37,38,0.055)] sm:px-4">
+            <div className="mb-3 border-b border-[#eee7df] pb-2.5">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#b91f2c]">Filtrer par</span>
+                <h2 className="mt-1 font-serif text-[23px] font-semibold leading-none text-[#202526]">{title}</h2>
             </div>
             {children}
         </section>
@@ -332,21 +322,16 @@ function CategoryFilterSection({ title, children }: { title: string; children: R
 function CategoryFilterLink({ href, active, children }: { href: string; active?: boolean; children: React.ReactNode }) {
     return (
         <Link
-            className={`group flex min-h-11 items-center justify-between rounded-md border px-3.5 py-2.5 text-sm font-medium transition duration-200 ${
+            aria-current={active ? 'page' : undefined}
+            className={`group flex min-h-10 items-center rounded-md border px-3 py-2 text-sm font-medium transition duration-200 ${
                 active
-                    ? 'border-[#202526] bg-[#202526] text-white shadow-[0_12px_24px_rgba(32,37,38,0.16)]'
-                    : 'border-transparent text-[#4f5659] hover:border-[#dedbd8] hover:bg-[#f4f0eb] hover:pl-4 hover:text-[#202526]'
+                    ? 'border-[#202526] bg-[#202526] text-white shadow-[0_10px_20px_rgba(32,37,38,0.16)]'
+                    : 'border-transparent text-[#4f5659] hover:border-[#eadfd5] hover:bg-[#f4f0eb] hover:translate-x-1 hover:text-[#202526]'
             }`}
             href={href}
             preserveScroll
         >
             <span className="truncate">{children}</span>
-            <span
-                aria-hidden="true"
-                className={`ml-3 h-1.5 w-1.5 rounded-full transition ${
-                    active ? 'bg-white' : 'bg-[#dedbd8] opacity-0 group-hover:opacity-100'
-                }`}
-            />
         </Link>
     );
 }
@@ -354,10 +339,10 @@ function CategoryFilterLink({ href, active, children }: { href: string; active?:
 function FilterLink({ href, active, children }: { href: string; active?: boolean; children: React.ReactNode }) {
     return (
         <Link
-            className={`rounded-md px-3 py-2.5 text-sm transition ${
+            className={`rounded-md border px-3 py-2 text-sm transition ${
                 active
-                    ? 'bg-[#202526] font-semibold text-white shadow-[0_10px_22px_rgba(32,37,38,0.14)]'
-                    : 'text-[#4f5659] hover:bg-[#eee4dc] hover:text-[#202526]'
+                    ? 'border-[#202526] bg-[#202526] font-semibold text-white shadow-[0_10px_22px_rgba(32,37,38,0.14)]'
+                    : 'border-transparent text-[#4f5659] hover:border-[#eadfd5] hover:bg-[#f4f0eb] hover:translate-x-1 hover:text-[#202526]'
             }`}
             href={href}
             preserveScroll
@@ -489,11 +474,12 @@ function normalizeImagePath(path: string): string {
     const value = String(path || '').trim();
 
     if (!value) return FALLBACK_PRODUCT_IMAGE;
-    if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/')) return value;
+    if (value.startsWith('http://') || value.startsWith('https://')) return value;
+    if (value.startsWith('/storage') || value.startsWith('/images')) return value;
     if (value.startsWith('storage/')) return `/${value}`;
     if (value.startsWith('images/')) return `/${value}`;
 
-    return `/storage/${value}`;
+    return FALLBACK_PRODUCT_IMAGE;
 }
 
 function CartNotice({ message }: { message: string }) {

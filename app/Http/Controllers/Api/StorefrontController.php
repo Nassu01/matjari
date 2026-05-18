@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\SiteSetting;
 use App\Support\Images11;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class StorefrontController extends Controller
 {
@@ -19,6 +21,8 @@ class StorefrontController extends Controller
 
         $logoPath = $this->assetPath($settings->navbar_logo_path);
         $heroImagePath = $this->assetPath($settings->hero_image_path);
+        $categories = $this->activeCategories();
+        $products = $this->activeProducts();
 
         return response()->json([
             'settings' => [
@@ -28,7 +32,13 @@ class StorefrontController extends Controller
                     'homeLabel' => $settings->navbar_home_label,
                     'categoryLabel' => $settings->navbar_category_label,
                     'searchPlaceholder' => $settings->navbar_search_placeholder,
-                    'links' => $settings->navbar_links ?? [],
+                    'links' => $categories->map(fn (array $category) => [
+                        'icon' => Str::upper(Str::substr($category['name'], 0, 2)),
+                        'label' => $category['name'],
+                        'name' => $category['name'],
+                        'slug' => $category['slug'],
+                        'url' => "/shop?category={$category['slug']}",
+                    ])->values(),
                 ],
                 'hero' => [
                     'badge' => $settings->hero_badge,
@@ -62,18 +72,29 @@ class StorefrontController extends Controller
                     'email' => $user->email,
                 ] : null,
             ],
+            'categories' => $categories,
+            'products' => $products->take(16)->values(),
         ]);
     }
 
     public function products(): JsonResponse
     {
-        $products = Product::query()
+        $products = $this->activeProducts();
+
+        return response()->json([
+            'products' => $products,
+        ]);
+    }
+
+    private function activeProducts()
+    {
+        return Product::query()
             ->with(['brand:id,name', 'category:id,name,slug'])
             ->where('is_active', true)
-            ->orderByDesc('id')
+            ->latest()
             ->get()
             ->map(function (Product $product, int $index) {
-                $image = $this->assetPath($product->featured_image) ?: Images11::urlAt($index);
+                $image = $this->assetPath($product->featured_image) ?: Images11::urlAt($index) ?: '/images/logomatjari.png';
 
                 return [
                     'id' => $product->id,
@@ -91,10 +112,24 @@ class StorefrontController extends Controller
                 ];
             })
             ->values();
+    }
 
-        return response()->json([
-            'products' => $products,
-        ]);
+    private function activeCategories()
+    {
+        return Category::query()
+            ->where('is_active', true)
+            ->whereHas('products', fn ($query) => $query->where('is_active', true))
+            ->withCount(['products' => fn ($query) => $query->where('is_active', true)])
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug'])
+            ->map(fn (Category $category) => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->slug,
+                'count' => $category->products_count,
+                'url' => "/shop?category={$category->slug}",
+            ])
+            ->values();
     }
 
     private function assetPath(?string $path): string
@@ -104,6 +139,10 @@ class StorefrontController extends Controller
         }
 
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        if (str_starts_with($path, '/storage/') || str_starts_with($path, '/images/')) {
             return $path;
         }
 

@@ -6,696 +6,321 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+use RuntimeException;
+use Throwable;
 
 class ProductSeeder extends Seeder
 {
+    private const SOURCE = 'dummyjson';
+    private const GENERATED_SOURCE = 'matjari-generated';
+    private const TARGET_TOTAL = 180;
+
     public function run(): void
     {
-        $products = [
-            [
-                'name' => 'Urban Carry Bag',
-                'slug' => 'urban-carry-bag',
-                'sku' => 'MAT-BAG-001',
-                'short_description' => 'Minimal everyday bag with enough room for your essentials.',
-                'description' => 'A lightweight and practical bag designed for daily commutes, work, and casual outings.',
-                'price' => 29.99,
-                'stock' => 24,
-                'featured_image' => '/images/bag.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'bags',
-            ],
-            [
-                'name' => 'Commuter Tote Bag',
-                'slug' => 'commuter-tote-bag',
-                'sku' => 'MAT-BAG-002',
-                'short_description' => 'Structured tote bag for workdays, travel, and daily essentials.',
-                'description' => 'A versatile tote with a clean profile, roomy interior, and practical carry comfort.',
-                'price' => 34.99,
-                'stock' => 28,
-                'featured_image' => '/images/bag.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'bags',
-            ],
-            [
-                'name' => 'Weekend Travel Bag',
-                'slug' => 'weekend-travel-bag',
-                'sku' => 'MAT-BAG-003',
-                'short_description' => 'Spacious bag built for short trips and overnight stays.',
-                'description' => 'Travel-ready storage with a simple look, easy carry handles, and dependable everyday style.',
-                'price' => 42.99,
-                'stock' => 18,
-                'featured_image' => '/images/bag.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'bags',
-            ],
-            [
-                'name' => 'Daily Sling Bag',
-                'slug' => 'daily-sling-bag',
-                'sku' => 'MAT-BAG-004',
-                'short_description' => 'Compact sling bag made for quick outings and hands-free use.',
-                'description' => 'An easy everyday carry option with a lightweight build and modern silhouette.',
-                'price' => 24.99,
-                'stock' => 31,
-                'featured_image' => '/images/bag.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'bags',
-            ],
-            [
-                'name' => 'Metro Utility Bag',
-                'slug' => 'metro-utility-bag',
-                'sku' => 'MAT-BAG-005',
-                'short_description' => 'Everyday utility bag with a compact body and practical storage.',
-                'description' => 'A city-friendly bag built for quick movement, daily essentials, and organized carry.',
-                'price' => 27.99,
-                'stock' => 26,
-                'featured_image' => '/images/bag.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'bags',
-            ],
-            [
-                'name' => 'Canvas Shopper Bag',
-                'slug' => 'canvas-shopper-bag',
-                'sku' => 'MAT-BAG-006',
-                'short_description' => 'Light canvas-style bag for everyday errands and casual use.',
-                'description' => 'Simple and roomy with an easy carry shape that works well for daily shopping and outings.',
-                'price' => 22.99,
-                'stock' => 34,
-                'featured_image' => '/images/bag.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'bags',
-            ],
-            [
-                'name' => 'Summer Sandals',
-                'slug' => 'summer-sandals',
-                'sku' => 'MAT-SHOE-001',
-                'short_description' => 'Lightweight sandals designed for comfort and warm weather.',
-                'description' => 'Open and breathable sandals built for easy movement and everyday summer wear.',
-                'price' => 39.99,
-                'stock' => 30,
-                'featured_image' => '/images/sandle.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'shoes',
-            ],
-            [
-                'name' => 'Leather Boots',
-                'slug' => 'leather-boots',
-                'sku' => 'MAT-SHOE-002',
-                'short_description' => 'Durable boots with a versatile silhouette and sturdy sole.',
-                'description' => 'Reliable boots that balance durability, comfort, and premium styling.',
-                'price' => 59.99,
-                'stock' => 16,
-                'featured_image' => '/images/boot1.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'shoes',
-            ],
-            [
-                'name' => 'City Walk Sandals',
-                'slug' => 'city-walk-sandals',
-                'sku' => 'MAT-SHOE-003',
-                'short_description' => 'Flexible sandals for all-day casual comfort.',
-                'description' => 'A comfortable sandal pair with a simple shape, light feel, and easy daily wear.',
-                'price' => 36.99,
-                'stock' => 22,
-                'featured_image' => '/images/sandle.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'shoes',
-            ],
-            [
-                'name' => 'Trail Leather Boots',
-                'slug' => 'trail-leather-boots',
-                'sku' => 'MAT-SHOE-004',
-                'short_description' => 'Supportive boots with a premium leather-inspired finish.',
-                'description' => 'Built for colder days and stronger looks, with dependable comfort and stable footing.',
-                'price' => 64.99,
-                'stock' => 14,
-                'featured_image' => '/images/boot1.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'shoes',
-            ],
-            [
-                'name' => 'Coastline Slides',
-                'slug' => 'coastline-slides',
-                'sku' => 'MAT-SHOE-005',
-                'short_description' => 'Relaxed slides made for pool days and quick errands.',
-                'description' => 'Simple open footwear that combines an easy slip-on shape with lightweight comfort.',
-                'price' => 21.99,
-                'stock' => 33,
-                'featured_image' => '/images/sandle.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'shoes',
-            ],
-            [
-                'name' => 'Weekend Comfort Sandals',
-                'slug' => 'weekend-comfort-sandals',
-                'sku' => 'MAT-SHOE-006',
-                'short_description' => 'Soft everyday sandals designed for comfort and light movement.',
-                'description' => 'A casual pair made for warm days, easy styling, and comfortable all-day use.',
-                'price' => 33.99,
-                'stock' => 24,
-                'featured_image' => '/images/sandle.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'shoes',
-            ],
-            [
-                'name' => 'Heritage Street Boots',
-                'slug' => 'heritage-street-boots',
-                'sku' => 'MAT-SHOE-007',
-                'short_description' => 'Structured boots with a bold profile and everyday support.',
-                'description' => 'Strong styling meets practical comfort in a pair built for cool-weather outfits.',
-                'price' => 68.99,
-                'stock' => 12,
-                'featured_image' => '/images/boot1.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'shoes',
-            ],
-            [
-                'name' => 'Classic Watch',
-                'slug' => 'classic-watch',
-                'sku' => 'MAT-ACC-001',
-                'short_description' => 'Clean analog watch that works with both casual and formal looks.',
-                'description' => 'An elegant timepiece with a timeless face and comfortable strap.',
-                'price' => 49.99,
-                'stock' => 18,
-                'featured_image' => '/images/watch.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'accessories',
-            ],
-            [
-                'name' => 'Street Cap',
-                'slug' => 'street-cap',
-                'sku' => 'MAT-ACC-002',
-                'short_description' => 'Everyday cap with a curved brim and structured front panel.',
-                'description' => 'A casual cap made to complete daily looks with comfort and simplicity.',
-                'price' => 19.99,
-                'stock' => 40,
-                'featured_image' => '/images/cap.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'accessories',
-            ],
-            [
-                'name' => 'Minimal Wrist Watch',
-                'slug' => 'minimal-wrist-watch',
-                'sku' => 'MAT-ACC-003',
-                'short_description' => 'A refined watch with a clean dial and modern finish.',
-                'description' => 'A sleek watch designed to elevate daily outfits without feeling overstated.',
-                'price' => 54.99,
-                'stock' => 20,
-                'featured_image' => '/images/watch.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'accessories',
-            ],
-            [
-                'name' => 'Signature Cap',
-                'slug' => 'signature-cap',
-                'sku' => 'MAT-ACC-004',
-                'short_description' => 'Classic cap with a clean crown and relaxed daily fit.',
-                'description' => 'An easy accessory for sunny days, casual styling, and quick outfit finishing.',
-                'price' => 17.99,
-                'stock' => 36,
-                'featured_image' => '/images/cap.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'accessories',
-            ],
-            [
-                'name' => 'Evening Dial Watch',
-                'slug' => 'evening-dial-watch',
-                'sku' => 'MAT-ACC-005',
-                'short_description' => 'A polished watch designed for smart and versatile styling.',
-                'description' => 'A reliable daily timepiece with subtle elegance and a comfortable strap.',
-                'price' => 58.99,
-                'stock' => 15,
-                'featured_image' => '/images/watch.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'accessories',
-            ],
-            [
-                'name' => 'Chrono Edge Watch',
-                'slug' => 'chrono-edge-watch',
-                'sku' => 'MAT-ACC-006',
-                'short_description' => 'Modern watch styling with a strong face and balanced proportions.',
-                'description' => 'A sleek accessory that brings a polished finish to workwear and smart casual outfits.',
-                'price' => 61.99,
-                'stock' => 17,
-                'featured_image' => '/images/watch.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'accessories',
-            ],
-            [
-                'name' => 'Core Everyday Cap',
-                'slug' => 'core-everyday-cap',
-                'sku' => 'MAT-ACC-007',
-                'short_description' => 'Simple cap built for casual comfort and easy daily rotation.',
-                'description' => 'A staple accessory with a clean front, curved brim, and lightweight everyday feel.',
-                'price' => 18.49,
-                'stock' => 32,
-                'featured_image' => '/images/cap.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'accessories',
-            ],
-            [
-                'name' => 'Wireless Headphones',
-                'slug' => 'wireless-headphones',
-                'sku' => 'MAT-TECH-001',
-                'short_description' => 'Comfort-first headphones with immersive sound and modern styling.',
-                'description' => 'Wireless over-ear headphones with clear audio, comfort padding, and solid battery life.',
-                'price' => 44.99,
-                'stock' => 22,
-                'featured_image' => '/images/headphone.jpg',
-                'is_active' => true,
-                'brand_slug' => 'tech-wave',
-                'category_slug' => 'electronics',
-            ],
-            [
-                'name' => 'Studio Sound Headphones',
-                'slug' => 'studio-sound-headphones',
-                'sku' => 'MAT-TECH-002',
-                'short_description' => 'Balanced sound and cushioned comfort for long listening sessions.',
-                'description' => 'Designed for work, music, and focused listening with a modern over-ear profile.',
-                'price' => 52.99,
-                'stock' => 19,
-                'featured_image' => '/images/headphone.jpg',
-                'is_active' => true,
-                'brand_slug' => 'tech-wave',
-                'category_slug' => 'electronics',
-            ],
-            [
-                'name' => 'Everyday Audio Headset',
-                'slug' => 'everyday-audio-headset',
-                'sku' => 'MAT-TECH-003',
-                'short_description' => 'Easy-to-wear headphones made for calls, playlists, and daily use.',
-                'description' => 'Comfortable headphones with a clean design, reliable audio, and practical everyday value.',
-                'price' => 39.99,
-                'stock' => 27,
-                'featured_image' => '/images/headphone.jpg',
-                'is_active' => true,
-                'brand_slug' => 'tech-wave',
-                'category_slug' => 'electronics',
-            ],
-            [
-                'name' => 'Noise Comfort Headphones',
-                'slug' => 'noise-comfort-headphones',
-                'sku' => 'MAT-TECH-004',
-                'short_description' => 'Over-ear headphones tuned for comfort and immersive sound.',
-                'description' => 'A practical audio pick for work sessions, movies, and everyday listening on the go.',
-                'price' => 47.99,
-                'stock' => 23,
-                'featured_image' => '/images/headphone.jpg',
-                'is_active' => true,
-                'brand_slug' => 'tech-wave',
-                'category_slug' => 'electronics',
-            ],
-            [
-                'name' => 'Focus Wireless Headset',
-                'slug' => 'focus-wireless-headset',
-                'sku' => 'MAT-TECH-005',
-                'short_description' => 'Reliable headset for music, calls, and daily commuting.',
-                'description' => 'Made for balanced audio, comfortable wear, and easy integration into busy routines.',
-                'price' => 41.99,
-                'stock' => 25,
-                'featured_image' => '/images/headphone.jpg',
-                'is_active' => true,
-                'brand_slug' => 'tech-wave',
-                'category_slug' => 'electronics',
-            ],
-            [
-                'name' => 'Essential Shirt',
-                'slug' => 'essential-shirt',
-                'sku' => 'MAT-CLOTH-001',
-                'short_description' => 'Relaxed-fit shirt made for daily wear and easy layering.',
-                'description' => 'A simple and versatile shirt designed for comfort across everyday outfits.',
-                'price' => 27.99,
-                'stock' => 35,
-                'featured_image' => '/images/shirt.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'clothing',
-            ],
-            [
-                'name' => 'Classic Cotton Shirt',
-                'slug' => 'classic-cotton-shirt',
-                'sku' => 'MAT-CLOTH-002',
-                'short_description' => 'Soft everyday shirt with a timeless casual fit.',
-                'description' => 'An easy shirt option for layering, daily styling, and comfortable all-day wear.',
-                'price' => 31.99,
-                'stock' => 29,
-                'featured_image' => '/images/shirt.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'clothing',
-            ],
-            [
-                'name' => 'Weekend Overshirt',
-                'slug' => 'weekend-overshirt',
-                'sku' => 'MAT-CLOTH-003',
-                'short_description' => 'A relaxed overshirt built for casual looks and light layering.',
-                'description' => 'Comfortable and easy to style, with a laid-back shape that works across seasons.',
-                'price' => 35.99,
-                'stock' => 21,
-                'featured_image' => '/images/shirt.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'clothing',
-            ],
-            [
-                'name' => 'Soft Touch Casual Shirt',
-                'slug' => 'soft-touch-casual-shirt',
-                'sku' => 'MAT-CLOTH-004',
-                'short_description' => 'Daily shirt with a clean fit and soft hand feel.',
-                'description' => 'An easy wardrobe piece that brings comfort, simple style, and versatile layering options.',
-                'price' => 29.99,
-                'stock' => 30,
-                'featured_image' => '/images/shirt.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'clothing',
-            ],
-            [
-                'name' => 'Urban Layer Shirt',
-                'slug' => 'urban-layer-shirt',
-                'sku' => 'MAT-CLOTH-005',
-                'short_description' => 'Relaxed shirt shape designed for all-season casual wear.',
-                'description' => 'A versatile shirt for workdays and weekends with a look that stays clean and effortless.',
-                'price' => 33.49,
-                'stock' => 24,
-                'featured_image' => '/images/shirt.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'clothing',
-            ],
-            [
-                'name' => 'City Office Tote',
-                'slug' => 'city-office-tote',
-                'sku' => 'MAT-BAG-007',
-                'short_description' => 'Roomy tote bag suited for work, notebooks, and daily essentials.',
-                'description' => 'A structured everyday tote with a practical shape, reliable carry comfort, and clean styling.',
-                'price' => 36.99,
-                'stock' => 22,
-                'featured_image' => '/images/bag.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'bags',
-            ],
-            [
-                'name' => 'Compact Travel Sling',
-                'slug' => 'compact-travel-sling',
-                'sku' => 'MAT-BAG-008',
-                'short_description' => 'Travel-friendly sling bag with a neat shape and light feel.',
-                'description' => 'A compact carry option made for daily movement, short trips, and quick-access essentials.',
-                'price' => 25.99,
-                'stock' => 28,
-                'featured_image' => '/images/bag.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'bags',
-            ],
-            [
-                'name' => 'Daily Commute Backpack',
-                'slug' => 'daily-commute-backpack',
-                'sku' => 'MAT-BAG-009',
-                'short_description' => 'Balanced backpack design for city routines and everyday carry.',
-                'description' => 'Built for organization and comfort with a clean profile that works from workdays to weekends.',
-                'price' => 39.49,
-                'stock' => 19,
-                'featured_image' => '/images/bag.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'bags',
-            ],
-            [
-                'name' => 'Lightstep Sandals',
-                'slug' => 'lightstep-sandals',
-                'sku' => 'MAT-SHOE-008',
-                'short_description' => 'Easygoing sandals with a soft step and casual warm-weather style.',
-                'description' => 'A lightweight pair designed for relaxed days, quick walks, and breathable all-day comfort.',
-                'price' => 29.99,
-                'stock' => 26,
-                'featured_image' => '/images/sandle.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'shoes',
-            ],
-            [
-                'name' => 'Urban Trek Boots',
-                'slug' => 'urban-trek-boots',
-                'sku' => 'MAT-SHOE-009',
-                'short_description' => 'Supportive boots designed for confident steps and bold casual outfits.',
-                'description' => 'A durable boot silhouette with dependable structure, everyday wearability, and strong seasonal appeal.',
-                'price' => 71.99,
-                'stock' => 11,
-                'featured_image' => '/images/boot1.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'shoes',
-            ],
-            [
-                'name' => 'Sunset Comfort Slides',
-                'slug' => 'sunset-comfort-slides',
-                'sku' => 'MAT-SHOE-010',
-                'short_description' => 'Slip-on slides made for comfort at home and quick outdoor errands.',
-                'description' => 'Simple slides with a relaxed fit and low-effort comfort for everyday use.',
-                'price' => 23.49,
-                'stock' => 37,
-                'featured_image' => '/images/sandle.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'shoes',
-            ],
-            [
-                'name' => 'Executive Steel Watch',
-                'slug' => 'executive-steel-watch',
-                'sku' => 'MAT-ACC-008',
-                'short_description' => 'Smart watch styling for office looks and polished daily outfits.',
-                'description' => 'A refined timepiece with a balanced face, crisp lines, and versatile elegance.',
-                'price' => 63.99,
-                'stock' => 14,
-                'featured_image' => '/images/watch.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'accessories',
-            ],
-            [
-                'name' => 'Sport Fit Cap',
-                'slug' => 'sport-fit-cap',
-                'sku' => 'MAT-ACC-009',
-                'short_description' => 'Light everyday cap with a sporty look and comfortable fit.',
-                'description' => 'A casual finishing piece made for sunny days, active routines, and simple styling.',
-                'price' => 20.49,
-                'stock' => 33,
-                'featured_image' => '/images/cap.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'accessories',
-            ],
-            [
-                'name' => 'Minimal Strap Watch',
-                'slug' => 'minimal-strap-watch',
-                'sku' => 'MAT-ACC-010',
-                'short_description' => 'Understated watch with a slim strap and clean dial design.',
-                'description' => 'A versatile accessory that blends easily into daily outfits while keeping a polished edge.',
-                'price' => 46.99,
-                'stock' => 21,
-                'featured_image' => '/images/watch.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'accessories',
-            ],
-            [
-                'name' => 'Pure Sound Wireless Headphones',
-                'slug' => 'pure-sound-wireless-headphones',
-                'sku' => 'MAT-TECH-006',
-                'short_description' => 'Smooth listening experience with comfortable over-ear cushioning.',
-                'description' => 'Designed for music, calls, and focused listening with a balanced sound profile.',
-                'price' => 49.49,
-                'stock' => 20,
-                'featured_image' => '/images/headphone.jpg',
-                'is_active' => true,
-                'brand_slug' => 'tech-wave',
-                'category_slug' => 'electronics',
-            ],
-            [
-                'name' => 'Bass Boost Headset',
-                'slug' => 'bass-boost-headset',
-                'sku' => 'MAT-TECH-007',
-                'short_description' => 'Headset built for punchy sound, daily wear, and strong value.',
-                'description' => 'Comfortable and practical, with a modern look and dependable audio for everyday use.',
-                'price' => 43.99,
-                'stock' => 24,
-                'featured_image' => '/images/headphone.jpg',
-                'is_active' => true,
-                'brand_slug' => 'tech-wave',
-                'category_slug' => 'electronics',
-            ],
-            [
-                'name' => 'ClearCall Audio Headphones',
-                'slug' => 'clearcall-audio-headphones',
-                'sku' => 'MAT-TECH-008',
-                'short_description' => 'Everyday headphones with comfort padding and easy call support.',
-                'description' => 'A reliable audio choice for home, office, and commuting with a clean, simple design.',
-                'price' => 45.49,
-                'stock' => 18,
-                'featured_image' => '/images/headphone.jpg',
-                'is_active' => true,
-                'brand_slug' => 'tech-wave',
-                'category_slug' => 'electronics',
-            ],
-            [
-                'name' => 'Smart Casual Shirt',
-                'slug' => 'smart-casual-shirt',
-                'sku' => 'MAT-CLOTH-006',
-                'short_description' => 'A versatile shirt that works across relaxed and slightly dressed-up looks.',
-                'description' => 'Comfortable daily wear with a neat silhouette, easy layering, and timeless styling.',
-                'price' => 34.99,
-                'stock' => 23,
-                'featured_image' => '/images/shirt.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'clothing',
-            ],
-            [
-                'name' => 'Relaxed Weekend Shirt',
-                'slug' => 'relaxed-weekend-shirt',
-                'sku' => 'MAT-CLOTH-007',
-                'short_description' => 'Laid-back shirt made for comfortable weekends and everyday styling.',
-                'description' => 'A wardrobe staple that pairs light comfort with an easy, wearable shape.',
-                'price' => 28.99,
-                'stock' => 31,
-                'featured_image' => '/images/shirt.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'clothing',
-            ],
-            [
-                'name' => 'Layered Fit Shirt',
-                'slug' => 'layered-fit-shirt',
-                'sku' => 'MAT-CLOTH-008',
-                'short_description' => 'Easy layering shirt with a relaxed profile and simple finish.',
-                'description' => 'An everyday shirt designed to feel comfortable and look clean in any season.',
-                'price' => 32.49,
-                'stock' => 27,
-                'featured_image' => '/images/shirt.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'clothing',
-            ],
-            [
-                'name' => 'Market Tote Carry Bag',
-                'slug' => 'market-tote-carry-bag',
-                'sku' => 'MAT-BAG-010',
-                'short_description' => 'A roomy tote shape perfect for shopping, errands, and daily essentials.',
-                'description' => 'Made for practical use with a simple silhouette and enough space for daily carry.',
-                'price' => 23.99,
-                'stock' => 29,
-                'featured_image' => '/images/bag.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'bags',
-            ],
-            [
-                'name' => 'Explorer Utility Bag',
-                'slug' => 'explorer-utility-bag',
-                'sku' => 'MAT-BAG-011',
-                'short_description' => 'Compact utility bag made for movement and organized essentials.',
-                'description' => 'A practical daily companion with a neat size, secure feel, and versatile styling.',
-                'price' => 30.49,
-                'stock' => 20,
-                'featured_image' => '/images/bag.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'bags',
-            ],
-            [
-                'name' => 'Classic Open Sandals',
-                'slug' => 'classic-open-sandals',
-                'sku' => 'MAT-SHOE-011',
-                'short_description' => 'Simple open sandals for warm days and effortless comfort.',
-                'description' => 'A lightweight pair designed for daily wear, easy movement, and breathable style.',
-                'price' => 31.49,
-                'stock' => 25,
-                'featured_image' => '/images/sandle.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'shoes',
-            ],
-            [
-                'name' => 'Terrain Leather Boots',
-                'slug' => 'terrain-leather-boots',
-                'sku' => 'MAT-SHOE-012',
-                'short_description' => 'Boots with a rugged feel and reliable day-to-day support.',
-                'description' => 'A strong boot choice for cooler seasons with a durable look and comfortable step.',
-                'price' => 73.49,
-                'stock' => 10,
-                'featured_image' => '/images/boot1.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'shoes',
-            ],
-            [
-                'name' => 'Refined Crown Cap',
-                'slug' => 'refined-crown-cap',
-                'sku' => 'MAT-ACC-011',
-                'short_description' => 'A clean cap profile with everyday ease and subtle structure.',
-                'description' => 'Designed for daily use with a lightweight feel and timeless casual appeal.',
-                'price' => 19.49,
-                'stock' => 35,
-                'featured_image' => '/images/cap.jpg',
-                'is_active' => true,
-                'brand_slug' => 'matjari-essentials',
-                'category_slug' => 'accessories',
-            ],
-            [
-                'name' => 'Modern Dial Watch',
-                'slug' => 'modern-dial-watch',
-                'sku' => 'MAT-ACC-012',
-                'short_description' => 'A sharp, modern watch face built for versatile daily styling.',
-                'description' => 'A polished timepiece that adds a refined finish without feeling overdesigned.',
-                'price' => 57.49,
-                'stock' => 16,
-                'featured_image' => '/images/watch.jpg',
-                'is_active' => true,
-                'brand_slug' => 'urban-style',
-                'category_slug' => 'accessories',
-            ],
-        ];
+        $this->deactivateLegacyLocalImageProducts();
 
-        $brands = Brand::query()->pluck('id', 'slug');
-        $categories = Category::query()->pluck('id', 'slug');
+        $categories = $this->categories();
+        $brands = $this->brands();
+        $products = $this->fetchDummyJsonProducts();
+        $imported = 0;
 
-        foreach ($products as $productData) {
+        foreach ($products as $payload) {
+            if (! is_array($payload) || empty($payload['id']) || empty($payload['title'])) {
+                continue;
+            }
+
+            $externalId = (string) $payload['id'];
+            $title = trim((string) $payload['title']);
+            $category = $categories[$this->categorySlugFor($payload)] ?? $categories['clothing'];
+            $brand = $this->brandFor($payload, $brands);
+
             Product::updateOrCreate(
-                ['slug' => $productData['slug']],
                 [
-                    'brand_id' => $brands[$productData['brand_slug']] ?? null,
-                    'category_id' => $categories[$productData['category_slug']] ?? null,
-                    'name' => $productData['name'],
-                    'sku' => $productData['sku'],
-                    'short_description' => $productData['short_description'],
-                    'description' => $productData['description'],
-                    'price' => $productData['price'],
-                    'stock' => $productData['stock'],
-                    'featured_image' => $productData['featured_image'],
-                    'is_active' => $productData['is_active'],
+                    'external_source' => self::SOURCE,
+                    'external_id' => $externalId,
+                ],
+                [
+                    'brand_id' => $brand?->id,
+                    'category_id' => $category->id,
+                    'name' => $title,
+                    'slug' => $this->uniqueSlug($title, self::SOURCE, $externalId),
+                    'sku' => $this->uniqueSku("DUMMYJSON-{$externalId}", self::SOURCE, $externalId),
+                    'short_description' => Str::limit((string) ($payload['description'] ?? ''), 250, ''),
+                    'description' => (string) ($payload['description'] ?? ''),
+                    'price' => (float) ($payload['price'] ?? 0),
+                    'stock' => max(0, (int) ($payload['stock'] ?? 0)),
+                    'featured_image' => $this->imageFor($payload),
+                    'is_active' => true,
                 ],
             );
+
+            $imported++;
         }
+
+        $this->generateMissingProducts($categories, $brands);
+
+        $this->command?->info("Imported or updated {$imported} DummyJSON products and topped the catalog up to ".self::TARGET_TOTAL.' products.');
+    }
+
+    private function deactivateLegacyLocalImageProducts(): void
+    {
+        Product::query()
+            ->whereNull('external_source')
+            ->whereIn('featured_image', [
+                '/images/bag.jpg',
+                '/images/watch.jpg',
+                '/images/shirt.jpg',
+                '/images/headphone.jpg',
+                '/images/sandle.jpg',
+                '/images/boot1.jpg',
+                '/images/cap.jpg',
+            ])
+            ->update(['is_active' => false]);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchDummyJsonProducts(): array
+    {
+        try {
+            $response = Http::timeout(20)
+                ->acceptJson()
+                ->get('https://dummyjson.com/products?limit=0');
+        } catch (Throwable $exception) {
+            throw new RuntimeException('DummyJSON request failed: '.$exception->getMessage(), previous: $exception);
+        }
+
+        if (! $response->successful()) {
+            throw new RuntimeException("DummyJSON returned HTTP {$response->status()}.");
+        }
+
+        $products = $response->json('products');
+
+        if (! is_array($products)) {
+            throw new RuntimeException('DummyJSON response did not contain a products array.');
+        }
+
+        if ($products === []) {
+            throw new RuntimeException('DummyJSON returned an empty products array.');
+        }
+
+        return $products;
+    }
+
+    /**
+     * @return array<string, Category>
+     */
+    private function categories(): array
+    {
+        $names = [
+            'bags' => 'Bags',
+            'shoes' => 'Shoes',
+            'accessories' => 'Accessories',
+            'electronics' => 'Electronics',
+            'clothing' => 'Clothing',
+        ];
+
+        return collect($names)
+            ->mapWithKeys(fn (string $name, string $slug) => [
+                $slug => Category::updateOrCreate(
+                    ['slug' => $slug],
+                    ['name' => $name, 'is_active' => true],
+                ),
+            ])
+            ->all();
+    }
+
+    /**
+     * @return array<string, Brand>
+     */
+    private function brands(): array
+    {
+        $brands = [
+            'matjari-essentials' => 'Matjari Essentials',
+            'urban-style' => 'Urban Style',
+            'tech-wave' => 'Tech Wave',
+        ];
+
+        return collect($brands)
+            ->mapWithKeys(fn (string $name, string $slug) => [
+                $slug => Brand::updateOrCreate(
+                    ['slug' => $slug],
+                    ['name' => $name, 'is_active' => true],
+                ),
+            ])
+            ->all();
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, Brand> $brands
+     */
+    private function brandFor(array $payload, array $brands): ?Brand
+    {
+        $brandName = trim((string) ($payload['brand'] ?? ''));
+
+        if ($brandName === '') {
+            $categorySlug = $this->categorySlugFor($payload);
+
+            return $categorySlug === 'electronics'
+                ? $brands['tech-wave']
+                : $brands['matjari-essentials'];
+        }
+
+        return Brand::updateOrCreate(
+            ['slug' => Str::slug($brandName)],
+            ['name' => $brandName, 'is_active' => true],
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function categorySlugFor(array $payload): string
+    {
+        $value = Str::lower(implode(' ', [
+            (string) ($payload['title'] ?? ''),
+            (string) ($payload['category'] ?? ''),
+        ]));
+
+        return match (true) {
+            Str::contains($value, ['bag', 'backpack', 'handbag', 'purse']) => 'bags',
+            Str::contains($value, ['shoe', 'sneaker', 'boot', 'sandal']) => 'shoes',
+            Str::contains($value, ['watch', 'sunglasses', 'jewelry', 'cap', 'accessory']) => 'accessories',
+            Str::contains($value, ['phone', 'laptop', 'tablet', 'electronics', 'headphones', 'audio', 'computer']) => 'electronics',
+            default => 'clothing',
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function imageFor(array $payload): string
+    {
+        $thumbnail = trim((string) ($payload['thumbnail'] ?? ''));
+
+        if ($thumbnail !== '') {
+            return $thumbnail;
+        }
+
+        $images = $payload['images'] ?? [];
+
+        if (is_array($images)) {
+            foreach ($images as $image) {
+                $image = trim((string) $image);
+
+                if ($image !== '') {
+                    return $image;
+                }
+            }
+        }
+
+        return $this->placeholderImage('matjari-product');
+    }
+
+    /**
+     * @param array<string, Category> $categories
+     * @param array<string, Brand> $brands
+     */
+    private function generateMissingProducts(array $categories, array $brands): void
+    {
+        $existingCount = Product::query()
+            ->whereIn('external_source', [self::SOURCE, self::GENERATED_SOURCE])
+            ->count();
+
+        $categoryKeys = array_keys($categories);
+        $generatedIndex = 1;
+
+        while ($existingCount < self::TARGET_TOTAL) {
+            $categorySlug = $categoryKeys[($existingCount + $generatedIndex) % count($categoryKeys)];
+            $name = $this->generatedName($categorySlug, $generatedIndex);
+            $externalId = "{$categorySlug}-{$generatedIndex}";
+            $brand = $categorySlug === 'electronics' ? $brands['tech-wave'] : $brands['matjari-essentials'];
+
+            Product::updateOrCreate(
+                [
+                    'external_source' => self::GENERATED_SOURCE,
+                    'external_id' => $externalId,
+                ],
+                [
+                    'brand_id' => $brand->id,
+                    'category_id' => $categories[$categorySlug]->id,
+                    'name' => $name,
+                    'slug' => $this->uniqueSlug($name, self::GENERATED_SOURCE, $externalId),
+                    'sku' => $this->uniqueSku('MAT-'.Str::upper(Str::substr($categorySlug, 0, 3)).'-'.str_pad((string) $generatedIndex, 4, '0', STR_PAD_LEFT), self::GENERATED_SOURCE, $externalId),
+                    'short_description' => "Curated {$categories[$categorySlug]->name} product for the MATJARI catalog.",
+                    'description' => "A reliable {$categories[$categorySlug]->name} selection generated to keep the MATJARI storefront complete while preserving online product imagery.",
+                    'price' => 19 + (($generatedIndex * 7) % 140) + .99,
+                    'stock' => 8 + (($generatedIndex * 5) % 52),
+                    'featured_image' => $this->placeholderImage($name),
+                    'is_active' => true,
+                ],
+            );
+
+            $existingCount++;
+            $generatedIndex++;
+        }
+    }
+
+    private function generatedName(string $categorySlug, int $index): string
+    {
+        $prefixes = [
+            'bags' => 'MATJARI Carry Bag',
+            'shoes' => 'MATJARI Comfort Shoes',
+            'accessories' => 'MATJARI Daily Accessory',
+            'electronics' => 'MATJARI Smart Electronic',
+            'clothing' => 'MATJARI Casual Clothing',
+        ];
+
+        return ($prefixes[$categorySlug] ?? 'MATJARI Product').' '.str_pad((string) $index, 3, '0', STR_PAD_LEFT);
+    }
+
+    private function placeholderImage(string $text): string
+    {
+        return 'https://placehold.co/800x800/f4f4f3/202526/png?text='.rawurlencode(Str::limit($text, 34, ''));
+    }
+
+    private function uniqueSlug(string $name, string $source, string $externalId): string
+    {
+        $base = Str::slug($name) ?: "{$source}-{$externalId}";
+        $slug = $base;
+        $suffix = 2;
+
+        while ($this->conflictingProductQuery('slug', $slug, $source, $externalId)->exists()) {
+            $slug = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return $slug;
+    }
+
+    private function uniqueSku(string $sku, string $source, string $externalId): string
+    {
+        $base = trim($sku) !== '' ? trim($sku) : Str::upper("{$source}-{$externalId}");
+        $candidate = $base;
+        $suffix = 2;
+
+        while ($this->conflictingProductQuery('sku', $candidate, $source, $externalId)->exists()) {
+            $candidate = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return $candidate;
+    }
+
+    private function conflictingProductQuery(string $column, string $value, string $source, string $externalId)
+    {
+        return Product::query()
+            ->where($column, $value)
+            ->where(function ($query) use ($source, $externalId) {
+                $query
+                    ->where('external_source', '!=', $source)
+                    ->orWhereNull('external_source')
+                    ->orWhere('external_id', '!=', $externalId)
+                    ->orWhereNull('external_id');
+            });
     }
 }
