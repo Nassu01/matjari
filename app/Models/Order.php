@@ -18,17 +18,28 @@ class Order extends Model
         'customer_name',
         'customer_email',
         'customer_phone',
+        'customer_address',
+        'delivery_address',
+        'city',
+        'postal_code',
         'status',
+        'payment_method',
         'payment_status',
+        'subtotal',
+        'shipping_total',
         'total',
         'notes',
         'shipped_at',
+        'invoice_path',
+        'invoice_number',
     ];
 
     protected function casts(): array
     {
         return [
             'total' => 'decimal:2',
+            'subtotal' => 'decimal:2',
+            'shipping_total' => 'decimal:2',
             'shipped_at' => 'datetime',
         ];
     }

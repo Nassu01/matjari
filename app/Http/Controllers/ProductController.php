@@ -70,10 +70,19 @@ class ProductController extends Controller
                 'slug' => $category->slug,
             ]);
 
+        $favoriteIds = $request->user()
+            ? $request->user()
+                ->favoriteProducts()
+                ->pluck('products.id')
+                ->map(fn ($id) => (int) $id)
+                ->values()
+            : [];
+
         return Inertia::render('shop/Index', [
             'products' => $products,
             'filters' => $filters,
             'categories' => $categories,
+            'favoriteIds' => $favoriteIds,
         ]);
     }
 
@@ -214,6 +223,11 @@ class ProductController extends Controller
         }
 
         return Storage::exists($path) ? Storage::url($path) : $this->fallbackImageUrl($fallbackIndex);
+    }
+
+    public function publicImageUrl(?string $path, ?int $fallbackIndex = null): ?string
+    {
+        return $this->imageUrl($path, $fallbackIndex);
     }
 
     private function fallbackImageUrl(?int $index = null): ?string

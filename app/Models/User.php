@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\Product; 
+
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -116,4 +119,14 @@ class User extends Authenticatable implements FilamentUser
     {
         return in_array($this->role, ['admin', 'commercant'], true);
     }
+
+    public function favoriteProducts(): BelongsToMany
+    {
+        // إذا كان اسم جدول الوسيط الافتراضي لديك هو 'id_product_user' أو 'favorite_product' 
+        // يمكنك تمريره كعامل ثانٍ هنا، وإلا سيفترض Eloquent تلقائياً أنه 'product_user'
+        return $this->belongsToMany(Product::class, 'product_user', 'user_id', 'product_id')
+                    ->withTimestamps();
+    }
+
+
 }

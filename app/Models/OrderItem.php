@@ -13,11 +13,14 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
+        'merchant_id',
         'product_name',
+        'product_sku',
         'sku',
         'quantity',
         'unit_price',
         'total_price',
+        'total',
     ];
 
     protected function casts(): array
@@ -25,6 +28,7 @@ class OrderItem extends Model
         return [
             'unit_price' => 'decimal:2',
             'total_price' => 'decimal:2',
+            'total' => 'decimal:2',
         ];
     }
 
@@ -36,5 +40,10 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function merchant(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'merchant_id');
     }
 }

@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use App\Http\Controllers\FavoriteController;
+
 
 Route::get('/', StorefrontController::class)->name('storefront.home');
 Route::get('/shop', [ProductController::class, 'index'])->name('shop.index');
@@ -27,6 +29,7 @@ Route::get('/privacy', StorefrontController::class)->name('storefront.privacy');
 Route::get('/terms', StorefrontController::class)->name('storefront.terms');
 Route::get('/contact', StorefrontController::class)->name('storefront.contact');
 Route::get('/about', StorefrontController::class)->name('storefront.about');
+
 
 Route::get('/dashboard', DashboardController::class)->middleware('auth')->name('dashboard');
 
@@ -54,9 +57,8 @@ Route::middleware('auth')->group(function () {
         ]);
     })->name('account.orders');
     Route::get('/account/orders/{id}', StorefrontController::class)->name('account.orders.show');
-    Route::get('/account/favorites', fn () => Inertia::render('Account/Favorites', [
-        'favoriteProducts' => [],
-    ]))->name('account.favorites');
+    Route::get('/account/favorites', [FavoriteController::class, 'index'])->name('account.favorites');
+    Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
     Route::get('/account/addresses', fn () => Inertia::render('Account/Addresses', [
         'addresses' => [],
     ]))->name('account.addresses');
@@ -79,6 +81,12 @@ Route::middleware('auth')->group(function () {
             ]);
         })->name('merchant.pending');
     });
+
+    Route::middleware(['auth'])->group(function () {
+    Route::get('/checkout', function () {
+        return Inertia::render('Checkout');
+    })->name('checkout');
+});
 
     Route::middleware([EnsureRole::class.':commercant', EnsureActiveRole::class.':commercant'])->group(function () {
         Route::get('/merchant/dashboard', function (Request $request) {

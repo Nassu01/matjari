@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { FiEye, FiHeart, FiRefreshCw, FiSearch, FiShoppingBag } from 'react-icons/fi';
 import { FaStar } from 'react-icons/fa';
@@ -55,6 +55,7 @@ type ShopProps = PageProps<{
     products: PaginatedProducts;
     filters: Filters;
     categories: Category[];
+    favoriteIds: number[];
 }>;
 
 type StoredCartProduct = {
@@ -86,17 +87,21 @@ const sortOptions = [
 ];
 
 export default function ShopIndex() {
-    const { auth, products, filters = {}, categories = [] } = usePage<ShopProps>().props;
+    const { auth, products, filters = {}, categories = [], favoriteIds: pageFavoriteIds = [] } = usePage<ShopProps>().props;
     const productList = products?.data || [];
     const resultCount = products?.total || productList.length;
     const visibleCategories = categories;
     const [search, setSearch] = useState(filters.search || '');
     const [minPrice, setMinPrice] = useState(filters.min_price || '');
     const [maxPrice, setMaxPrice] = useState(filters.max_price || '');
-    const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+    const [favoriteIds, setFavoriteIds] = useState<number[]>(pageFavoriteIds);
     const [showFavoritePrompt, setShowFavoritePrompt] = useState(false);
     const [cartNotice, setCartNotice] = useState('');
     const activeFilters = useMemo(() => cleanFilters(filters), [filters]);
+
+    useEffect(() => {
+        setFavoriteIds(pageFavoriteIds);
+    }, [pageFavoriteIds]);
 
     const visitShop = (nextFilters: Filters = {}) => {
         router.get('/shop', cleanFilters({ ...activeFilters, ...nextFilters }), {
@@ -121,9 +126,10 @@ export default function ShopIndex() {
             return;
         }
 
-        setFavoriteIds((current) =>
-            current.includes(id) ? current.filter((favoriteId) => favoriteId !== id) : [...current, id],
-        );
+        router.post('/favorites/toggle', { product_id: id }, {
+            preserveScroll: true,
+            onSuccess: () => router.reload({ only: ['favoriteIds'] }),
+        });
     };
 
     const addToCart = (product: ShopProduct) => {
