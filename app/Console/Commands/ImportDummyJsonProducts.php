@@ -87,6 +87,7 @@ class ImportDummyJsonProducts extends Command
                     'price' => (float) ($payload['price'] ?? 0),
                     'stock' => max(0, (int) ($payload['stock'] ?? 0)),
                     'featured_image' => $this->imageFor($payload),
+                    'images' => $this->imagesFor($payload),
                     'is_active' => true,
                 ],
             );
@@ -214,5 +215,21 @@ class ImportDummyJsonProducts extends Command
         }
 
         return null;
+    }
+
+    private function imagesFor(array $payload): array
+    {
+        $images = $payload['images'] ?? [];
+
+        if (! is_array($images)) {
+            return [];
+        }
+
+        return collect($images)
+            ->map(fn ($image) => trim((string) $image))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 }

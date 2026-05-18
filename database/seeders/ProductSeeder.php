@@ -52,6 +52,7 @@ class ProductSeeder extends Seeder
                     'price' => (float) ($payload['price'] ?? 0),
                     'stock' => max(0, (int) ($payload['stock'] ?? 0)),
                     'featured_image' => $this->imageFor($payload),
+                    'images' => $this->imagesFor($payload),
                     'is_active' => true,
                 ],
             );
@@ -256,6 +257,7 @@ class ProductSeeder extends Seeder
                     'price' => 19 + (($generatedIndex * 7) % 140) + .99,
                     'stock' => 8 + (($generatedIndex * 5) % 52),
                     'featured_image' => $this->placeholderImage($name),
+                    'images' => [],
                     'is_active' => true,
                 ],
             );
@@ -263,6 +265,26 @@ class ProductSeeder extends Seeder
             $existingCount++;
             $generatedIndex++;
         }
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<int, string>
+     */
+    private function imagesFor(array $payload): array
+    {
+        $images = $payload['images'] ?? [];
+
+        if (! is_array($images)) {
+            return [];
+        }
+
+        return collect($images)
+            ->map(fn ($image) => trim((string) $image))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function generatedName(string $categorySlug, int $index): string

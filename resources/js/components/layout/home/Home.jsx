@@ -124,7 +124,7 @@ function imageByPath(images, keywords, fallbackIndex = 0) {
   return match?.url || imageFrom(images, fallbackIndex);
 }
 
-function buildHomeContent(images, databaseProducts = [], databaseCategories = [], settings = {}) {
+function buildHomeContent(images, databaseProducts = [], databaseCategories = [], databaseBlogPosts = [], settings = {}) {
   const sources = getDisplayImages11(images);
   const hero = settings.hero || {};
   const primaryHeroTitle = hero.title || "MATJARI";
@@ -153,23 +153,33 @@ function buildHomeContent(images, databaseProducts = [], databaseCategories = []
       { label: "Full Gallery", title: "Every File, One Storefront", image: imageFrom(sources, 1) },
       { label: "Fresh Source", title: "Browse the Complete Set", image: imageFrom(sources, 2) },
     ],
-    blogPosts: blogTemplates.map((post, index) => ({
-      ...post,
-      image: imageByPath(
-        sources,
-        [
-          "fashion-accessories/fashion-bags/totes",
-          "fashion/men/casual-wear",
-          "home-furniture/home-decor",
-          "fashion-accessories/jewelry",
-          "home-furniture/home-lighting",
-          "electronics/computing",
-        ],
-        index + 18
-      ),
-    })),
+    blogPosts: normalizeBlogPosts(databaseBlogPosts, sources),
     galleryImages: images,
   };
+}
+
+function normalizeBlogPosts(databaseBlogPosts, images) {
+  const fallbackKeywords = [
+    ["fashion-accessories/fashion-bags/totes", "fashion-accessories/handbags"],
+    ["fashion/men/casual-wear", "fashion/women"],
+    ["electronics/computing", "electronics/mobile"],
+    ["home-furniture/home-decor", "home-furniture"],
+    ["fashion-accessories/jewelry", "fashion-accessories"],
+  ];
+
+  const posts = Array.isArray(databaseBlogPosts) && databaseBlogPosts.length > 0
+    ? databaseBlogPosts
+    : blogTemplates;
+
+  return posts.map((post, index) => ({
+    ...post,
+    day: post.day || "01",
+    month: post.month || "Jan",
+    comments: Number(post.comments ?? post.comments_count ?? 0),
+    views: Number(post.views ?? 0),
+    url: post.url || (post.slug ? `/blog/${post.slug}` : "/blog"),
+    image: post.image || imageByPath(images, fallbackKeywords[index % fallbackKeywords.length], index + 18) || "/images/logomatjari.png",
+  }));
 }
 
 function formatHomePrice(value) {
@@ -193,7 +203,7 @@ function normalizeStorefrontProduct(product, index) {
 
 function normalizeStorefrontProducts(databaseProducts) {
   return Array.isArray(databaseProducts)
-    ? databaseProducts.slice(0, 96).map(normalizeStorefrontProduct)
+    ? databaseProducts.slice(0, 240).map(normalizeStorefrontProduct)
     : [];
 }
 
@@ -377,21 +387,28 @@ const slugifyCatalogValue = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-function buildCatalogMenuCategories(categories) {
-  if (!Array.isArray(categories)) return [];
+function buildCatalogMenuCategories(catalogMenu, categories = []) {
+  const source = Array.isArray(catalogMenu) && catalogMenu.length > 0 ? catalogMenu : categories;
 
-  return categories
+  if (!Array.isArray(source)) return [];
+
+  return source
     .filter((category) => category?.slug && category?.name)
-    .map((category) => ({
-      name: category.name,
-      slug: category.slug,
-      groups: [
-        {
-          title: "Catalogue",
-          links: [category.name],
-        },
-      ],
-    }));
+    .map((category) => {
+      const products = Array.isArray(category.products)
+        ? category.products.filter((product) => product?.name && product?.slug).slice(0, 8)
+        : [];
+
+      return {
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        description: category.description || `Selection MATJARI autour de ${category.name}.`,
+        count: Number(category.count || products.length || 0),
+        url: category.url || `/shop?category=${category.slug}`,
+        products,
+      };
+    });
 }
 
 export function JournalHeader({ categories = [], auth = undefined, forceDocumentNavigation = true }) {
@@ -406,10 +423,13 @@ export function JournalHeader({ categories = [], auth = undefined, forceDocument
   const searchButtonRef = useRef(null);
   const languageRef = useRef(null);
   const catalogRef = useRef(null);
-  const { auth: storefrontAuth, categories: storefrontCategories = [] } = useStorefrontContent();
+  const { auth: storefrontAuth, categories: storefrontCategories = [], catalogMenu: storefrontCatalogMenu = [] } = useStorefrontContent();
   const { currentLanguage, languageLabel, setCurrentLanguage, t } = useStorefrontLanguage();
   const headerCategories = categories.length > 0 ? categories : storefrontCategories;
-  const catalogCategories = useMemo(() => buildCatalogMenuCategories(headerCategories), [headerCategories]);
+  const catalogCategories = useMemo(
+    () => buildCatalogMenuCategories(storefrontCatalogMenu, headerCategories),
+    [headerCategories, storefrontCatalogMenu]
+  );
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 18);
@@ -602,24 +622,36 @@ export function JournalHeader({ categories = [], auth = undefined, forceDocument
                   <div className="journal-catalog-heading">
                     <span>Catalogue</span>
                     <strong>{activeCatalog.name}</strong>
+                    <p>{activeCatalog.description}</p>
                   </div>
 
-                  <div className="journal-catalog-columns">
-                    {activeCatalog.groups.map((group) => (
-                      <div key={group.title}>
-                        <h3>{group.title}</h3>
-                        {group.links.map((link) => (
+                  <div className="journal-catalog-actions">
+                    <CatalogLink href={activeCatalog.url || `/shop?category=${activeCatalog.slug}`} onClick={() => setCatalogOpen(false)}>
+                      Voir tous les produits
+                    </CatalogLink>
+                    <span>{activeCatalog.count} produits</span>
+                  </div>
+
+                  {activeCatalog.products.length > 0 ? (
+                    <div className="journal-catalog-product-grid">
+                      {activeCatalog.products.map((product) => (
                           <CatalogLink
-                            key={link}
-                            href={`/shop?category=${activeCatalog.slug}`}
+                            key={product.id || product.slug}
+                            href={product.url || `/products/${product.slug}`}
                             onClick={() => setCatalogOpen(false)}
                           >
-                            {link}
+                            {product.name}
                           </CatalogLink>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="journal-catalog-empty">
+                      <p>Aucun produit actif dans cette categorie pour le moment.</p>
+                      <CatalogLink href={activeCatalog.url || `/shop?category=${activeCatalog.slug}`} onClick={() => setCatalogOpen(false)}>
+                        Voir tous les produits
+                      </CatalogLink>
+                    </div>
+                  )}
                 </div>
                 )}
               </div>
@@ -696,16 +728,29 @@ export function JournalHeader({ categories = [], auth = undefined, forceDocument
       {open && (
         <div className="journal-mobile-panel">
           {catalogCategories.map((category) => (
-            <CatalogLink
-              key={category.slug}
-              href={`/shop?category=${category.slug}`}
-              onClick={() => {
-                setOpen(false);
-                setCatalogOpen(false);
-              }}
-            >
-              {category.name}
-            </CatalogLink>
+            <div className="journal-mobile-catalog-group" key={category.slug}>
+              <CatalogLink
+                href={category.url || `/shop?category=${category.slug}`}
+                onClick={() => {
+                  setOpen(false);
+                  setCatalogOpen(false);
+                }}
+              >
+                {category.name}
+              </CatalogLink>
+              {category.products.slice(0, 3).map((product) => (
+                <CatalogLink
+                  key={product.id || product.slug}
+                  href={product.url || `/products/${product.slug}`}
+                  onClick={() => {
+                    setOpen(false);
+                    setCatalogOpen(false);
+                  }}
+                >
+                  {product.name}
+                </CatalogLink>
+              ))}
+            </div>
           ))}
         </div>
       )}
@@ -1064,20 +1109,7 @@ function FeaturedCategories({ products, featureImage }) {
   const rowRefs = useRef({});
   const [rowNav, setRowNav] = useState({});
   const rows = useMemo(
-    () => [
-      {
-        title: "Beauty",
-        links: ["Makeup", "Face", "Eyes", "Lips"],
-        image: featureImage || products[6]?.image,
-        products: [...products.slice(4, 8), ...products.slice(0, 4)],
-      },
-      {
-        title: "Skin Care",
-        links: ["Moisturizers", "Hand Lotion", "Face Primers", "Body Lotion"],
-        image: products[1]?.image || featureImage,
-        products: [...products.slice(0, 4), ...products.slice(4, 8)],
-      },
-    ],
+    () => buildFeaturedCategoryRows(products, featureImage),
     [featureImage, products]
   );
 
@@ -1143,13 +1175,19 @@ function FeaturedCategories({ products, featureImage }) {
                       <h3>{row.title}</h3>
                       <div>
                         {row.links.map((link) => (
-                          <a key={link} href="/shop">{link}</a>
+                          <a key={link} href={row.url}>{link}</a>
                         ))}
                       </div>
-                      <a className="journal-feature-more" href="/shop">View More <MdOutlineKeyboardArrowRight /></a>
+                      <a className="journal-feature-more" href={row.url}>View More <MdOutlineKeyboardArrowRight /></a>
                     </div>
                     {row.image && (
-                      <img src={row.image} alt={`${row.title} category`} />
+                      <img
+                        src={row.image}
+                        alt={`${row.title} category`}
+                        onError={(event) => {
+                          event.currentTarget.src = "/images/logomatjari.png";
+                        }}
+                      />
                     )}
                   </article>
                   {row.products.map((product, index) => (
@@ -1168,6 +1206,28 @@ function FeaturedCategories({ products, featureImage }) {
       </div>
     </section>
   );
+}
+
+function buildFeaturedCategoryRows(products, featureImage) {
+  const electronicsProducts = products.filter((product) => product.category === "electronics");
+  const shoesProducts = products.filter((product) => product.category === "shoes");
+
+  return [
+    {
+      title: "Electronics",
+      links: ["Phones", "Laptops", "Tablets", "Headphones"],
+      url: "/shop?category=electronics",
+      image: electronicsProducts.find((product) => product.image)?.image || "/images/logomatjari.png",
+      products: electronicsProducts,
+    },
+    {
+      title: "Espadrilles & Shoes",
+      links: ["Espadrilles", "Sneakers", "Sandals", "Boots"],
+      url: "/shop?category=shoes",
+      image: shoesProducts.find((product) => product.image)?.image || "/images/logomatjari.png",
+      products: shoesProducts,
+    },
+  ].filter((row) => row.products.length > 0 || row.image);
 }
 
 function PromoBanner({ image }) {
@@ -1292,14 +1352,20 @@ function Blog({ blogPosts }) {
           <div className="journal-blog-track">
             {blogPosts.map((post) => (
               <article className="journal-blog-card" key={post.title} data-animate>
-                <InertiaLink className="journal-blog-image" href={`/blog/${post.slug}`} aria-label={post.title}>
-                  <img src={post.image} alt={post.title} />
+                <InertiaLink className="journal-blog-image" href={post.url || `/blog/${post.slug}`} aria-label={post.title}>
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    onError={(event) => {
+                      event.currentTarget.src = "/images/logomatjari.png";
+                    }}
+                  />
                   <div><strong>{post.day}</strong><span>{post.month}</span></div>
                 </InertiaLink>
                 <p>{post.category} / admin / {post.comments} commentaires / {post.views} vues</p>
-                <h3><InertiaLink className="journal-blog-title-link" href={`/blog/${post.slug}`}>{post.title}</InertiaLink></h3>
+                <h3><InertiaLink className="journal-blog-title-link" href={post.url || `/blog/${post.slug}`}>{post.title}</InertiaLink></h3>
                 <p>{post.excerpt}</p>
-                <InertiaLink href={`/blog/${post.slug}`}>Lire l'article <MdOutlineKeyboardArrowRight /></InertiaLink>
+                <InertiaLink href={post.url || `/blog/${post.slug}`}>Lire l'article <MdOutlineKeyboardArrowRight /></InertiaLink>
               </article>
             ))}
           </div>
@@ -1377,10 +1443,10 @@ export function JournalStyle() {
 export default function Home() {
   useScrollReveal();
   const { images, status } = useImages11();
-  const { auth, settings, products: databaseProducts = [], categories: databaseCategories = [] } = useStorefrontContent();
+  const { auth, settings, products: databaseProducts = [], categories: databaseCategories = [], blogPosts: databaseBlogPosts = [] } = useStorefrontContent();
   const content = useMemo(() => {
-    return buildHomeContent(images, databaseProducts, databaseCategories, settings);
-  }, [databaseCategories, databaseProducts, images, settings]);
+    return buildHomeContent(images, databaseProducts, databaseCategories, databaseBlogPosts, settings);
+  }, [databaseBlogPosts, databaseCategories, databaseProducts, images, settings]);
 
   return (
     <main className="journal-page">
@@ -1417,7 +1483,7 @@ const css = `
 .journal-nav-left a, .journal-nav-right a { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; box-shadow: none; white-space: nowrap; }
 .journal-catalog-menu { position: relative; display: inline-flex; align-items: center; }
 .journal-nav-left .journal-catalog-trigger { width: auto; height: auto; display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; color: inherit; padding: 0; font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit; line-height: inherit; text-transform: inherit; white-space: nowrap; cursor: pointer; }
-.journal-catalog-dropdown { position: absolute; left: 0; top: calc(100% + 18px); z-index: 260; width: min(1060px, calc(100vw - 52px)); min-height: 438px; display: grid; grid-template-columns: 285px minmax(0, 1fr); gap: 0; overflow: hidden; border: 1px solid rgba(32,37,38,.12); border-radius: 10px; background: rgba(255,255,255,.98); box-shadow: 0 28px 70px rgba(32,37,38,.18); backdrop-filter: blur(14px); animation: journalDropdownIn 170ms ease-out both; }
+.journal-catalog-dropdown { position: absolute; left: 0; top: calc(100% + 18px); z-index: 260; width: min(1080px, calc(100vw - 52px)); min-height: 430px; display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 0; overflow: hidden; border: 1px solid rgba(32,37,38,.12); border-radius: 10px; background: rgba(255,255,255,.98); box-shadow: 0 28px 70px rgba(32,37,38,.18); backdrop-filter: blur(14px); animation: journalDropdownIn 170ms ease-out both; }
 .journal-catalog-list { display: grid; align-content: start; gap: 3px; border-right: 1px solid rgba(32,37,38,.1); background: #fbfaf8; padding: 12px; }
 .journal-catalog-item { position: relative; min-height: 38px; display: flex !important; align-items: center; gap: 10px !important; border-radius: 7px; padding: 0 12px 0 10px; color: #394044; font-size: 13px; font-weight: 600; letter-spacing: 0; line-height: 1.2; text-transform: none; transition: background-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease; }
 .journal-catalog-item span { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: rgba(32,37,38,.22); transition: background-color 160ms ease, transform 160ms ease; }
@@ -1425,19 +1491,26 @@ const css = `
 .journal-catalog-item.is-active { background: #eee4dc; color: #111827; box-shadow: inset 3px 0 0 #202526; transform: translateX(2px); }
 .journal-catalog-item:hover span,
 .journal-catalog-item.is-active span { background: #202526; transform: scale(1.12); }
-.journal-catalog-detail { padding: 28px 32px 30px; background: linear-gradient(135deg, #fff, #fbf7f2); }
-.journal-catalog-heading { margin-bottom: 24px; }
+.journal-catalog-detail { display: flex; min-width: 0; flex-direction: column; padding: 26px 30px 28px; background: linear-gradient(135deg, #fff, #fbf7f2); }
+.journal-catalog-heading { margin-bottom: 16px; }
 .journal-catalog-heading span { display: block; margin-bottom: 6px; color: #b91f2c; font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .journal-catalog-heading strong { display: block; color: #202526; font-family: 'Playfair Display', Georgia, serif; font-size: 30px; font-weight: 600; line-height: 1.08; letter-spacing: 0; text-transform: none; }
-.journal-catalog-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
-.journal-catalog-columns h3 { margin: 0 0 13px; color: #202526; font-family: Inter, system-ui, sans-serif; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
-.journal-catalog-columns a { display: flex; width: fit-content; max-width: 100%; margin: 0 0 10px; border-radius: 6px; color: #626a6e; font-size: 14px; font-weight: 500; letter-spacing: 0; line-height: 1.35; text-transform: none; transition: color 160ms ease, background-color 160ms ease, transform 160ms ease; }
-.journal-catalog-columns a:hover { color: #111827; background: rgba(238,228,220,.62); transform: translateX(3px); }
+.journal-catalog-heading p { max-width: 640px; margin: 10px 0 0; color: #687074; font-size: 14px; font-weight: 400; line-height: 1.7; letter-spacing: 0; text-transform: none; }
+.journal-catalog-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid rgba(32,37,38,.09); }
+.journal-catalog-actions a { min-height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: #202526; padding: 0 15px; color: #fff; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; transition: transform 160ms ease, background-color 160ms ease; }
+.journal-catalog-actions a:hover { transform: translateY(-1px); background: #000; color: #fff; }
+.journal-catalog-actions span { color: #687074; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.journal-catalog-product-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.journal-catalog-product-grid a { min-height: 44px; display: flex; align-items: center; min-width: 0; border: 1px solid rgba(32,37,38,.08); border-radius: 8px; background: rgba(255,255,255,.76); padding: 9px 12px; color: #394044; font-size: 14px; font-weight: 600; letter-spacing: 0; line-height: 1.25; text-transform: none; transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease; }
+.journal-catalog-product-grid a:hover { border-color: rgba(32,37,38,.18); background: rgba(238,228,220,.68); color: #111827; transform: translateX(3px); }
+.journal-catalog-empty { margin-top: 12px; border: 1px dashed rgba(32,37,38,.18); border-radius: 8px; background: rgba(255,255,255,.68); padding: 18px; }
+.journal-catalog-empty p { margin: 0 0 12px; color: #687074; font-size: 14px; line-height: 1.6; }
+.journal-catalog-empty a { color: #202526; font-size: 13px; font-weight: 800; text-decoration: underline; text-underline-offset: 4px; }
 [dir="rtl"] .journal-catalog-dropdown { left: auto; right: 0; }
 [dir="rtl"] .journal-catalog-list { border-right: 0; border-left: 1px solid rgba(32,37,38,.1); }
 [dir="rtl"] .journal-catalog-item:hover,
 [dir="rtl"] .journal-catalog-item.is-active { box-shadow: inset -3px 0 0 #202526; transform: translateX(-2px); }
-[dir="rtl"] .journal-catalog-columns a:hover { transform: translateX(-3px); }
+[dir="rtl"] .journal-catalog-product-grid a:hover { transform: translateX(-3px); }
 .journal-language-menu { position: relative; display: inline-flex; align-items: center; }
 .journal-nav-right .journal-language-trigger { width: auto; height: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 14px; line-height: 20px; white-space: nowrap; }
 .journal-language-dropdown { position: absolute; top: calc(100% + 14px); right: 0; z-index: 240; min-width: 168px; display: grid; gap: 4px; border: 1px solid rgba(32,37,38,.12); border-radius: 10px; background: rgba(255,255,255,.98); box-shadow: 0 22px 54px rgba(32,37,38,.16); padding: 8px; backdrop-filter: blur(12px); animation: journalDropdownIn 160ms ease-out both; }
@@ -1469,6 +1542,9 @@ const css = `
 .journal-search-popover button:hover { background: #262626; transform: translateY(-1px); }
 .journal-mobile-panel { display: none; border-top: 1px solid var(--line); padding: 12px 24px; background: white; }
 .journal-mobile-panel a { display: block; padding: 12px 0; }
+.journal-mobile-catalog-group { display: grid; gap: 4px; }
+.journal-mobile-catalog-group > a:first-child { font-weight: 800; color: #111827; }
+.journal-mobile-catalog-group > a:not(:first-child) { margin-left: 12px; color: #687074; font-size: 13px; }
 
 .journal-hero { position: relative; height: 617px; overflow: hidden; background: #1d130f; }
 .journal-hero-main { position: absolute; inset: 0; overflow: hidden; background: #1d130f; }
@@ -1759,7 +1835,7 @@ const css = `
   color: #111827;
   transform: translateX(2px);
 }
-.journal-nav-left .journal-catalog-columns a:hover {
+.journal-nav-left .journal-catalog-product-grid a:hover {
   color: #111827;
   transform: translateX(3px);
 }
@@ -1767,7 +1843,7 @@ const css = `
 [dir="rtl"] .journal-nav-left .journal-catalog-item.is-active {
   transform: translateX(-2px);
 }
-[dir="rtl"] .journal-nav-left .journal-catalog-columns a:hover {
+[dir="rtl"] .journal-nav-left .journal-catalog-product-grid a:hover {
   transform: translateX(-3px);
 }
 .journal-logo-link:hover .journal-logo {
@@ -1905,7 +1981,7 @@ const css = `
   .journal-header-inner { padding: 0 20px; }
   .journal-nav-left, .journal-nav-right { gap: 14px; }
   .journal-catalog-dropdown { width: min(940px, calc(100vw - 40px)); grid-template-columns: 260px minmax(0, 1fr); }
-  .journal-catalog-columns { gap: 20px; }
+  .journal-catalog-product-grid { gap: 9px; }
   .journal-blog-track > .journal-blog-card { flex-basis: clamp(380px, 31vw, 440px); }
   .journal-feature-row { grid-template-columns: minmax(220px, 260px) minmax(0, 1fr); gap: 18px; }
   .journal-feature-products { gap: 18px; }

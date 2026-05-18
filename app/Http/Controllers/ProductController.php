@@ -133,6 +133,9 @@ class ProductController extends Controller
 
     private function summaryPayload(Product $product): array
     {
+        $images = $this->galleryUrls($product);
+        $image = $images[0] ?? $this->fallbackImageUrl($product->id);
+
         return [
             'id' => $product->id,
             'name' => $product->name,
@@ -145,9 +148,9 @@ class ProductController extends Controller
             'sale' => false,
             'top' => $product->order_items_count > 0,
             'stock' => $product->stock,
-            'image' => $this->imageUrl($product->featured_image, $product->id),
-            'thumbnail' => $this->imageUrl($product->featured_image, $product->id),
-            'images' => array_values(array_filter([$this->imageUrl($product->featured_image, $product->id)])),
+            'image' => $image,
+            'thumbnail' => $image,
+            'images' => $images,
             'description' => $product->short_description,
             'url' => route('products.show', ['product' => $product->slug]),
         ];
@@ -155,15 +158,13 @@ class ProductController extends Controller
 
     private function detailPayload(Product $product): array
     {
-        $image = $this->imageUrl($product->featured_image, $product->id);
-
         return [
             ...$this->summaryPayload($product),
             'sku' => $product->sku,
             'stock' => $product->stock,
             'description' => $product->description ?: $product->short_description,
             'short_description' => $product->short_description,
-            'images' => array_values(array_filter([$image])),
+            'images' => $this->galleryUrls($product),
             'options' => [
                 'brand' => $product->brand?->name,
                 'category' => $product->category?->name,
@@ -171,6 +172,19 @@ class ProductController extends Controller
                 'stock' => $product->stock > 0 ? 'En stock' : 'Rupture de stock',
             ],
         ];
+    }
+
+    private function galleryUrls(Product $product): array
+    {
+        $images = collect([$product->featured_image])
+            ->merge(is_array($product->images) ? $product->images : [])
+            ->map(fn ($path) => $this->imageUrl(is_string($path) ? $path : null, $product->id))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return $images ?: array_values(array_filter([$this->fallbackImageUrl($product->id)]));
     }
 
     private function imageUrl(?string $path, ?int $fallbackIndex = null): ?string
@@ -193,6 +207,10 @@ class ProductController extends Controller
 
         if (is_file(public_path($path))) {
             return '/'.ltrim($path, '/');
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            return Storage::disk('public')->url($path);
         }
 
         return Storage::exists($path) ? Storage::url($path) : $this->fallbackImageUrl($fallbackIndex);

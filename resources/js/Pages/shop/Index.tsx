@@ -479,7 +479,7 @@ function normalizeImagePath(path: string): string {
     if (value.startsWith('storage/')) return `/${value}`;
     if (value.startsWith('images/')) return `/${value}`;
 
-    return FALLBACK_PRODUCT_IMAGE;
+    return `/storage/${value.replace(/^\/+/, '')}`;
 }
 
 function CartNotice({ message }: { message: string }) {

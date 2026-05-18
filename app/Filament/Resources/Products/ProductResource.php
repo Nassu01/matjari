@@ -16,6 +16,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class ProductResource extends Resource
@@ -52,17 +53,43 @@ class ProductResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->isAdmin() || auth()->user()?->isMerchant();
+        $user = auth()->user();
+
+        return $user?->isAdmin() || ($user?->isMerchant() && $user->isActive());
     }
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->isAdmin() || auth()->user()?->isMerchant();
+        $user = auth()->user();
+
+        return $user?->isAdmin() || ($user?->isMerchant() && $user->isActive());
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->isAdmin() || auth()->user()?->isMerchant();
+        $user = auth()->user();
+
+        return $user?->isAdmin() || ($user?->isMerchant() && $user->isActive());
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return static::canManageRecord($record);
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return static::canManageRecord($record);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return static::canManageRecord($record);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->isAdmin() || (auth()->user()?->isMerchant() && auth()->user()?->isActive());
     }
 
     public static function getEloquentQuery(): Builder
@@ -74,11 +101,24 @@ class ProductResource extends Resource
             return $query;
         }
 
-        if ($user?->isMerchant()) {
+        if ($user?->isMerchant() && $user->isActive()) {
             return $query->where('merchant_id', $user->id);
         }
 
         return $query->whereRaw('1 = 0');
+    }
+
+    private static function canManageRecord(Model $record): bool
+    {
+        $user = auth()->user();
+
+        if ($user?->isAdmin()) {
+            return true;
+        }
+
+        return $user?->isMerchant()
+            && $user->isActive()
+            && (int) $record->merchant_id === (int) $user->id;
     }
 
     public static function getPages(): array

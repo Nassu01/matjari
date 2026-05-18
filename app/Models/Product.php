@@ -23,6 +23,7 @@ class Product extends Model
         'price',
         'stock',
         'featured_image',
+        'images',
         'is_active',
         'external_source',
         'external_id',
@@ -32,6 +33,7 @@ class Product extends Model
     {
         return [
             'price' => 'decimal:2',
+            'images' => 'array',
             'is_active' => 'boolean',
         ];
     }

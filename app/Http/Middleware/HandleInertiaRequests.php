@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Category;
+use App\Models\Product;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -69,6 +71,34 @@ class HandleInertiaRequests extends Middleware
                 'secondaryButtonUrl' => $settings()->hero_secondary_button_url,
                 'imagePath' => $settings()->hero_image_path,
             ],
+            'catalogMenu' => fn () => Category::query()
+                ->where('is_active', true)
+                ->whereHas('products', fn ($query) => $query->where('is_active', true))
+                ->withCount(['products' => fn ($query) => $query->where('is_active', true)])
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug', 'description'])
+                ->map(fn (Category $category) => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'slug' => $category->slug,
+                    'description' => $category->description ?: "Selection MATJARI autour de {$category->name}.",
+                    'count' => $category->products_count,
+                    'url' => "/shop?category={$category->slug}",
+                    'products' => Product::query()
+                        ->where('is_active', true)
+                        ->where('category_id', $category->id)
+                        ->latest()
+                        ->limit(8)
+                        ->get(['id', 'name', 'slug'])
+                        ->map(fn (Product $product) => [
+                            'id' => $product->id,
+                            'name' => $product->name,
+                            'slug' => $product->slug,
+                            'url' => route('products.show', ['product' => $product->slug]),
+                        ])
+                        ->values(),
+                ])
+                ->values(),
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

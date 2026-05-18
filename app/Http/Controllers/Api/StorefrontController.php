@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\BlogPost;
 use App\Models\Product;
 use App\Models\SiteSetting;
 use App\Support\Images11;
@@ -73,7 +74,9 @@ class StorefrontController extends Controller
                 ] : null,
             ],
             'categories' => $categories,
-            'products' => $products->take(16)->values(),
+            'products' => $products->take(240)->values(),
+            'blogPosts' => $this->blogPosts(),
+            'catalogMenu' => $this->catalogMenu(),
         ]);
     }
 
@@ -94,7 +97,8 @@ class StorefrontController extends Controller
             ->latest()
             ->get()
             ->map(function (Product $product, int $index) {
-                $image = $this->assetPath($product->featured_image) ?: Images11::urlAt($index) ?: '/images/logomatjari.png';
+                $images = $this->galleryUrls($product);
+                $image = $images[0] ?? (Images11::urlAt($index) ?: '/images/logomatjari.png');
 
                 return [
                     'id' => $product->id,
@@ -103,6 +107,7 @@ class StorefrontController extends Controller
                     'sku' => $product->sku,
                     'price' => (float) $product->price,
                     'image' => $image,
+                    'images' => $images,
                     'url' => route('products.show', ['product' => $product->slug]),
                     'description' => $product->short_description ?: $product->description,
                     'category' => $product->category?->slug ?: $product->category?->name ?: 'other',
@@ -112,6 +117,17 @@ class StorefrontController extends Controller
                 ];
             })
             ->values();
+    }
+
+    private function galleryUrls(Product $product): array
+    {
+        return collect([$product->featured_image])
+            ->merge(is_array($product->images) ? $product->images : [])
+            ->map(fn ($path) => is_string($path) ? $this->assetPath($path) : '')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function activeCategories()
@@ -129,6 +145,83 @@ class StorefrontController extends Controller
                 'count' => $category->products_count,
                 'url' => "/shop?category={$category->slug}",
             ])
+            ->values();
+    }
+
+    private function catalogMenu()
+    {
+        return Category::query()
+            ->where('is_active', true)
+            ->whereHas('products', fn ($query) => $query->where('is_active', true))
+            ->withCount(['products' => fn ($query) => $query->where('is_active', true)])
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'description'])
+            ->map(function (Category $category) {
+                $products = $category->products()
+                    ->where('is_active', true)
+                    ->latest()
+                    ->limit(8)
+                    ->get(['id', 'name', 'slug'])
+                    ->map(fn (Product $product) => [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'slug' => $product->slug,
+                        'url' => route('products.show', ['product' => $product->slug]),
+                    ])
+                    ->values();
+
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'slug' => $category->slug,
+                    'description' => $category->description ?: $this->categoryDescription($category->slug, $category->name),
+                    'count' => $category->products_count,
+                    'url' => "/shop?category={$category->slug}",
+                    'products' => $products,
+                ];
+            })
+            ->values();
+    }
+
+    private function categoryDescription(string $slug, string $name): string
+    {
+        return match ($slug) {
+            'bags' => 'Sacs pratiques et elegants pour accompagner chaque journee.',
+            'shoes' => 'Chaussures confortables et stylisees pour toutes les saisons.',
+            'accessories' => 'Accessoires, montres et details utiles pour completer votre style.',
+            'electronics' => 'Produits tech, audio et appareils connectes pour le quotidien.',
+            'clothing' => 'Pieces mode faciles a porter, selectionnees pour tous les jours.',
+            default => "Selection MATJARI autour de {$name}.",
+        };
+    }
+
+    private function blogPosts()
+    {
+        return BlogPost::query()
+            ->published()
+            ->latest('published_at')
+            ->latest()
+            ->limit(8)
+            ->get()
+            ->map(function (BlogPost $post) {
+                $publishedAt = $post->published_at ?: $post->created_at;
+
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'slug' => $post->slug,
+                    'category' => $post->category,
+                    'author' => $post->author,
+                    'date' => $publishedAt?->translatedFormat('d M') ?? '',
+                    'day' => $publishedAt?->format('d') ?? '',
+                    'month' => $publishedAt?->translatedFormat('M') ?? '',
+                    'image' => $this->assetPath($post->featured_image) ?: (Images11::urlAt(18) ?: '/images/logomatjari.png'),
+                    'excerpt' => $post->excerpt,
+                    'views' => $post->views_count,
+                    'comments' => 0,
+                    'url' => route('blog.show', ['slug' => $post->slug]),
+                ];
+            })
             ->values();
     }
 
@@ -152,6 +245,10 @@ class StorefrontController extends Controller
 
         if (is_file(public_path($path))) {
             return '/'.ltrim($path, '/');
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            return Storage::disk('public')->url($path);
         }
 
         return Storage::exists($path) ? Storage::url($path) : '';

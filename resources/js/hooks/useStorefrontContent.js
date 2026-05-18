@@ -50,6 +50,8 @@ const defaultContent = {
   },
   categories: [],
   products: [],
+  blogPosts: [],
+  catalogMenu: [],
 };
 
 let cachedContent = null;
@@ -99,6 +101,8 @@ async function loadStorefrontContent() {
           },
           categories: Array.isArray(payload.categories) ? payload.categories : [],
           products: Array.isArray(payload.products) ? payload.products : [],
+          blogPosts: Array.isArray(payload.blogPosts) ? payload.blogPosts : [],
+          catalogMenu: Array.isArray(payload.catalogMenu) ? payload.catalogMenu : [],
         };
 
         return cachedContent;

@@ -3,12 +3,15 @@
 namespace App\Filament\Resources\Products\Tables;
 
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class ProductsTable
@@ -18,35 +21,44 @@ class ProductsTable
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
-                TextColumn::make('merchant.name')
-                    ->label('Merchant')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('brand.name')
-                    ->label('Brand')
-                    ->searchable(),
-                TextColumn::make('category.name')
-                    ->label('Category')
-                    ->searchable(),
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable(),
+                ImageColumn::make('featured_image')
+                    ->label('Image')
+                    ->getStateUsing(fn ($record) => static::imageUrl($record->featured_image)),
                 TextColumn::make('name')
-                    ->searchable(),
-                TextColumn::make('slug')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('sku')
                     ->label('SKU')
                     ->searchable(),
-                TextColumn::make('short_description')
-                    ->searchable(),
+                TextColumn::make('category.name')
+                    ->label('Category')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('brand.name')
+                    ->label('Brand')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('-'),
                 TextColumn::make('price')
                     ->money('MAD')
                     ->sortable(),
                 TextColumn::make('stock')
                     ->numeric()
                     ->sortable(),
-                ImageColumn::make('featured_image')
-                    ->getStateUsing(fn ($record) => static::imageUrl($record->featured_image)),
-                IconColumn::make('is_active')
-                    ->boolean(),
+                ToggleColumn::make('is_active')
+                    ->label('Active')
+                    ->sortable(),
+                TextColumn::make('merchant.name')
+                    ->label('Merchant')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->placeholder('-'),
+                TextColumn::make('slug')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -57,11 +69,29 @@ class ProductsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('category_id')
+                    ->label('Category')
+                    ->relationship('category', 'name')
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('brand_id')
+                    ->label('Brand')
+                    ->relationship('brand', 'name')
+                    ->searchable()
+                    ->preload(),
+                TernaryFilter::make('is_active')
+                    ->label('Active'),
+                SelectFilter::make('merchant_id')
+                    ->label('Merchant')
+                    ->relationship('merchant', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn () => auth()->user()?->isAdmin()),
             ])
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -73,7 +103,7 @@ class ProductsTable
     private static function imageUrl(?string $path): ?string
     {
         if (! $path) {
-            return null;
+            return '/images/logomatjari.png';
         }
 
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
