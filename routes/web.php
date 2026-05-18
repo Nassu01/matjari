@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StorefrontController;
@@ -14,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use App\Http\Controllers\FavoriteController;
 
 
 Route::get('/', StorefrontController::class)->name('storefront.home');
@@ -35,28 +37,16 @@ Route::get('/dashboard', DashboardController::class)->middleware('auth')->name('
 
 Route::middleware('auth')->group(function () {
     Route::get('/order', StorefrontController::class)->name('storefront.order');
-    Route::get('/checkout', StorefrontController::class)->name('storefront.checkout');
+    Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+    Route::get('/checkout/success/{order}/invoice', [CheckoutController::class, 'invoice'])->name('checkout.success.invoice');
     Route::get('/support', StorefrontController::class)->name('support');
 
     Route::redirect('/account/profile', '/profile')->name('account.profile');
-    Route::get('/account/orders', function (Request $request) {
-        $orders = $request->user()->orders()
-            ->latest()
-            ->get()
-            ->map(fn ($order) => [
-                'id' => $order->id,
-                'order_number' => $order->order_number,
-                'status' => $order->status,
-                'payment_status' => $order->payment_status,
-                'total' => (float) $order->total,
-                'created_at' => $order->created_at?->toFormattedDateString(),
-            ]);
-
-        return Inertia::render('Account/Orders', [
-            'orders' => $orders,
-        ]);
-    })->name('account.orders');
-    Route::get('/account/orders/{id}', StorefrontController::class)->name('account.orders.show');
+    Route::get('/account/orders', [OrderController::class, 'index'])->name('account.orders');
+    Route::get('/account/orders/{order}', [OrderController::class, 'show'])->name('account.orders.show');
+    Route::get('/account/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('account.orders.invoice');
     Route::get('/account/favorites', [FavoriteController::class, 'index'])->name('account.favorites');
     Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
     Route::get('/account/addresses', fn () => Inertia::render('Account/Addresses', [
@@ -81,12 +71,6 @@ Route::middleware('auth')->group(function () {
             ]);
         })->name('merchant.pending');
     });
-
-    Route::middleware(['auth'])->group(function () {
-    Route::get('/checkout', function () {
-        return Inertia::render('Checkout');
-    })->name('checkout');
-});
 
     Route::middleware([EnsureRole::class.':commercant', EnsureActiveRole::class.':commercant'])->group(function () {
         Route::get('/merchant/dashboard', function (Request $request) {
@@ -207,7 +191,7 @@ Route::middleware('auth')->group(function () {
                 'order_number' => $order->order_number,
                 'customer_name' => $order->customer_name,
                 'customer_phone' => $order->customer_phone,
-                'shipping_address' => $order->customer_address ?? 'Adresse inconnue',
+                'shipping_address' => $order->delivery_address ?? 'Adresse inconnue',
                 'total' => (float) $order->total,
                 'status' => $order->status,
             ])->values();
@@ -216,7 +200,7 @@ Route::middleware('auth')->group(function () {
                 'id' => $order->id,
                 'order_number' => $order->order_number,
                 'customer_name' => $order->customer_name,
-                'shipping_address' => $order->customer_address ?? 'Adresse inconnue',
+                'shipping_address' => $order->delivery_address ?? 'Adresse inconnue',
                 'total' => (float) $order->total,
                 'status' => $order->status,
             ])->values();
@@ -225,7 +209,7 @@ Route::middleware('auth')->group(function () {
                 'id' => $order->id,
                 'order_number' => $order->order_number,
                 'customer_name' => $order->customer_name,
-                'shipping_address' => $order->customer_address ?? 'Adresse inconnue',
+                'shipping_address' => $order->delivery_address ?? 'Adresse inconnue',
                 'total' => (float) $order->total,
                 'status' => $order->status,
                 'delivered_at' => $order->shipped_at?->toFormattedDateString(),

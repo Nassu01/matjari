@@ -36,7 +36,7 @@ class LoginController extends Controller
             default => '/dashboard',
         };
 
-        return redirect()->intended($destination);
+        return redirect($destination);
     }
 
     public function destroy(Request $request): RedirectResponse

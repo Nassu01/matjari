@@ -1,0 +1,1 @@
+import{j as o}from"./client-BfrtrBW3.js";import{M as a,N as e,O as t}from"./Home-Bq9hueXk.js";function i({children:r}){return o.jsxs("div",{className:"journal-page min-h-screen bg-white text-black",children:[o.jsx(a,{forceDocumentNavigation:!1}),r,o.jsx(e,{}),o.jsx(t,{})]})}export{i as A};
