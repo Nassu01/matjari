@@ -158,7 +158,7 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
 
           {forceDocumentNavigation ? (
             <a href="/" className="navbar-center" aria-label={homeLabel}>
-              {logoPath && <img className="navbar-logo" src={logoPath} alt="" />}
+              {logoPath && <img className="navbar-logo" alt="" />}
               <span className="navbar-logo-text">{siteName}</span>
             </a>
           ) : (

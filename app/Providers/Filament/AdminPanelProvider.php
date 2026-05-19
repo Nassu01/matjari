@@ -2,8 +2,15 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\MonthlyRevenueChart;
 use App\Filament\Widgets\OrderStatusPieChart;
+use App\Filament\Widgets\PendingApprovalsOverview;
+use App\Filament\Widgets\ProductsByCategoryChart;
+use App\Filament\Widgets\RecentOrdersWidget;
 use App\Filament\Widgets\StoreStatsOverview;
+use App\Filament\Widgets\TopProductsWidget;
+use App\Filament\Widgets\UsersByRoleChart;
+use App\Filament\Widgets\UsersByStatusChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -42,6 +49,13 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 StoreStatsOverview::class,
                 OrderStatusPieChart::class,
+                UsersByRoleChart::class,
+                UsersByStatusChart::class,
+                ProductsByCategoryChart::class,
+                MonthlyRevenueChart::class,
+                PendingApprovalsOverview::class,
+                RecentOrdersWidget::class,
+                TopProductsWidget::class,
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
