@@ -24,12 +24,12 @@ export default function CreateProduct({ categories }: Props) {
             <Head title="Ajouter un produit" />
             <AuthStorefrontLayout>
                 <main className="account-dashboard-page px-4 py-8 lg:px-10 lg:py-12">
-                    <div className="grid gap-8 xl:grid-cols-[320px_1fr]">
+                    <div className="mx-auto grid w-full max-w-[1580px] gap-6 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)] xl:gap-8">
                         <MerchantSidebar />
-                        <section className="rounded-3xl border border-black/10 bg-white p-8 shadow-xl shadow-black/5">
+                        <section className="min-w-0 rounded-3xl border border-black/10 bg-white p-5 shadow-xl shadow-black/5 sm:p-8">
                             <div className="mb-6">
                                 <span className="text-sm uppercase tracking-[0.3em] text-red-500">Produit</span>
-                                <h1 className="mt-3 text-4xl font-semibold text-slate-900">Ajouter un produit</h1>
+                                <h1 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">Ajouter un produit</h1>
                                 <p className="mt-3 text-slate-600">Créez un nouveau produit pour votre boutique. Les champs suivants sont les informations de base requises.</p>
                             </div>
 
@@ -62,7 +62,7 @@ export default function CreateProduct({ categories }: Props) {
                                 </div>
                             </div>
 
-                            <div className="mt-8 flex flex-wrap gap-3">
+                            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                                 <button type="button" className="inline-flex h-12 items-center justify-center rounded-full bg-black px-6 text-sm font-semibold text-white">Enregistrer</button>
                                 <Link href="/merchant/products" className="inline-flex h-12 items-center justify-center rounded-full border border-black bg-white px-6 text-sm font-semibold text-black">
                                     Annuler

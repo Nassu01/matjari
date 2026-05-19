@@ -33,13 +33,13 @@ export default function Dashboard() {
             <Head title="Tableau de bord livreur" />
             <AuthStorefrontLayout>
                 <main className="account-dashboard-page px-4 py-8 lg:px-10 lg:py-12">
-                    <div className="grid gap-8 xl:grid-cols-[320px_1fr]">
+                    <div className="mx-auto grid w-full max-w-[1580px] gap-6 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)] xl:gap-8">
                         <DeliverySidebar />
 
-                        <section className="space-y-8">
-                            <header className="rounded-3xl border border-black/10 bg-white p-8 shadow-xl shadow-black/5">
+                        <section className="min-w-0 space-y-8">
+                            <header className="rounded-3xl border border-black/10 bg-white p-5 shadow-xl shadow-black/5 sm:p-8">
                                 <p className="mb-3 text-sm uppercase tracking-[0.3em] text-red-500">Bienvenue</p>
-                                <h1 className="text-4xl font-semibold tracking-tight text-[#111]">Bonjour, {displayName}</h1>
+                                <h1 className="break-words text-3xl font-semibold tracking-tight text-[#111] sm:text-4xl">Bonjour, {displayName}</h1>
                                 <p className="mt-3 max-w-2xl text-base text-slate-600">Bienvenue dans votre espace livreur. Suivez vos livraisons et gérez vos tournées.</p>
                                 <div className="mt-6 grid gap-3 sm:grid-cols-3">
                                     <StatusBadge label={status === 'active' ? 'Compte livreur validé' : status === 'pending' ? 'En attente de validation' : 'Refusé'} status={status} />
@@ -64,13 +64,13 @@ export default function Dashboard() {
                                         <div className="space-y-4">
                                             {availableOrders.map((order) => (
                                                 <div key={order.id} className="rounded-3xl border border-black/10 bg-slate-50 p-4">
-                                                    <div className="flex items-center justify-between gap-4">
-                                                        <div>
+                                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                                        <div className="min-w-0">
                                                             <p className="text-xs uppercase tracking-[0.3em] text-red-500">{order.order_number}</p>
                                                             <p className="mt-2 text-sm text-slate-700">{order.customer_name} — {order.customer_phone}</p>
                                                             <p className="mt-1 text-sm text-slate-500">{order.shipping_address}</p>
                                                         </div>
-                                                        <Link href={`/delivery/orders/${order.id}`} className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white">Accepter la livraison</Link>
+                                                        <Link href={`/delivery/orders/${order.id}`} className="inline-flex min-h-10 items-center justify-center rounded-full bg-black px-4 py-2 text-sm font-semibold text-white">Accepter la livraison</Link>
                                                     </div>
                                                 </div>
                                             ))}
@@ -88,7 +88,7 @@ export default function Dashboard() {
                                         <SummaryItem label="Statut" value="On delivery" />
                                     </div>
                                     <div className="mt-6">
-                                        <Link href="/delivery/orders/current" className="inline-flex h-12 items-center justify-center rounded-full bg-black px-6 text-sm font-semibold text-white transition hover:bg-slate-900">
+                                        <Link href="/delivery/orders/current" className="inline-flex h-12 w-full items-center justify-center rounded-full bg-black px-6 text-sm font-semibold text-white transition hover:bg-slate-900 sm:w-auto">
                                             Voir les livraisons en cours
                                         </Link>
                                     </div>
@@ -100,7 +100,7 @@ export default function Dashboard() {
                                         <SummaryItem label="Aujourd’hui" value={String(summary.today_deliveries)} />
                                     </div>
                                     <div className="mt-6">
-                                        <Link href="/delivery/orders/history" className="inline-flex h-12 items-center justify-center rounded-full border border-black bg-white px-6 text-sm font-semibold text-black transition hover:border-slate-900">
+                                        <Link href="/delivery/orders/history" className="inline-flex h-12 w-full items-center justify-center rounded-full border border-black bg-white px-6 text-sm font-semibold text-black transition hover:border-slate-900 sm:w-auto">
                                             Voir l’historique
                                         </Link>
                                     </div>
@@ -125,11 +125,11 @@ export default function Dashboard() {
 
 function DashboardCard({ title, eyebrow, children }: { title: string; eyebrow: string; children: React.ReactNode }) {
     return (
-        <article className="rounded-3xl border border-black/10 bg-white p-6 shadow-xl shadow-black/5">
+        <article className="min-w-0 rounded-3xl border border-black/10 bg-white p-5 shadow-xl shadow-black/5 sm:p-6">
             <div className="mb-6 flex items-center justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                     <span className="block text-sm uppercase tracking-[0.3em] text-red-500">{eyebrow}</span>
-                    <h2 className="mt-3 text-2xl font-semibold text-slate-900">{title}</h2>
+                    <h2 className="mt-3 break-words text-2xl font-semibold text-slate-900">{title}</h2>
                 </div>
                 <FiTruck className="h-5 w-5 text-slate-500" />
             </div>
@@ -142,7 +142,7 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
     return (
         <div className="rounded-3xl bg-slate-50 p-4">
             <dt className="text-sm text-slate-500">{label}</dt>
-            <dd className="mt-2 text-lg font-semibold text-slate-900">{value}</dd>
+            <dd className="mt-2 break-words text-lg font-semibold text-slate-900">{value}</dd>
         </div>
     );
 }

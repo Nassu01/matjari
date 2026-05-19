@@ -45,17 +45,30 @@ class OrderForm
                     ->required()
                     ->options([
                         'pending' => 'Pending',
+                        'processing' => 'Processing',
                         'paid' => 'Paid',
                         'shipped' => 'Shipped',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
+                        'payment_cancelled' => 'Payment cancelled',
                     ])
                     ->default('pending'),
+                Select::make('payment_method')
+                    ->required()
+                    ->options([
+                        'cash_on_delivery' => 'Paiement a la livraison',
+                        'stripe' => 'Carte bancaire',
+                        'card' => 'Carte bancaire',
+                    ])
+                    ->default('cash_on_delivery'),
                 Select::make('payment_status')
                     ->required()
                     ->options([
                         'unpaid' => 'Unpaid',
+                        'pending' => 'Pending',
                         'paid' => 'Paid',
+                        'failed' => 'Failed',
+                        'cancelled' => 'Cancelled',
                         'refunded' => 'Refunded',
                     ])
                     ->default('unpaid'),

@@ -48,13 +48,13 @@ export default function Dashboard() {
             <Head title="Tableau de bord commerçant" />
             <AuthStorefrontLayout>
                 <main className="account-dashboard-page px-4 py-8 lg:px-10 lg:py-12">
-                    <div className="grid gap-8 xl:grid-cols-[320px_1fr]">
+                    <div className="mx-auto grid w-full max-w-[1580px] gap-6 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)] xl:gap-8">
                         <MerchantSidebar />
 
-                        <section className="space-y-8">
-                            <header className="rounded-3xl border border-black/10 bg-white p-8 shadow-xl shadow-black/5">
+                        <section className="min-w-0 space-y-8">
+                            <header className="rounded-3xl border border-black/10 bg-white p-5 shadow-xl shadow-black/5 sm:p-8">
                                 <p className="mb-3 text-sm uppercase tracking-[0.35em] text-red-500">Bienvenue</p>
-                                <h1 className="text-4xl font-semibold tracking-tight text-[#111]">Bonjour, {displayName}</h1>
+                                <h1 className="break-words text-3xl font-semibold tracking-tight text-[#111] sm:text-4xl">Bonjour, {displayName}</h1>
                                 <p className="mt-3 max-w-2xl text-base text-slate-600">Bienvenue dans votre espace commerçant. Gérez votre entreprise, vos produits et suivez vos commandes.</p>
                                 <div className="mt-6 grid gap-3 sm:grid-cols-3">
                                     <StatusBadge label={companyStatus === 'active' ? 'Entreprise validée' : companyStatus === 'pending' ? 'En attente de validation' : 'Refusée'} status={companyStatus} />
@@ -151,11 +151,11 @@ export default function Dashboard() {
 
 function DashboardCard({ title, eyebrow, children }: { title: string; eyebrow: string; children: React.ReactNode }) {
     return (
-        <article className="rounded-3xl border border-black/10 bg-white p-6 shadow-xl shadow-black/5">
+        <article className="min-w-0 rounded-3xl border border-black/10 bg-white p-5 shadow-xl shadow-black/5 sm:p-6">
             <div className="mb-6 flex items-center justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                     <span className="block text-sm uppercase tracking-[0.3em] text-red-500">{eyebrow}</span>
-                    <h2 className="mt-3 text-2xl font-semibold text-slate-900">{title}</h2>
+                    <h2 className="mt-3 break-words text-2xl font-semibold text-slate-900">{title}</h2>
                 </div>
                 <div className="text-slate-500">
                     <FiBriefcase className="h-6 w-6" />
@@ -170,7 +170,7 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
     return (
         <div className="rounded-3xl bg-slate-50 p-4">
             <dt className="text-sm text-slate-500">{label}</dt>
-            <dd className="mt-2 text-lg font-semibold text-slate-900">{value}</dd>
+            <dd className="mt-2 break-words text-lg font-semibold text-slate-900">{value}</dd>
         </div>
     );
 }

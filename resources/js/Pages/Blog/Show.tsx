@@ -32,9 +32,9 @@ export default function BlogShow() {
             <Head title={`${article.title} - Blog MATJARI`} />
 
             <main className="bg-[#f4f4f3] text-[#202526]">
-                <section className="px-5 pb-8 pt-14 text-center sm:px-8 lg:pt-16">
+                <section className="px-4 pb-8 pt-12 text-center sm:px-6 lg:px-8 lg:pt-16">
                     <span className="text-xs font-extrabold uppercase tracking-[0.24em] text-[#b91f2c]">Blog</span>
-                    <h1 className="mx-auto mt-4 max-w-[980px] font-serif text-4xl font-semibold leading-tight text-[#111827] sm:text-5xl">
+                    <h1 className="mx-auto mt-4 max-w-[980px] break-words font-serif text-3xl font-semibold leading-tight text-[#111827] sm:text-5xl">
                         {article.title}
                     </h1>
                     <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-sm font-medium text-[#687074]">
@@ -52,11 +52,11 @@ export default function BlogShow() {
                     </div>
 
                     <div className="mx-auto mt-9 max-w-[900px] rounded-lg border border-black/10 bg-white p-6 shadow-[0_18px_42px_rgba(32,37,38,0.055)] sm:p-8">
-                        <p className="border-l-4 border-[#b91f2c] bg-[#f7f2ec] px-5 py-4 text-lg leading-8 text-[#3f4649]">
+                        <p className="border-l-4 border-[#b91f2c] bg-[#f7f2ec] px-4 py-4 text-base leading-8 text-[#3f4649] sm:px-5 sm:text-lg">
                             {article.excerpt}
                         </p>
 
-                        <div className="mt-8 space-y-6 text-[17px] leading-8 text-[#4b5357]">
+                        <div className="mt-8 space-y-6 text-base leading-8 text-[#4b5357] sm:text-[17px]">
                             {article.content.map((paragraph) => (
                                 <p key={paragraph}>{paragraph}</p>
                             ))}
@@ -87,7 +87,7 @@ export default function BlogShow() {
                                 <h2 className="font-serif text-3xl font-semibold text-[#111827]">Articles similaires</h2>
                             </div>
 
-                            <div className="grid gap-6 md:grid-cols-3">
+                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                 {relatedArticles.map((related) => (
                                     <RelatedCard key={related.slug} article={related} />
                                 ))}

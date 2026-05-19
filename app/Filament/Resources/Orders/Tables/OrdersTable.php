@@ -36,18 +36,26 @@ class OrdersTable
                 BadgeColumn::make('status')
                     ->colors([
                         'warning' => 'pending',
-                        'success' => ['paid', 'completed'],
+                        'success' => ['paid', 'completed', 'processing'],
                         'info' => 'shipped',
-                        'danger' => 'cancelled',
+                        'danger' => ['cancelled', 'payment_cancelled'],
                     ])
                     ->searchable(),
+                TextColumn::make('payment_method')
+                    ->searchable()
+                    ->toggleable(),
                 BadgeColumn::make('payment_status')
                     ->colors([
                         'gray' => 'unpaid',
+                        'warning' => 'pending',
                         'success' => 'paid',
-                        'danger' => 'refunded',
+                        'danger' => ['refunded', 'failed', 'cancelled'],
                     ])
                     ->searchable(),
+                TextColumn::make('stripe_checkout_session_id')
+                    ->label('Stripe Session')
+                    ->copyable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('total')
                     ->money('MAD')
                     ->sortable(),

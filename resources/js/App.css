@@ -260,6 +260,7 @@ header.navbar.is-scrolled .navbar-pill {
   justify-self: center;
   display: flex;
   align-items: center;
+  gap: 10px;
   height: 30px;
   overflow: visible;
 }
@@ -272,7 +273,7 @@ header.navbar.is-scrolled .navbar-pill {
 }
 
 .navbar-logo {
-  height: 42px;
+  max-height: 42px;
   width: auto;
   display: block;
   transform: scale(1.28);
@@ -3528,7 +3529,8 @@ header.navbar.is-scrolled .navbar-pill {
 /* ============================= */
 html,
 body,
-#root {
+#root,
+#app {
   max-width: 100%;
   overflow-x: hidden;
 }
@@ -3641,6 +3643,18 @@ button {
     max-width: none;
     margin-top: 8px;
     transform: none;
+  }
+
+  .navbar-language-dropdown {
+    right: 0;
+    left: auto;
+    width: min(260px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+  }
+
+  [dir="rtl"] .navbar-language-dropdown {
+    left: 0;
+    right: auto;
   }
 }
 

@@ -25,11 +25,11 @@ export default function Company() {
             <Head title="Mon entreprise" />
             <AuthStorefrontLayout>
                 <main className="account-dashboard-page px-4 py-8 lg:px-10 lg:py-12">
-                    <div className="grid gap-8 xl:grid-cols-[320px_1fr]">
+                    <div className="mx-auto grid w-full max-w-[1580px] gap-6 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)] xl:gap-8">
                         <MerchantSidebar />
-                        <section className="rounded-3xl border border-black/10 bg-white p-8 shadow-xl shadow-black/5">
+                        <section className="min-w-0 rounded-3xl border border-black/10 bg-white p-5 shadow-xl shadow-black/5 sm:p-8">
                             <span className="text-sm uppercase tracking-[0.3em] text-red-500">Entreprise</span>
-                            <h1 className="mt-3 text-4xl font-semibold text-slate-900">Mon entreprise</h1>
+                            <h1 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">Mon entreprise</h1>
                             <p className="mt-3 text-slate-600">Consultez et modifiez les informations de votre entreprise.</p>
 
                             <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -55,7 +55,7 @@ function Summary({ label, value }: { label: string; value: string }) {
     return (
         <div className="rounded-3xl border border-black/10 bg-slate-50 p-6">
             <dt className="text-sm uppercase tracking-[0.2em] text-slate-500">{label}</dt>
-            <dd className="mt-3 text-lg font-semibold text-slate-900">{value}</dd>
+            <dd className="mt-3 break-words text-lg font-semibold text-slate-900">{value}</dd>
         </div>
     );
 }

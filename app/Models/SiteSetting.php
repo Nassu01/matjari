@@ -29,6 +29,7 @@ class SiteSetting extends Model
         'hero_stat_two_value',
         'hero_stat_two_label',
         'hero_image_path',
+        'banner_slides',
         'promo_badge',
         'promo_title',
         'promo_description',
@@ -50,6 +51,7 @@ class SiteSetting extends Model
     {
         return [
             'navbar_links' => 'array',
+            'banner_slides' => 'array',
             'footer_quick_links' => 'array',
             'footer_social_links' => 'array',
         ];
@@ -84,6 +86,34 @@ class SiteSetting extends Model
             'hero_stat_two_value' => 'Fast',
             'hero_stat_two_label' => 'delivery nationwide',
             'hero_image_path' => '/images/HeroPage.png',
+            'banner_slides' => [
+                [
+                    'image' => '/images/HeroPage.png',
+                    'badge' => 'Limited Offer',
+                    'title' => 'Seasonal Style Sale',
+                    'description' => 'Refresh your wardrobe and accessories with curated daily picks, sharp discounts, and a cleaner shopping experience inspired by the layout you shared.',
+                    'button_label' => 'Shop Now',
+                    'button_url' => '/shop',
+                    'secondary_button_label' => 'Create Account',
+                    'secondary_button_url' => '/register',
+                ],
+                [
+                    'image' => '',
+                    'badge' => 'Full Gallery',
+                    'title' => 'Every File, One Storefront',
+                    'description' => '',
+                    'button_label' => 'Shop Now',
+                    'button_url' => '/shop',
+                ],
+                [
+                    'image' => '',
+                    'badge' => 'Fresh Source',
+                    'title' => 'Browse the Complete Set',
+                    'description' => '',
+                    'button_label' => 'Shop Now',
+                    'button_url' => '/shop',
+                ],
+            ],
             'promo_badge' => 'Festive Capsule',
             'promo_title' => 'Merry Shopping',
             'promo_description' => 'Discover bold essentials, statement accessories, and fresh arrivals curated to feel premium, warm, and gift-ready.',

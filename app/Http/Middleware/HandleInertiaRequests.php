@@ -40,6 +40,11 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+                'status' => fn () => $request->session()->get('status'),
+            ],
             'siteSettings' => $settings,
             'navbarSettings' => fn () => [
                 'siteName' => $settings()->site_name,

@@ -1,9 +1,12 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { FiDownload, FiFileText, FiPrinter, FiShoppingBag } from 'react-icons/fi';
 
 import AuthStorefrontLayout from '@/layouts/AuthStorefrontLayout';
 import type { PageProps } from '@/types';
+
+const CART_STORAGE_KEY = 'matjari_cart';
 
 type OrderItem = {
     id: number;
@@ -28,6 +31,7 @@ type SuccessOrder = {
     city?: string | null;
     payment_method: string;
     payment_status: string;
+    is_demo_payment?: boolean;
     status: string;
     subtotal: number;
     shipping_total: number;
@@ -49,17 +53,21 @@ type Props = PageProps<{
 export default function CheckoutSuccess() {
     const { order } = usePage<Props>().props;
 
+    useEffect(() => {
+        window.localStorage.removeItem(CART_STORAGE_KEY);
+    }, []);
+
     return (
         <AuthStorefrontLayout>
             <Head title={`Commande ${order.order_number} confirmée`} />
 
-            <main className="bg-[#f4f4f3] px-5 py-12 text-[#202526] sm:px-8 lg:px-10 lg:py-16">
+            <main className="bg-[#f4f4f3] px-4 py-12 text-[#202526] sm:px-6 lg:px-10 lg:py-16">
                 <div className="mx-auto w-full max-w-[1180px]">
                     <section className="rounded-lg border border-black/10 bg-white p-6 shadow-[0_22px_60px_rgba(32,37,38,0.08)] sm:p-10">
                         <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#b91f2c]">Commande confirmée</span>
                         <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                             <div>
-                                <h1 className="font-serif text-4xl font-semibold leading-tight sm:text-5xl">Commande passée avec succès</h1>
+                                <h1 className="break-words font-serif text-3xl font-semibold leading-tight sm:text-5xl">Commande passée avec succès</h1>
                                 <p className="mt-4 max-w-2xl text-base leading-7 text-[#687074]">
                                     Merci pour votre achat. Votre commande a bien été enregistrée.
                                 </p>
@@ -83,7 +91,7 @@ export default function CheckoutSuccess() {
                     </section>
 
                     <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-                        <article id="facture" className="rounded-lg border border-black/10 bg-white p-6 shadow-[0_22px_60px_rgba(32,37,38,0.08)] sm:p-8">
+                        <article id="facture" className="min-w-0 rounded-lg border border-black/10 bg-white p-4 shadow-[0_22px_60px_rgba(32,37,38,0.08)] sm:p-8">
                             <div className="flex flex-col gap-4 border-b-2 border-[#202526] pb-6 sm:flex-row sm:items-start sm:justify-between">
                                 <div>
                                     <h2 className="font-serif text-3xl font-semibold">MATJARI</h2>
@@ -136,13 +144,15 @@ export default function CheckoutSuccess() {
                             </div>
 
                             <div className="ml-auto mt-6 w-full max-w-sm space-y-3 text-sm">
+                                <Line label="Mode de paiement" value={paymentLabel(order.payment_method)} />
+                                {order.is_demo_payment ? <Line label="Simulation" value="Paiement Stripe simulé" /> : null}
                                 <Line label="Sous-total" value={money(order.subtotal)} />
                                 <Line label="Frais de livraison" value={money(order.shipping_total)} />
                                 <Line label="Total" value={money(order.total)} strong />
                             </div>
                         </article>
 
-                        <aside className="space-y-6">
+                        <aside className="min-w-0 space-y-6">
                             <article className="rounded-lg border border-black/10 bg-white p-6 shadow-[0_18px_45px_rgba(32,37,38,0.07)]">
                                 <h2 className="font-serif text-2xl font-semibold">Récapitulatif</h2>
                                 <div className="mt-5 grid gap-4">
@@ -154,6 +164,11 @@ export default function CheckoutSuccess() {
                                     <Info label="Paiement" value={paymentLabel(order.payment_method)} />
                                     <Info label="Statut paiement" value={paymentStatusLabel(order.payment_status)} />
                                 </div>
+                                {order.is_demo_payment ? (
+                                    <span className="mt-4 inline-flex rounded-full border border-[#f1c7c7] bg-[#fff5f5] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#b91f2c]">
+                                        Paiement Stripe simulé
+                                    </span>
+                                ) : null}
                             </article>
 
                             <article className="rounded-lg border border-black/10 bg-white p-6 shadow-[0_18px_45px_rgba(32,37,38,0.07)]">
@@ -193,7 +208,7 @@ function Info({ label, value }: { label: string; value: string }) {
 
 function Box({ title, children }: { title: string; children: ReactNode }) {
     return (
-        <section className="rounded-lg border border-[#ece7e1] bg-[#fbf7f2] p-5">
+        <section className="rounded-lg border border-[#ece7e1] bg-[#fbf7f2] p-4 sm:p-5">
             <h3 className="font-serif text-2xl font-semibold">{title}</h3>
             <p className="mt-3 text-sm leading-7 text-[#687074]">{children}</p>
         </section>
@@ -202,9 +217,9 @@ function Box({ title, children }: { title: string; children: ReactNode }) {
 
 function Line({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
     return (
-        <div className={`flex items-center justify-between border-b border-[#ece7e1] py-2 ${strong ? 'text-lg' : ''}`}>
+        <div className={`flex flex-wrap items-center justify-between gap-2 border-b border-[#ece7e1] py-2 ${strong ? 'text-lg' : ''}`}>
             <span>{label}</span>
-            <strong>{value}</strong>
+            <strong className="break-words text-right">{value}</strong>
         </div>
     );
 }
@@ -223,12 +238,18 @@ function statusLabel(status: string): string {
 
 function paymentLabel(method: string): string {
     if (method === 'cash_on_delivery') return 'Paiement à la livraison';
-    if (method === 'card') return 'Carte bancaire';
+    if (method === 'stripe' || method === 'card') return 'Paiement par carte bancaire';
     return method;
 }
 
 function paymentStatusLabel(status: string): string {
-    return status === 'unpaid' ? 'Non payé' : status;
+    if (status === 'unpaid') return 'Non payé';
+    if (status === 'paid') return 'Payé';
+    if (status === 'pending') return 'En attente';
+    if (status === 'failed') return 'Échoué';
+    if (status === 'cancelled') return 'Annulé';
+
+    return status;
 }
 
 function money(value: number): string {

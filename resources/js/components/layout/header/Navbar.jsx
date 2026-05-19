@@ -18,6 +18,9 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
   const location = useLocation();
   const { settings, auth } = useStorefrontContent();
   const navbar = settings?.navbar || {};
+  const siteName = settings?.siteName || "MATJARI";
+  const logoPath = navbar.logoPath;
+  const homeLabel = navbar.homeLabel || `${siteName} home`;
   const { currentLanguage, languageLabel, setCurrentLanguage, t } = useStorefrontLanguage();
 
   useEffect(() => {
@@ -138,8 +141,8 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
                 <div className="dropdown-menu">
                   <div className="navbar-category-panel-head">
                     <div>
-                      <strong>{t.categories}</strong>
-                      <span>{t.catalog}</span>
+                      <strong>{navbar.categoryLabel || t.categories}</strong>
+                      <span>{navbar.categoryLabel || t.catalog}</span>
                     </div>
                     <a href="/shop">{t.shop}</a>
                   </div>
@@ -154,12 +157,14 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
           </div>
 
           {forceDocumentNavigation ? (
-            <a href="/" className="navbar-center" aria-label="MATJARI home">
-              <span className="navbar-logo-text">MATJARI</span>
+            <a href="/" className="navbar-center" aria-label={homeLabel}>
+              {logoPath && <img className="navbar-logo" src={logoPath} alt="" />}
+              <span className="navbar-logo-text">{siteName}</span>
             </a>
           ) : (
-            <InertiaLink href="/" className="navbar-center" aria-label="MATJARI home">
-              <span className="navbar-logo-text">MATJARI</span>
+            <InertiaLink href="/" className="navbar-center" aria-label={homeLabel}>
+              {logoPath && <img className="navbar-logo" src={logoPath} alt="" />}
+              <span className="navbar-logo-text">{siteName}</span>
             </InertiaLink>
           )}
 
@@ -200,7 +205,7 @@ export default function Navbar({ cartCount = 0, forceDocumentNavigation = false 
               <ChevronIcon />
             </button>
 
-            <IconButton label={t.search} onClick={goToSearch}>
+            <IconButton label={navbar.searchPlaceholder || t.search} onClick={goToSearch}>
               <SearchIcon />
             </IconButton>
 

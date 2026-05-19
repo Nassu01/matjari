@@ -88,7 +88,13 @@
 
     <section class="totals">
         <div><span>Statut</span><span>{{ $order->status }}</span></div>
-        <div><span>Paiement</span><span>{{ $order->payment_method }} / {{ $order->payment_status }}</span></div>
+        <div>
+            <span>Mode de paiement</span>
+            <span>{{ $order->payment_method === 'stripe' ? 'Carte bancaire' : $order->payment_method }} / {{ $order->payment_status }}</span>
+        </div>
+        @if ($order->payment_method === 'stripe')
+            <div><span></span><span>Paiement Stripe simulé</span></div>
+        @endif
         <div><span>Sous-total</span><span>{{ number_format((float) $order->subtotal, 2) }} DH</span></div>
         <div><span>Livraison</span><span>{{ number_format((float) $order->shipping_total, 2) }} DH</span></div>
         <div><strong>Total</strong><strong>{{ number_format((float) $order->total, 2) }} DH</strong></div>

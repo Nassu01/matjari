@@ -34,13 +34,20 @@ export default function Register({ googleEnabled }) {
     cin: '',
   });
 
-  const next = () => setStep((s) => Math.min(4, s + 1));
-  const back = () => setStep((s) => Math.max(1, s - 1));
+  const next = () => setStep((s) => (data.role === 'client' && s === 2 ? 4 : Math.min(4, s + 1)));
+  const back = () => setStep((s) => (data.role === 'client' && s === 4 ? 2 : Math.max(1, s - 1)));
+  const selectRole = (role) => {
+    setData('role', role);
+    setStep(role === 'client' ? 4 : 3);
+  };
+
+  const validationErrors = Object.values(errors).filter(Boolean);
 
   const submit = (e) => {
     e.preventDefault();
 
     post(route('register'), {
+      forceFormData: true,
       onFinish: () => reset('password', 'password_confirmation', 'company_logo'),
     });
   };
@@ -55,6 +62,13 @@ export default function Register({ googleEnabled }) {
         subtitle={<>Join Matjari and start selling or shopping.</>}
       >
         <form onSubmit={submit} encType="multipart/form-data">
+          {validationErrors.length > 0 && (
+            <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <p className="font-bold">Veuillez corriger les champs indiqués.</p>
+              {errors.register && <p className="mt-1">{errors.register}</p>}
+            </div>
+          )}
+
           {step === 1 && (
             <div className="space-y-4">
               <IofrmInput
@@ -118,7 +132,7 @@ export default function Register({ googleEnabled }) {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <button
                   type="button"
-                  onClick={() => setData('role', 'client') || next()}
+                  onClick={() => selectRole('client')}
                   className={`h-24 rounded-md p-4 text-left border ${data.role === 'client' ? 'border-black bg-black text-white' : 'border-gray-200 bg-white'}`}
                 >
                   <div className="text-lg font-bold">Client</div>
@@ -127,7 +141,7 @@ export default function Register({ googleEnabled }) {
 
                 <button
                   type="button"
-                  onClick={() => setData('role', 'commercant') || next()}
+                  onClick={() => selectRole('commercant')}
                   className={`h-24 rounded-md p-4 text-left border ${data.role === 'commercant' ? 'border-black bg-black text-white' : 'border-gray-200 bg-white'}`}
                 >
                   <div className="text-lg font-bold">Commerçant</div>
@@ -136,7 +150,7 @@ export default function Register({ googleEnabled }) {
 
                 <button
                   type="button"
-                  onClick={() => setData('role', 'livreur') || next()}
+                  onClick={() => selectRole('livreur')}
                   className={`h-24 rounded-md p-4 text-left border ${data.role === 'livreur' ? 'border-black bg-black text-white' : 'border-gray-200 bg-white'}`}
                 >
                   <div className="text-lg font-bold">Livreur</div>
@@ -218,7 +232,7 @@ export default function Register({ googleEnabled }) {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setData('company_logo', e.target.files[0])}
+                  onChange={(e) => setData('company_logo', e.target.files?.[0] ?? null)}
                   className="mt-1 block w-full"
                 />
                 {errors.company_logo && <p className="text-red-600 text-sm">{errors.company_logo}</p>}

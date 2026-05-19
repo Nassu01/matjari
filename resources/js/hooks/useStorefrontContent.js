@@ -23,6 +23,15 @@ const defaultContent = {
     hero: {
       title: "Welcome to Ecomerce",
       description: "Discover our best products",
+      slides: [],
+    },
+    promo: {
+      badge: "Festive Capsule",
+      title: "Merry Shopping",
+      description:
+        "Discover bold essentials, statement accessories, and fresh arrivals curated to feel premium, warm, and gift-ready.",
+      buttonLabel: "Explore Collection",
+      buttonUrl: "/shop",
     },
     footer: {
       description:
@@ -89,6 +98,10 @@ async function loadStorefrontContent() {
             hero: {
               ...defaultContent.settings.hero,
               ...(payload.settings?.hero || {}),
+            },
+            promo: {
+              ...defaultContent.settings.promo,
+              ...(payload.settings?.promo || {}),
             },
             footer: {
               ...defaultContent.settings.footer,

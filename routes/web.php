@@ -7,6 +7,7 @@ use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\StorefrontController;
 use App\Http\Middleware\EnsureActiveRole;
 use App\Http\Middleware\EnsureRole;
@@ -31,6 +32,7 @@ Route::get('/privacy', StorefrontController::class)->name('storefront.privacy');
 Route::get('/terms', StorefrontController::class)->name('storefront.terms');
 Route::get('/contact', StorefrontController::class)->name('storefront.contact');
 Route::get('/about', StorefrontController::class)->name('storefront.about');
+Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 
 
 Route::get('/dashboard', DashboardController::class)->middleware('auth')->name('dashboard');
@@ -40,6 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+    Route::get('/checkout/cancel/{order}', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
     Route::get('/checkout/success/{order}/invoice', [CheckoutController::class, 'invoice'])->name('checkout.success.invoice');
     Route::get('/support', StorefrontController::class)->name('support');
 

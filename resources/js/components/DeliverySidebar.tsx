@@ -21,7 +21,7 @@ export default function DeliverySidebar() {
     };
 
     return (
-        <aside className="max-w-[320px] rounded-3xl bg-black px-6 py-8 text-white shadow-xl shadow-black/10 sm:sticky sm:top-8 sm:self-start">
+        <aside className="w-full rounded-3xl bg-black px-4 py-6 text-white shadow-xl shadow-black/10 sm:px-6 sm:py-8 xl:sticky xl:top-8 xl:max-w-[320px] xl:self-start">
             <div className="mb-8 flex items-center gap-4 border-b border-white/10 pb-6">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-2xl text-white">
                     <FiTruck />
@@ -45,11 +45,11 @@ export default function DeliverySidebar() {
                                 active ? 'border-white bg-white/10 text-white' : 'border-white/10 text-white/80 hover:border-white/30 hover:text-white'
                             }`}
                         >
-                            <span className="flex items-center gap-3">
-                                <Icon className="text-base" />
-                                {item.label}
+                            <span className="flex min-w-0 items-center gap-3">
+                                <Icon className="shrink-0 text-base" />
+                                <span className="truncate">{item.label}</span>
                             </span>
-                            <FiClipboard className="text-base" />
+                            <FiClipboard className="shrink-0 text-base" />
                         </Link>
                     );
                 })}

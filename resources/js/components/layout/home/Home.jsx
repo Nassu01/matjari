@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link as InertiaLink } from "@inertiajs/react";
+import { Link as InertiaLink, router } from "@inertiajs/react";
+import axios from "axios";
+import { useDispatch } from "react-redux";
 import {
   FaFacebookF,
   FaInstagram,
@@ -20,6 +22,7 @@ import { TbPackageImport } from "react-icons/tb";
 import useImages11, { getDisplayImages11, imageUrlFromImages11, images11ManifestUrl } from "../../../hooks/useImages11";
 import useStorefrontContent from "../../../hooks/useStorefrontContent";
 import { languageOptions, useStorefrontLanguage } from "../../../i18n/storefrontLanguage";
+import { addToCart, getCartTotals } from "../../../redux/CartSlice";
 
 const blogTemplates = [
   {
@@ -127,8 +130,42 @@ function imageByPath(images, keywords, fallbackIndex = 0) {
 function buildHomeContent(images, databaseProducts = [], databaseCategories = [], databaseBlogPosts = [], settings = {}) {
   const sources = getDisplayImages11(images);
   const hero = settings.hero || {};
+  const promo = settings.promo || {};
   const primaryHeroTitle = hero.title || "MATJARI";
   const primaryHeroImage = hero.imagePath || imageFrom(sources, 0);
+  const fallbackHeroSlides = [
+    {
+      label: hero.badge || "Local Collection",
+      title: primaryHeroTitle,
+      image: primaryHeroImage,
+      description: hero.description || "",
+      primaryButtonLabel: hero.primaryButtonLabel || "Shop Now",
+      primaryButtonUrl: hero.primaryButtonUrl || "/shop",
+      secondaryButtonLabel: hero.secondaryButtonLabel || "Learn More",
+      secondaryButtonUrl: hero.secondaryButtonUrl || "#about",
+    },
+    {
+      label: "Full Gallery",
+      title: "Every File, One Storefront",
+      image: imageFrom(sources, 1),
+      description: "",
+      primaryButtonLabel: "Shop Now",
+      primaryButtonUrl: "/shop",
+      secondaryButtonLabel: "Learn More",
+      secondaryButtonUrl: "#about",
+    },
+    {
+      label: "Fresh Source",
+      title: "Browse the Complete Set",
+      image: imageFrom(sources, 2),
+      description: "",
+      primaryButtonLabel: "Shop Now",
+      primaryButtonUrl: "/shop",
+      secondaryButtonLabel: "Learn More",
+      secondaryButtonUrl: "#about",
+    },
+  ];
+  const configuredHeroSlides = Array.isArray(hero.slides) ? hero.slides : [];
 
   return {
     imageCount: images.length,
@@ -137,22 +174,30 @@ function buildHomeContent(images, databaseProducts = [], databaseCategories = []
       promo: imageByPath(sources, ["fashion-accessories/fashion-bags/totes", "home-furniture/home-decor", "fashion/men/casual-wear"], 7),
       feature: imageFrom(sources, 12),
     },
+    promo: {
+      badge: promo.badge || "Shop",
+      title: promo.title || undefined,
+      description: promo.description || undefined,
+      buttonLabel: promo.buttonLabel || undefined,
+      buttonUrl: promo.buttonUrl || "/shop",
+      image: promo.imagePath || imageByPath(sources, ["fashion-accessories/fashion-bags/totes", "home-furniture/home-decor", "fashion/men/casual-wear"], 7),
+    },
     categories: normalizeStorefrontCategories(databaseCategories, sources),
     products: normalizeStorefrontProducts(databaseProducts),
-    heroSlides: [
-      {
-        label: hero.badge || "Local Collection",
-        title: primaryHeroTitle,
-        image: primaryHeroImage,
-        description: hero.description || "",
-        primaryButtonLabel: hero.primaryButtonLabel || "Shop Now",
-        primaryButtonUrl: hero.primaryButtonUrl || "/shop",
-        secondaryButtonLabel: hero.secondaryButtonLabel || "Learn More",
-        secondaryButtonUrl: hero.secondaryButtonUrl || "#about",
-      },
-      { label: "Full Gallery", title: "Every File, One Storefront", image: imageFrom(sources, 1) },
-      { label: "Fresh Source", title: "Browse the Complete Set", image: imageFrom(sources, 2) },
-    ],
+    heroSlides: fallbackHeroSlides.map((fallback, index) => {
+      const slide = configuredHeroSlides[index] || {};
+
+      return {
+        label: slide.badge || slide.label || fallback.label,
+        title: slide.title || fallback.title,
+        image: slide.imagePath || slide.image || fallback.image,
+        description: slide.description || fallback.description,
+        primaryButtonLabel: slide.primaryButtonLabel || slide.buttonLabel || fallback.primaryButtonLabel,
+        primaryButtonUrl: slide.primaryButtonUrl || slide.buttonUrl || fallback.primaryButtonUrl,
+        secondaryButtonLabel: slide.secondaryButtonLabel || fallback.secondaryButtonLabel,
+        secondaryButtonUrl: slide.secondaryButtonUrl || fallback.secondaryButtonUrl,
+      };
+    }),
     blogPosts: normalizeBlogPosts(databaseBlogPosts, sources),
     galleryImages: images,
   };
@@ -190,9 +235,12 @@ function formatHomePrice(value) {
 
 function normalizeStorefrontProduct(product, index) {
   return {
+    id: product.id,
+    slug: product.slug || "",
     brand: product.brand || product.categoryName || "MATJARI",
     name: product.name || "Produit",
     price: formatHomePrice(product.price),
+    rawPrice: Number(product.price || 0),
     image: product.image || "",
     url: product.url || (product.slug ? `/products/${product.slug}` : "/shop"),
     category: product.category || "",
@@ -263,8 +311,15 @@ function useScrollReveal() {
 
 function Logo() {
   const { settings } = useStorefrontContent();
+  const siteName = settings?.siteName || "MATJARI";
+  const logoPath = settings?.navbar?.logoPath;
 
-  return <span className="journal-logo">{settings?.siteName || "MATJARI"}</span>;
+  return (
+    <span className="journal-logo">
+      {logoPath && <img className="journal-logo-image" src={logoPath} alt="" />}
+      <span>{siteName}</span>
+    </span>
+  );
 }
 
 function TextChevron() {
@@ -423,13 +478,17 @@ export function JournalHeader({ categories = [], auth = undefined, forceDocument
   const searchButtonRef = useRef(null);
   const languageRef = useRef(null);
   const catalogRef = useRef(null);
-  const { auth: storefrontAuth, categories: storefrontCategories = [], catalogMenu: storefrontCatalogMenu = [] } = useStorefrontContent();
+  const { auth: storefrontAuth, settings, categories: storefrontCategories = [], catalogMenu: storefrontCatalogMenu = [] } = useStorefrontContent();
+  const navbar = settings?.navbar || {};
   const { currentLanguage, languageLabel, setCurrentLanguage, t } = useStorefrontLanguage();
   const headerCategories = categories.length > 0 ? categories : storefrontCategories;
+  const navbarLinks = Array.isArray(navbar.links) ? navbar.links : [];
   const catalogCategories = useMemo(
-    () => buildCatalogMenuCategories(storefrontCatalogMenu, headerCategories),
-    [headerCategories, storefrontCatalogMenu]
+    () => buildCatalogMenuCategories(navbarLinks.length > 0 ? navbarLinks : storefrontCatalogMenu, headerCategories),
+    [headerCategories, navbarLinks, storefrontCatalogMenu]
   );
+  const catalogLabel = navbar.categoryLabel || t.catalog;
+  const searchPlaceholder = navbar.searchPlaceholder || t.searchPlaceholder;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 18);
@@ -595,7 +654,7 @@ export function JournalHeader({ categories = [], auth = undefined, forceDocument
               aria-expanded={catalogOpen}
               onClick={() => setCatalogOpen((value) => !value)}
             >
-              {t.catalog} <TextChevron />
+              {catalogLabel} <TextChevron />
             </button>
 
             {catalogOpen && (
@@ -604,7 +663,7 @@ export function JournalHeader({ categories = [], auth = undefined, forceDocument
                   {catalogCategories.map((category) => (
                     <CatalogLink
                       key={category.slug}
-                      href={`/shop?category=${category.slug}`}
+                      href={category.url || `/shop?category=${category.slug}`}
                       className={`journal-catalog-item ${activeCatalogSlug === category.slug ? "is-active" : ""}`}
                       role="menuitem"
                       onMouseEnter={() => setActiveCatalogSlug(category.slug)}
@@ -659,7 +718,7 @@ export function JournalHeader({ categories = [], auth = undefined, forceDocument
           </div>
         </nav>
 
-        <StoreLink to="/" className="journal-logo-link" ariaLabel="Journal home">
+        <StoreLink to="/" className="journal-logo-link" ariaLabel={navbar.homeLabel || `${settings?.siteName || "MATJARI"} home`}>
           <Logo />
         </StoreLink>
 
@@ -717,8 +776,8 @@ export function JournalHeader({ categories = [], auth = undefined, forceDocument
               type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder={t.searchPlaceholder}
-              aria-label={t.searchPlaceholder}
+              placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
             />
             <button type="submit">{t.search}</button>
           </form>
@@ -784,8 +843,8 @@ function Hero({ heroSlides }) {
             />
           )}
           <div className="journal-hero-copy">
-            <span>{index === 0 ? slide.label : t.heroSlides?.[index]?.label || slide.label}</span>
-            <h1>{index === 0 ? slide.title : t.heroSlides?.[index]?.title || slide.title}</h1>
+            <span>{slide.label}</span>
+            <h1>{slide.title}</h1>
             {slide.description && <p>{slide.description}</p>}
             <div>
               <a className="journal-btn journal-btn-dark" href={slide.primaryButtonUrl || "/shop"}>{slide.primaryButtonLabel || t.shopCollection}</a>
@@ -865,24 +924,82 @@ function CategoryStrip({ categories }) {
 }
 
 function ProductCard({ product, compact = false }) {
+  const dispatch = useDispatch();
   const { auth } = useStorefrontContent();
   const { t } = useStorefrontLanguage();
-  const [showFavoritePrompt, setShowFavoritePrompt] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [cartNotice, setCartNotice] = useState("");
+  const [isFavorite, setIsFavorite] = useState(false);
+  const detailsUrl = product.url || (product.slug ? `/products/${product.slug}` : "/shop");
 
-  const handleFavorite = () => {
+  const visitProduct = () => {
+    try {
+      router.visit(detailsUrl);
+    } catch {
+      window.location.assign(detailsUrl);
+    }
+  };
+
+  const handleCardLink = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    visitProduct();
+  };
+
+  const handleAddToCart = (event) => {
+    event.stopPropagation();
+
     if (!auth?.isAuthenticated) {
-      setShowFavoritePrompt(true);
+      setShowLoginPrompt(true);
       return;
     }
 
-    window.location.assign("/account/favorites");
+    dispatch(
+      addToCart({
+        id: product.id,
+        name: product.name,
+        price: product.rawPrice,
+        image: product.image,
+        category: product.categoryName || product.category,
+      })
+    );
+    dispatch(getCartTotals());
+    setCartNotice("Produit ajouté au panier.");
+    window.setTimeout(() => setCartNotice(""), 2200);
+  };
+
+  const handleFavorite = async (event) => {
+    event.stopPropagation();
+
+    if (!auth?.isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    if (!product.id) return;
+
+    try {
+      await axios.post("/favorites/toggle", { product_id: product.id });
+      setIsFavorite((current) => !current);
+    } catch {
+      setShowLoginPrompt(true);
+    }
   };
 
   return (
-    <article className={`journal-product-card ${compact ? "is-compact" : ""}`} data-animate>
+    <article
+      className={`journal-product-card ${compact ? "is-compact" : ""}`}
+      data-animate
+      onClick={visitProduct}
+      role="link"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") visitProduct();
+      }}
+    >
       {product.sale && <span className="journal-sale-flag">%</span>}
       {product.top && <span className="journal-top-badge"><FaStar /> {t.topBrand}</span>}
-      <div className="journal-product-image">
+      <a className="journal-product-image" href={detailsUrl} onClick={handleCardLink}>
         <img
           src={product.image || "/images/logomatjari.png"}
           alt={product.name}
@@ -890,36 +1007,45 @@ function ProductCard({ product, compact = false }) {
             event.currentTarget.src = "/images/logomatjari.png";
           }}
         />
-      </div>
-      <a className="journal-product-brand" href="#brand">{product.brand}</a>
-      <h3><a href={product.url || "/shop"}>{product.name}</a></h3>
+      </a>
+      <span className="journal-product-brand">{product.brand}</span>
+      <h3><a href={detailsUrl} onClick={handleCardLink}>{product.name}</a></h3>
       <p className="journal-price"><strong>{product.price}</strong>{product.old && <del>{product.old}</del>}</p>
-      <div className="journal-card-actions">
-        <button type="button"><FaShoppingCart /> {t.addToCart}</button>
-        <button type="button" aria-label={t.wishlist} onClick={handleFavorite}><FaRegHeart /></button>
-        <button type="button" aria-label={t.compare}><FiRefreshCw /></button>
+      <div className="journal-card-actions" onClick={(event) => event.stopPropagation()}>
+        <button type="button" onClick={handleAddToCart}><FaShoppingCart /> {t.addToCart}</button>
+        <button type="button" className={isFavorite ? "is-favorite" : ""} aria-label={t.wishlist} onClick={handleFavorite}><FaRegHeart /></button>
+        <button type="button" aria-label={t.compare} onClick={(event) => event.stopPropagation()}><FiRefreshCw /></button>
       </div>
-      {showFavoritePrompt && (
-        <FavoriteLoginPrompt onClose={() => setShowFavoritePrompt(false)} />
+      {showLoginPrompt && (
+        <LoginRequiredPrompt onClose={() => setShowLoginPrompt(false)} />
       )}
+      {cartNotice && <CartNotice message={cartNotice} />}
     </article>
   );
 }
 
-function FavoriteLoginPrompt({ onClose }) {
+function LoginRequiredPrompt({ onClose }) {
   const { t } = useStorefrontLanguage();
 
   return (
     <div className="journal-favorite-prompt" role="dialog" aria-modal="true" aria-label={t.loginRequired}>
       <div>
         <button type="button" onClick={onClose} aria-label={t.close}>×</button>
-        <strong>{t.loginRequired}</strong>
-        <p>{t.loginPrompt}</p>
+        <strong>Connexion requise</strong>
+        <p>Vous devez vous connecter d'abord pour effectuer cette action.</p>
         <div>
-          <a href="/login">{t.loginButton}</a>
-          <a href="/register">{t.registerButton}</a>
+          <a href="/login">Se connecter</a>
+          <a href="/register">Créer un compte</a>
         </div>
       </div>
+    </div>
+  );
+}
+
+function CartNotice({ message }) {
+  return (
+    <div className="journal-cart-notice" role="status">
+      {message}
     </div>
   );
 }
@@ -1230,16 +1356,17 @@ function buildFeaturedCategoryRows(products, featureImage) {
   ].filter((row) => row.products.length > 0 || row.image);
 }
 
-function PromoBanner({ image }) {
+function PromoBanner({ promo }) {
   const { t } = useStorefrontLanguage();
+  const image = promo?.image;
 
   return (
     <section className="journal-promo" data-animate style={{ backgroundImage: `linear-gradient(90deg, rgba(231,216,200,.96), rgba(231,216,200,.78) 42%, rgba(231,216,200,.24) 78%), url(${image})` }}>
       <div>
-        <span>{t.shop}</span>
-        <h2>{t.promoHeadline}</h2>
-        <p>{t.promoText}</p>
-        <a className="journal-btn journal-btn-light" href="/shop">{t.promoShopCollection}</a>
+        <span>{promo?.badge || t.shop}</span>
+        <h2>{promo?.title || t.promoHeadline}</h2>
+        <p>{promo?.description || t.promoText}</p>
+        <a className="journal-btn journal-btn-light" href={promo?.buttonUrl || "/shop"}>{promo?.buttonLabel || t.promoShopCollection}</a>
         <a className="journal-text-link journal-light-link" href="#catalog">{t.promoLearnMore}</a>
       </div>
     </section>
@@ -1374,6 +1501,9 @@ function Blog({ blogPosts }) {
           <FiChevronRight aria-hidden="true" />
         </button>
       </div>
+      <div className="journal-blog-more">
+        <InertiaLink href="/blog">Voir plus d’articles <MdOutlineKeyboardArrowRight /></InertiaLink>
+      </div>
     </section>
   );
 }
@@ -1426,6 +1556,10 @@ export function JournalFooter() {
         <div className="journal-footer-col">
           <h3>{footer.newsletterTitle || "Newsletter"}</h3>
           <p>{footer.newsletterText || "Get updates and special offers in your inbox."}</p>
+          <form onSubmit={(event) => event.preventDefault()}>
+            <input type="email" placeholder={footer.newsletterPlaceholder || "Enter your email"} aria-label={footer.newsletterPlaceholder || "Enter your email"} />
+            <button type="submit">{footer.newsletterButtonLabel || "Subscribe"}</button>
+          </form>
         </div>
       </div>
       <div className="journal-copyright">
@@ -1456,7 +1590,7 @@ export default function Home() {
       <Products products={content.products} />
       <Services />
       <FeaturedCategories products={content.products} featureImage={content.assets.feature} />
-      <PromoBanner image={content.assets.promo} />
+      <PromoBanner promo={content.promo} />
       <Testimonials />
       <About image={content.assets.about} />
       <Blog blogPosts={content.blogPosts} />
@@ -1532,7 +1666,8 @@ const css = `
 .journal-nav-right button, .journal-nav-right > a[aria-label="Cart"], .journal-icon-link { width: 32px; height: 32px; display: inline-grid; place-items: center; }
 .journal-nav-right button svg, .journal-nav-right > a[aria-label="Cart"] svg, .journal-icon-link svg { width: 19px; height: 19px; stroke-width: 1.65; }
 .journal-logo-link { width: 158px; height: 32px; display: grid; place-items: center; }
-.journal-logo { display: inline-block; color: #121212; font-family: 'Bodoni 72', Didot, 'Cormorant Garamond', Georgia, serif; font-size: 32px; font-weight: 500; letter-spacing: .065em; transform: none; line-height: 1; }
+.journal-logo { display: inline-flex; align-items: center; justify-content: center; gap: 10px; color: #121212; font-family: 'Bodoni 72', Didot, 'Cormorant Garamond', Georgia, serif; font-size: 32px; font-weight: 500; letter-spacing: .065em; transform: none; line-height: 1; }
+.journal-logo-image { width: auto; max-width: 34px; height: 34px; object-fit: contain; }
 .journal-search-popover { position: absolute; right: 38px; top: calc(100% + 10px); z-index: 90; width: min(520px, calc(100vw - 32px)); border: 1px solid rgba(32,37,38,.12); border-radius: 8px; background: #fff; box-shadow: 0 24px 70px rgba(32,37,38,.16); padding: 12px; }
 .journal-search-popover form { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 12px; }
 .journal-search-popover svg { color: var(--muted); font-size: 18px; }
@@ -1622,7 +1757,7 @@ const css = `
 .journal-products-track, .journal-feature-track { display: flex; gap: 22px; align-items: stretch; }
 .journal-products-track > .journal-product-card,
 .journal-feature-track > .journal-product-card { flex: 0 0 calc((100% - 66px) / 4); scroll-snap-align: start; }
-.journal-product-card { position: relative; height: 455px; min-width: 0; display: flex; flex-direction: column; padding: 16px 16px 0; overflow: hidden; background: var(--soft); border: 1px solid rgba(32,37,38,.08); border-radius: 6px; box-shadow: 0 12px 30px rgba(32,37,38,.04); }
+.journal-product-card { position: relative; height: 455px; min-width: 0; display: flex; flex-direction: column; padding: 16px 16px 0; overflow: hidden; background: var(--soft); border: 1px solid rgba(32,37,38,.08); border-radius: 6px; box-shadow: 0 12px 30px rgba(32,37,38,.04); cursor: pointer; }
 .journal-product-card.is-compact { height: 430px; min-height: 430px; padding: 16px 16px 0; }
 .journal-product-image { flex: 0 0 248px; height: 248px; display: grid; place-items: center; overflow: hidden; }
 .journal-product-image img { width: min(82%, 205px); height: min(82%, 205px); object-fit: contain; mix-blend-mode: multiply; filter: drop-shadow(0 14px 16px rgba(0,0,0,.15)); }
@@ -1636,6 +1771,8 @@ const css = `
 .journal-card-actions { margin: auto -16px 0; min-height: 58px; display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; border-top: 1px solid #dbd9d6; padding: 0 16px; }
 .journal-card-actions button { display: inline-flex; align-items: center; gap: 8px; border: 0; background: transparent; color: #5a6164; cursor: pointer; font-size: 14px; }
 .journal-card-actions button:first-child { min-width: 0; justify-content: flex-start; color: #252b2c; font-weight: 600; }
+.journal-card-actions button.is-favorite { color: #b91f2c; }
+.journal-cart-notice { position: fixed; left: 50%; bottom: 24px; z-index: 130; width: min(360px, calc(100vw - 32px)); transform: translateX(-50%); border-radius: 8px; background: #202526; color: #fff; padding: 12px 18px; text-align: center; font-size: 14px; font-weight: 700; box-shadow: 0 18px 42px rgba(0,0,0,.18); }
 .journal-product-nav { position: absolute; top: 50%; z-index: 4; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid rgba(32,37,38,.16); border-radius: 50%; background: rgba(255,255,255,.94); color: #202526; box-shadow: 0 12px 28px rgba(32,37,38,.08); cursor: pointer; font-family: Georgia, serif; font-size: 30px; font-weight: 300; line-height: 1; transform: translateY(-50%); transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
 .journal-product-nav:hover { background: #fff; border-color: rgba(32,37,38,.3); box-shadow: 0 16px 34px rgba(32,37,38,.12); }
 .journal-product-nav.is-prev { left: -18px; }
@@ -1762,7 +1899,7 @@ const css = `
 .journal-gallery-status { grid-column: 1 / -1; color: rgba(255,255,255,.72); text-align: center; }
 
 .journal-blog-card { height: 364px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(32,37,38,.08); border-radius: 6px; background: #fff; box-shadow: 0 12px 30px rgba(32,37,38,.04); }
-.journal-blog-image { position: relative; flex: 0 0 164px; height: 164px; overflow: hidden; border-radius: 6px 6px 0 0; background: var(--soft); }
+.journal-blog-image { position: relative; flex: 0 0 164px; height: 164px; display: block !important; overflow: hidden; border-radius: 2px 2px 0 0; background: var(--soft); }
 .journal-blog-image img { width: 100%; height: 100%; object-fit: cover; }
 .journal-blog-image div { position: absolute; left: 10px; top: 10px; width: 54px; height: 56px; display: grid; place-items: center; align-content: center; border-radius: 7px; background: #eadbcb; font-family: Georgia, serif; line-height: 1; box-shadow: 0 10px 22px rgba(32,37,38,.1); }
 .journal-blog-image strong { font-size: 21px; }
@@ -1774,6 +1911,10 @@ const css = `
 .journal-blog-card > a svg { flex: 0 0 auto; transition: transform 180ms ease; }
 .journal-blog-card > a:hover { gap: 10px; background: rgba(237,232,226,.78); color: #15191a; }
 .journal-blog-card > a:hover svg { transform: translateX(3px); }
+.journal-blog-more { margin-top: 24px; display: flex; justify-content: center; }
+.journal-blog-more a { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 999px; background: #202526; color: #fff; padding: 0 24px; font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; box-shadow: 0 14px 30px rgba(32,37,38,.14); transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease; }
+.journal-blog-more a:hover { transform: translateY(-2px); background: #000; color: #fff; box-shadow: 0 18px 36px rgba(32,37,38,.18); }
+.journal-blog-more svg { flex: 0 0 auto; }
 
 .journal-newsletter { padding: 96px 20px 82px; text-align: center; background: var(--cream); }
 .journal-newsletter > svg { margin: 0 auto 22px; font-size: 46px; color: #202526; }
@@ -1793,6 +1934,9 @@ const css = `
 .journal-socials span, .journal-socials a { width: 54px; height: 54px; display: grid; place-items: center; border: 1px solid #e1e1e1; border-radius: 50%; background: white; color: #4e5b62; font-size: 20px; }
 .journal-footer-col h3 { margin: 0 0 28px; font: 24px Georgia, serif; color: #070707; }
 .journal-footer-col a { display: block; margin: 17px 0; color: #42515a; }
+.journal-footer-col form { display: flex; align-items: center; gap: 8px; margin-top: 18px; }
+.journal-footer-col input { min-width: 0; height: 42px; border: 1px solid #d8d8d8; border-radius: 999px; background: #fff; padding: 0 14px; color: #202526; outline: 0; }
+.journal-footer-col button { height: 42px; border: 0; border-radius: 999px; background: #202526; color: #fff; padding: 0 16px; cursor: pointer; }
 .journal-copyright { min-height: 86px; display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 0 42px; background: var(--cream); color: #514b47; }
 .journal-copyright div { display: flex; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
 .journal-copyright span { border-radius: 3px; background: #5c5c5c; color: white; padding: 6px 8px; font-weight: 800; font-size: 13px; }
@@ -2011,7 +2155,8 @@ const css = `
   .journal-hero-copy div { flex-wrap: wrap; gap: 20px; }
   .journal-section { padding: 64px 20px; }
   .journal-category-row { grid-auto-columns: minmax(300px, 86vw); }
-  .journal-services, .journal-about { grid-template-columns: 1fr; }
+  .journal-services { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .journal-about { grid-template-columns: 1fr; }
   .journal-blog-row { padding-left: 34px; padding-right: 34px; }
   .journal-blog-track > .journal-blog-card { flex-basis: calc((100% - 22px) / 2); }
   .journal-products-track > .journal-product-card,
@@ -2287,7 +2432,7 @@ const css = `
   }
 
   .journal-blog-track > .journal-blog-card {
-    flex-basis: calc((100% - 16px) / 2);
+    flex-basis: min(100%, 340px);
   }
 
   .journal-blog-card {
@@ -2297,6 +2442,15 @@ const css = `
   .journal-blog-image {
     flex-basis: 158px;
     height: 158px;
+  }
+
+  .journal-blog-more {
+    margin-top: 20px;
+  }
+
+  .journal-blog-more a {
+    width: 100%;
+    max-width: 320px;
   }
 
   .journal-feature-tile {
@@ -2400,6 +2554,7 @@ const css = `
   }
 
   .journal-services {
+    grid-template-columns: 1fr;
     padding: 32px 16px;
     gap: 20px;
   }

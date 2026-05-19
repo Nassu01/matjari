@@ -23,6 +23,7 @@ class CheckoutController extends Controller
                 'email' => $request->user()->email,
                 'phone' => $request->user()->phone,
             ],
+            'errorMessage' => session('error'),
         ]);
     }
 
@@ -36,8 +37,9 @@ class CheckoutController extends Controller
             'customer_phone' => ['required', 'string', 'max:50'],
             'delivery_address' => ['required', 'string', 'max:2000'],
             'city' => ['required', 'string', 'max:255'],
+            'postal_code' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:2000'],
-            'payment_method' => ['required', 'in:cash_on_delivery,card'],
+            'payment_method' => ['required', 'in:cash_on_delivery,stripe,card'],
             'cart_items' => ['required', 'array', 'min:1'],
             'cart_items.*.id' => ['required', 'integer', 'exists:products,id'],
             'cart_items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
@@ -53,6 +55,10 @@ class CheckoutController extends Controller
             'cart_items.min' => 'Votre panier est vide.',
             'cart_items.*.id.exists' => 'Un produit du panier n’existe plus.',
         ]);
+
+        if (($validated['payment_method'] ?? null) === 'card') {
+            $validated['payment_method'] = 'stripe';
+        }
 
         $cartItems = collect($validated['cart_items'])
             ->map(fn (array $item) => [
@@ -98,6 +104,7 @@ class CheckoutController extends Controller
 
         $order = DB::transaction(function () use ($request, $validated, $cartItems, $products, $subtotal, $shippingTotal, $total) {
             $firstProduct = $products->first();
+            $isStripeDemo = $validated['payment_method'] === 'stripe';
 
             $order = Order::create([
                 'user_id' => $request->user()->id,
@@ -108,9 +115,9 @@ class CheckoutController extends Controller
                 'customer_phone' => $validated['customer_phone'] ?? null,
                 'delivery_address' => $validated['delivery_address'],
                 'city' => $validated['city'],
-                'status' => 'pending',
+                'status' => $isStripeDemo ? 'processing' : 'pending',
                 'payment_method' => $validated['payment_method'],
-                'payment_status' => 'unpaid',
+                'payment_status' => $isStripeDemo ? 'paid' : 'unpaid',
                 'subtotal' => $subtotal,
                 'shipping_total' => $shippingTotal,
                 'total' => $total,
@@ -140,7 +147,6 @@ class CheckoutController extends Controller
         });
 
         OrderInvoice::generate($order);
-
         return redirect()
             ->route('checkout.success', $order)
             ->with('success', 'Votre commande a été passée avec succès.');
@@ -161,6 +167,22 @@ class CheckoutController extends Controller
             'order' => $this->orderPayload($order),
             'successMessage' => session('success'),
         ]);
+    }
+
+    public function cancel(Request $request, Order $order): RedirectResponse
+    {
+        $this->authorizeOrder($request, $order);
+
+        if ($order->payment_method === 'stripe' && $order->payment_status !== 'paid') {
+            $order->forceFill([
+                'payment_status' => 'cancelled',
+                'status' => 'payment_cancelled',
+            ])->save();
+        }
+
+        return redirect()
+            ->route('checkout')
+            ->with('error', 'Paiement annulé. Vous pouvez réessayer.');
     }
 
     public function invoice(Request $request, Order $order): RedirectResponse
@@ -196,6 +218,7 @@ class CheckoutController extends Controller
             'city' => $order->city,
             'payment_method' => $order->payment_method,
             'payment_status' => $order->payment_status,
+            'is_demo_payment' => $order->payment_method === 'stripe',
             'status' => $order->status,
             'subtotal' => (float) $order->subtotal,
             'shipping_total' => (float) $order->shipping_total,
@@ -227,4 +250,5 @@ class CheckoutController extends Controller
 
         return $number;
     }
+
 }

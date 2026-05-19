@@ -31,7 +31,7 @@ export default function BlogIndex() {
             <main className="bg-[#f4f4f3] px-4 py-12 text-[#202526] sm:px-6 lg:px-8 lg:py-16">
                 <section className="mx-auto max-w-[980px] text-center">
                     <span className="font-['Great_Vibes',cursive] text-[58px] leading-none text-[#c7c4bf]">Blog</span>
-                    <h1 className="-mt-1 font-serif text-[40px] font-semibold leading-tight text-[#111827] sm:text-5xl">Latest News</h1>
+                    <h1 className="-mt-1 font-serif text-4xl font-semibold leading-tight text-[#111827] sm:text-5xl">Latest News</h1>
                     <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#687074] sm:text-lg">
                         Decouvrez nos conseils, inspirations et nouveautes pour mieux choisir vos produits.
                     </p>
@@ -58,7 +58,7 @@ function BlogCard({ article }: { article: BlogArticle }) {
     const href = article.url || `/blog/${article.slug}`;
 
     return (
-        <article className="group flex min-h-[510px] flex-col overflow-hidden rounded-lg border border-black/10 bg-white shadow-[0_14px_34px_rgba(32,37,38,0.055)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_58px_rgba(32,37,38,0.13)]">
+        <article className="group flex min-h-[480px] flex-col overflow-hidden rounded-lg border border-black/10 bg-white shadow-[0_14px_34px_rgba(32,37,38,0.055)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_58px_rgba(32,37,38,0.13)] sm:min-h-[510px]">
             <Link className="block overflow-hidden bg-[#eee4dc]" href={href}>
                 <SafeImage
                     src={article.image}
@@ -70,7 +70,7 @@ function BlogCard({ article }: { article: BlogArticle }) {
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#b91f2c]">
                     {article.category} / {article.date}
                 </p>
-                <h2 className="mt-4 font-serif text-2xl font-semibold leading-snug text-[#202526]">
+                <h2 className="mt-4 break-words font-serif text-2xl font-semibold leading-snug text-[#202526]">
                     <Link className="transition hover:text-[#b91f2c]" href={href}>{article.title}</Link>
                 </h2>
                 <p className="mt-3 line-clamp-3 leading-7 text-[#687074]">{article.excerpt}</p>

@@ -23,6 +23,7 @@ type CheckoutProps = PageProps<{
         email?: string | null;
         phone?: string | null;
     };
+    errorMessage?: string | null;
     errors?: Record<string, string>;
 }>;
 
@@ -47,7 +48,7 @@ function money(value: number | string | undefined) {
 }
 
 export default function Checkout() {
-    const { customer, errors = {} } = usePage<CheckoutProps>().props;
+    const { customer, errorMessage, errors = {} } = usePage<CheckoutProps>().props;
     const [products, setProducts] = useState<CartProduct[]>([]);
     const [hydrated, setHydrated] = useState(false);
     const [processing, setProcessing] = useState(false);
@@ -101,7 +102,7 @@ export default function Checkout() {
                 delivery_address: formData.address,
                 city: formData.city,
                 postal_code: formData.postalCode,
-                payment_method: paymentMethod === 'cod' ? 'cash_on_delivery' : 'card',
+                payment_method: paymentMethod === 'cod' ? 'cash_on_delivery' : 'stripe',
                 cart_items: products.map((product) => ({
                     id: Number(product.id),
                     quantity: Number(product.quantity || 1),
@@ -109,10 +110,6 @@ export default function Checkout() {
             },
             {
                 preserveScroll: true,
-                onSuccess: () => {
-                    window.localStorage.removeItem(CART_STORAGE_KEY);
-                    setProducts([]);
-                },
                 onFinish: () => setProcessing(false),
             },
         );
@@ -122,10 +119,10 @@ export default function Checkout() {
         return (
             <AuthStorefrontLayout>
                 <Head title="Panier vide - Matjari" />
-                <main className="bg-[#f4f4f3] px-5 py-16 text-[#202526] sm:px-8 lg:px-10">
-                    <section className="mx-auto max-w-3xl rounded-lg border border-black/10 bg-white px-6 py-14 text-center shadow-[0_22px_60px_rgba(32,37,38,0.08)]">
+                <main className="bg-[#f4f4f3] px-4 py-12 text-[#202526] sm:px-6 sm:py-16 lg:px-10">
+                    <section className="mx-auto w-full max-w-3xl rounded-lg border border-black/10 bg-white px-5 py-12 text-center shadow-[0_22px_60px_rgba(32,37,38,0.08)] sm:px-6 sm:py-14">
                         <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#b91f2c]">Checkout</span>
-                        <h1 className="mt-3 font-serif text-4xl font-semibold">Votre panier est vide.</h1>
+                        <h1 className="mt-3 font-serif text-3xl font-semibold sm:text-4xl">Votre panier est vide.</h1>
                         <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-[#687074]">
                             Ajoutez des produits au panier avant de confirmer une commande.
                         </p>
@@ -145,7 +142,7 @@ export default function Checkout() {
         return (
             <AuthStorefrontLayout>
                 <Head title="Passer la commande - Matjari" />
-                <main className="bg-[#f4f4f3] px-5 py-16 text-center text-[#202526]">
+                <main className="bg-[#f4f4f3] px-4 py-16 text-center text-[#202526] sm:px-6 lg:px-10">
                     <p className="text-sm font-semibold text-[#687074]">Chargement du panier...</p>
                 </main>
             </AuthStorefrontLayout>
@@ -158,17 +155,22 @@ export default function Checkout() {
         <AuthStorefrontLayout>
             <Head title="Passer la commande - Matjari" />
 
-            <main className="bg-[#f4f4f3] px-5 py-12 text-[#202526] sm:px-8 lg:px-10 lg:py-16">
+            <main className="bg-[#f4f4f3] px-4 py-12 text-[#202526] sm:px-6 lg:px-10 lg:py-16">
                 <div className="mx-auto w-full max-w-[1180px]">
                     <div className="mb-8">
                         <Link href="/cart" className="inline-flex items-center gap-2 text-sm font-semibold text-[#687074] transition hover:text-black">
                             <FiArrowLeft className="h-4 w-4" />
                             Retour au panier
                         </Link>
+                        {errorMessage ? (
+                            <div className="mt-4 rounded-lg border border-[#f1c7c7] bg-[#fff5f5] px-4 py-3 text-sm font-semibold text-[#b91f2c]">
+                                {errorMessage}
+                            </div>
+                        ) : null}
                     </div>
 
-                    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
-                        <form id="checkout-form" onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)]">
+                        <form id="checkout-form" onSubmit={handleSubmit} className="min-w-0 space-y-6">
                             <section className="rounded-lg border border-black/10 bg-white p-5 shadow-[0_14px_35px_rgba(32,37,38,0.05)] sm:p-8">
                                 <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#b91f2c]">Étape 1</span>
                                 <h2 className="mb-6 mt-2 font-serif text-2xl font-semibold text-[#202526]">Informations de livraison</h2>
@@ -200,7 +202,7 @@ export default function Checkout() {
                                         active={paymentMethod === 'card'}
                                         icon={<FiCreditCard className="mt-1 h-5 w-5 text-[#687074]" />}
                                         title="Carte bancaire"
-                                        text="Le paiement sera enregistré pour traitement."
+                                        text="Paiement carte bancaire simulé pour démonstration."
                                         onClick={() => setPaymentMethod('card')}
                                     />
                                 </div>
@@ -208,7 +210,7 @@ export default function Checkout() {
                             </section>
                         </form>
 
-                        <aside className="h-fit space-y-4 lg:sticky lg:top-6">
+                        <aside className="min-w-0 space-y-4 lg:sticky lg:top-6 lg:h-fit">
                             <div className="rounded-lg border border-black/10 bg-white p-6 shadow-[0_22px_60px_rgba(32,37,38,0.08)]">
                                 <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#b91f2c]">Votre commande</span>
                                 <h2 className="mb-6 mt-2 font-serif text-2xl font-semibold text-[#202526]">Résumé de la commande</h2>
@@ -221,7 +223,7 @@ export default function Checkout() {
                                         const imgUrl = product.image || product.img || '';
 
                                         return (
-                                            <div key={product.id} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+                                            <div key={product.id} className="flex min-w-0 items-center gap-4 py-3 first:pt-0 last:pb-0">
                                                 <div className="h-14 w-14 flex-none overflow-hidden rounded-md border border-[#dedbd8] bg-[#eee4dc]">
                                                     {imgUrl ? <img src={imgUrl} alt={title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-[10px] font-bold text-[#687074]">Matjari</div>}
                                                 </div>
@@ -229,7 +231,7 @@ export default function Checkout() {
                                                     <h3 className="truncate text-sm font-semibold text-[#202526]">{title}</h3>
                                                     <p className="mt-1 text-xs text-[#687074]">Qté: {qty} x {money(price)}</p>
                                                 </div>
-                                                <span className="text-sm font-semibold text-[#202526]">{money(price * qty)}</span>
+                                                <span className="shrink-0 text-sm font-semibold text-[#202526]">{money(price * qty)}</span>
                                             </div>
                                         );
                                     })}
@@ -245,7 +247,7 @@ export default function Checkout() {
                                         <strong className="font-semibold text-green-600">Gratuit</strong>
                                     </div>
                                     <div className="border-t border-black/10 pt-4">
-                                        <div className="flex items-center justify-between text-lg">
+                                        <div className="flex flex-wrap items-center justify-between gap-2 text-lg">
                                             <span>Total à payer</span>
                                             <strong className="text-[#202526]">{money(totals.amount)}</strong>
                                         </div>
@@ -264,7 +266,7 @@ export default function Checkout() {
 
                                 <div className="mt-4 flex items-center justify-center gap-2 text-xs text-[#687074]">
                                     <FiLock className="h-3 w-3" />
-                                    <span>Paiement sécurisé</span>
+                                    <span>{paymentMethod === 'card' ? 'Paiement Stripe simulé' : 'Paiement sécurisé'}</span>
                                 </div>
                             </div>
                         </aside>

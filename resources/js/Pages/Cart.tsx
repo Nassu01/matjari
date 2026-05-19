@@ -124,7 +124,7 @@ export default function Cart() {
         <AuthStorefrontLayout>
             <Head title="Mon panier" />
 
-            <main className="bg-[#f4f4f3] px-5 py-12 text-[#202526] sm:px-8 lg:px-10 lg:py-16">
+            <main className="bg-[#f4f4f3] px-4 py-10 text-[#202526] sm:px-6 lg:px-10 lg:py-16">
                 <div className="mx-auto w-full max-w-[1180px]">
                     <div className="mb-9 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                         <div>
@@ -141,7 +141,7 @@ export default function Cart() {
 
                         <Link
                             href="/shop"
-                            className="inline-flex min-h-11 w-fit items-center justify-center rounded-md border border-neutral-300 bg-white px-5 text-sm font-semibold text-[#202526] shadow-sm transition hover:-translate-y-0.5 hover:border-neutral-300 hover:bg-neutral-100 hover:text-[#202526]"
+                            className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-neutral-300 bg-white px-5 text-sm font-semibold text-[#202526] shadow-sm transition hover:-translate-y-0.5 hover:border-neutral-300 hover:bg-neutral-100 hover:text-[#202526] sm:w-fit"
                         >
                             Continuer mes achats
                         </Link>
@@ -224,7 +224,7 @@ export default function Cart() {
                                                         )}
                                                     </div>
                                                     <div className="min-w-0 self-center">
-                                                        <h2 className="font-serif text-xl font-semibold leading-tight text-[#202526]">
+                                                        <h2 className="break-words font-serif text-xl font-semibold leading-tight text-[#202526]">
                                                             {name}
                                                         </h2>
                                                         <p className="mt-2 text-sm text-[#687074]">

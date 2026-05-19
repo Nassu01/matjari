@@ -30,6 +30,8 @@ class Order extends Model
         'shipped_at',
         'invoice_path',
         'invoice_number',
+        'stripe_checkout_session_id',
+        'stripe_payment_intent_id',
     ];
 
     protected function casts(): array

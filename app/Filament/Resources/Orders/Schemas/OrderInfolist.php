@@ -20,7 +20,13 @@ class OrderInfolist
                 TextEntry::make('customer_phone')
                     ->placeholder('-'),
                 TextEntry::make('status'),
+                TextEntry::make('payment_method'),
                 TextEntry::make('payment_status'),
+                TextEntry::make('stripe_checkout_session_id')
+                    ->placeholder('-'),
+                TextEntry::make('invoice_path')
+                    ->label('Invoice')
+                    ->placeholder('-'),
                 TextEntry::make('total')
                     ->money('MAD'),
                 TextEntry::make('notes')

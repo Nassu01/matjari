@@ -20,35 +20,49 @@ class OrderStatusPieChart extends ChartWidget
 
     protected function getData(): array
     {
-        $statuses = [
-            'pending' => 'Pending',
-            'paid' => 'Paid',
-            'shipped' => 'Shipped',
-            'completed' => 'Completed',
-            'cancelled' => 'Cancelled',
-        ];
+        $preferredOrder = ['pending', 'processing', 'shipped', 'delivered', 'completed', 'paid', 'cancelled', 'payment_cancelled'];
 
         $counts = Order::query()
             ->selectRaw('status, COUNT(*) as aggregate')
             ->groupBy('status')
             ->pluck('aggregate', 'status');
 
+        $statuses = collect($preferredOrder)
+            ->filter(fn (string $status): bool => $counts->has($status))
+            ->merge($counts->keys()->diff($preferredOrder)->sort())
+            ->values();
+
+        if ($statuses->isEmpty()) {
+            return [
+                'datasets' => [[
+                    'label' => 'Orders',
+                    'data' => [0],
+                    'backgroundColor' => ['#e5e7eb'],
+                ]],
+                'labels' => ['No orders'],
+            ];
+        }
+
         return [
             'datasets' => [[
                 'label' => 'Orders',
-                'data' => array_map(
-                    fn (string $status): int => (int) ($counts[$status] ?? 0),
-                    array_keys($statuses)
-                ),
+                'data' => $statuses
+                    ->map(fn (string $status): int => (int) $counts[$status])
+                    ->all(),
                 'backgroundColor' => [
                     '#f59e0b',
-                    '#22c55e',
+                    '#8b5cf6',
                     '#3b82f6',
+                    '#22c55e',
                     '#10b981',
                     '#ef4444',
+                    '#f97316',
+                    '#64748b',
                 ],
             ]],
-            'labels' => array_values($statuses),
+            'labels' => $statuses
+                ->map(fn (string $status): string => str($status)->replace('_', ' ')->headline()->toString())
+                ->all(),
         ];
     }
 
@@ -66,5 +80,10 @@ class OrderStatusPieChart extends ChartWidget
                 ],
             ],
         ];
+    }
+
+    public static function canView(): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
     }
 }

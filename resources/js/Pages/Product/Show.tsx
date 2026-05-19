@@ -107,15 +107,15 @@ export default function ProductShow() {
             <Head title={product.name} />
 
             <main className="bg-[#f4f4f3] text-[#202526]">
-                <section className="px-5 py-12 sm:px-8 lg:px-10 lg:py-16">
+                <section className="px-4 py-10 sm:px-6 lg:px-10 lg:py-16">
                     <div className="mx-auto grid w-full max-w-[1180px] gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] lg:items-start">
                         <div>
-                            <div className="grid min-h-[520px] place-items-center rounded-lg border border-black/10 bg-white p-6 shadow-[0_22px_60px_rgba(32,37,38,0.08)]">
+                            <div className="grid min-h-[320px] place-items-center rounded-lg border border-black/10 bg-white p-4 shadow-[0_22px_60px_rgba(32,37,38,0.08)] sm:min-h-[420px] sm:p-6 lg:min-h-[520px]">
                                 {mainImage ? (
                                     <img
                                         src={mainImage}
                                         alt={product.name}
-                                        className="max-h-[470px] w-full object-contain mix-blend-multiply"
+                                        className="max-h-[300px] w-full object-contain mix-blend-multiply sm:max-h-[390px] lg:max-h-[470px]"
                                         onError={(event) => {
                                             event.currentTarget.src = '/images/logomatjari.png';
                                         }}
@@ -154,7 +154,7 @@ export default function ProductShow() {
                             <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#b91f2c]">
                                 {product.category || 'Produit'}
                             </span>
-                            <h1 className="mt-4 font-serif text-[40px] font-semibold leading-tight text-[#202526] sm:text-5xl">
+                            <h1 className="mt-4 break-words font-serif text-3xl font-semibold leading-tight text-[#202526] sm:text-[40px] lg:text-5xl">
                                 {product.name}
                             </h1>
                             <p className="mt-5 text-2xl font-semibold text-[#202526]">{money(product.price)}</p>
@@ -174,7 +174,7 @@ export default function ProductShow() {
                                 )}
                             </dl>
 
-                            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                                 <div className="flex w-full items-center justify-between rounded-md border border-black/15 bg-white sm:w-36">
                                     <button
                                         type="button"
@@ -205,7 +205,7 @@ export default function ProductShow() {
 
                                 <button
                                     type="button"
-                                    className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-neutral-300 bg-white px-5 text-sm font-semibold transition hover:-translate-y-0.5 hover:bg-neutral-100 ${
+                                    className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-neutral-300 bg-white px-5 text-sm font-semibold transition hover:-translate-y-0.5 hover:bg-neutral-100 sm:flex-1 lg:flex-none ${
                                         isFavorite ? 'text-[#b91f2c]' : 'text-[#202526]'
                                     }`}
                                     onClick={toggleFavorite}
@@ -229,12 +229,12 @@ export default function ProductShow() {
                     </div>
                 </section>
 
-                <section className="border-t border-black/10 bg-white px-5 py-12 sm:px-8 lg:px-10">
+                <section className="border-t border-black/10 bg-white px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
                     <div className="mx-auto max-w-[1180px]">
                         <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#b91f2c]">Avis</span>
                         <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                            <h2 className="font-serif text-4xl font-semibold text-[#202526]">Avis clients</h2>
-                            <button className="inline-flex min-h-11 w-fit items-center justify-center rounded-md border border-neutral-300 bg-white px-5 text-sm font-semibold text-[#202526] transition hover:bg-neutral-100" type="button">
+                            <h2 className="font-serif text-3xl font-semibold text-[#202526] sm:text-4xl">Avis clients</h2>
+                            <button className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-neutral-300 bg-white px-5 text-sm font-semibold text-[#202526] transition hover:bg-neutral-100 sm:w-fit" type="button">
                                 Écrire un avis
                             </button>
                         </div>
@@ -258,10 +258,10 @@ export default function ProductShow() {
                     </div>
                 </section>
 
-                <section className="px-5 py-12 sm:px-8 lg:px-10 lg:py-16">
+                <section className="px-4 py-10 sm:px-6 lg:px-10 lg:py-16">
                     <div className="mx-auto max-w-[1180px]">
                         <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#b91f2c]">Sélection</span>
-                        <h2 className="mt-3 font-serif text-4xl font-semibold text-[#202526]">Vous aimerez aussi</h2>
+                        <h2 className="mt-3 font-serif text-3xl font-semibold text-[#202526] sm:text-4xl">Vous aimerez aussi</h2>
 
                         <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             {relatedProducts.map((relatedProduct) => (

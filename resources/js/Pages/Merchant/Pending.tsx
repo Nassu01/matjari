@@ -13,14 +13,14 @@ export default function Pending() {
         <>
             <Head title="Compte commerçant" />
             <AuthStorefrontLayout>
-                <main className="min-h-[calc(100vh-200px)] px-4 py-20 sm:px-6 lg:px-10">
-                    <div className="mx-auto max-w-3xl rounded-[40px] border border-black/10 bg-white p-10 shadow-[0_40px_120px_rgba(0,0,0,0.08)]">
+                <main className="min-h-[calc(100vh-200px)] px-4 py-12 sm:px-6 sm:py-16 lg:px-10 lg:py-20">
+                    <div className="mx-auto w-full max-w-3xl rounded-2xl border border-black/10 bg-white p-5 shadow-[0_40px_120px_rgba(0,0,0,0.08)] sm:rounded-[40px] sm:p-10">
                         <div className="flex flex-col items-center gap-6 text-center">
                             <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-black text-4xl text-white">
                                 {isRejected ? <FiXCircle /> : <FiLock />}
                             </div>
                             <span className="text-sm uppercase tracking-[0.3em] text-red-500">Espace commerçant</span>
-                            <h1 className="text-4xl font-semibold text-slate-900">{isRejected ? 'Compte refusé' : 'Compte en attente de validation'}</h1>
+                            <h1 className="break-words text-3xl font-semibold text-slate-900 sm:text-4xl">{isRejected ? 'Compte refusé' : 'Compte en attente de validation'}</h1>
                             <p className="max-w-2xl text-base leading-7 text-slate-600">
                                 {isRejected
                                     ? 'Votre demande de compte commerçant a été refusée par l’administrateur. Contactez le support si vous souhaitez plus d’informations.'

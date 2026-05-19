@@ -24,6 +24,18 @@ class StorefrontController extends Controller
         $heroImagePath = $this->assetPath($settings->hero_image_path);
         $categories = $this->activeCategories();
         $products = $this->activeProducts();
+        $navbarLinks = $this->navbarLinks($settings, $categories);
+        $heroTitle = trim(implode(' ', array_filter([$settings->hero_title, $settings->hero_title_accent])));
+        $heroFallback = [
+            'badge' => $settings->hero_badge,
+            'title' => $heroTitle,
+            'description' => $settings->hero_description,
+            'primaryButtonLabel' => $settings->hero_primary_button_label,
+            'primaryButtonUrl' => $settings->hero_primary_button_url,
+            'secondaryButtonLabel' => $settings->hero_secondary_button_label,
+            'secondaryButtonUrl' => $settings->hero_secondary_button_url,
+            'imagePath' => $this->image11Fallback($heroImagePath, 1, ['/images/HeroPage.png']),
+        ];
 
         return response()->json([
             'settings' => [
@@ -33,23 +45,22 @@ class StorefrontController extends Controller
                     'homeLabel' => $settings->navbar_home_label,
                     'categoryLabel' => $settings->navbar_category_label,
                     'searchPlaceholder' => $settings->navbar_search_placeholder,
-                    'links' => $categories->map(fn (array $category) => [
-                        'icon' => Str::upper(Str::substr($category['name'], 0, 2)),
-                        'label' => $category['name'],
-                        'name' => $category['name'],
-                        'slug' => $category['slug'],
-                        'url' => "/shop?category={$category['slug']}",
-                    ])->values(),
+                    'links' => $navbarLinks,
                 ],
                 'hero' => [
-                    'badge' => $settings->hero_badge,
-                    'title' => trim(implode(' ', array_filter([$settings->hero_title, $settings->hero_title_accent]))),
-                    'description' => $settings->hero_description,
-                    'primaryButtonLabel' => $settings->hero_primary_button_label,
-                    'primaryButtonUrl' => $settings->hero_primary_button_url,
-                    'secondaryButtonLabel' => $settings->hero_secondary_button_label,
-                    'secondaryButtonUrl' => $settings->hero_secondary_button_url,
-                    'imagePath' => $this->image11Fallback($heroImagePath, 1, ['/images/HeroPage.png']),
+                    ...$heroFallback,
+                    'statOneValue' => $settings->hero_stat_one_value,
+                    'statOneLabel' => $settings->hero_stat_one_label,
+                    'statTwoValue' => $settings->hero_stat_two_value,
+                    'statTwoLabel' => $settings->hero_stat_two_label,
+                    'slides' => $this->heroSlides($settings, $heroFallback),
+                ],
+                'promo' => [
+                    'badge' => $settings->promo_badge,
+                    'title' => $settings->promo_title,
+                    'description' => $settings->promo_description,
+                    'buttonLabel' => $settings->promo_button_label,
+                    'buttonUrl' => $settings->promo_button_url,
                 ],
                 'footer' => [
                     'description' => $settings->footer_description,
@@ -78,6 +89,92 @@ class StorefrontController extends Controller
             'blogPosts' => $this->blogPosts(),
             'catalogMenu' => $this->catalogMenu(),
         ]);
+    }
+
+    private function navbarLinks(SiteSetting $settings, $categories)
+    {
+        $links = collect($settings->navbar_links ?? [])
+            ->filter(fn ($link) => is_array($link) && filled($link['label'] ?? null))
+            ->map(fn (array $link) => $this->storefrontLink($link['label'], $link['url'] ?? '/shop'))
+            ->values();
+
+        if ($links->isNotEmpty()) {
+            return $links;
+        }
+
+        return $categories->map(fn (array $category) => [
+            'icon' => Str::upper(Str::substr($category['name'], 0, 2)),
+            'label' => $category['name'],
+            'name' => $category['name'],
+            'slug' => $category['slug'],
+            'url' => "/shop?category={$category['slug']}",
+        ])->values();
+    }
+
+    private function storefrontLink(string $label, ?string $url): array
+    {
+        $url = filled($url) ? $url : '/shop';
+        $slug = Str::of($url)->after('category=')->before('&')->slug()->value()
+            ?: Str::slug($label);
+
+        return [
+            'icon' => Str::upper(Str::substr($label, 0, 2)),
+            'label' => $label,
+            'name' => $label,
+            'slug' => $slug,
+            'url' => $url,
+        ];
+    }
+
+    private function heroSlides(SiteSetting $settings, array $heroFallback): array
+    {
+        $fallbacks = [
+            $heroFallback,
+            [
+                'badge' => 'Full Gallery',
+                'title' => 'Every File, One Storefront',
+                'description' => '',
+                'primaryButtonLabel' => 'Shop Now',
+                'primaryButtonUrl' => '/shop',
+                'secondaryButtonLabel' => 'Learn More',
+                'secondaryButtonUrl' => '#about',
+                'imagePath' => Images11::urlAt(1) ?: '',
+            ],
+            [
+                'badge' => 'Fresh Source',
+                'title' => 'Browse the Complete Set',
+                'description' => '',
+                'primaryButtonLabel' => 'Shop Now',
+                'primaryButtonUrl' => '/shop',
+                'secondaryButtonLabel' => 'Learn More',
+                'secondaryButtonUrl' => '#about',
+                'imagePath' => Images11::urlAt(2) ?: '',
+            ],
+        ];
+
+        return collect($settings->banner_slides ?? [])
+            ->take(3)
+            ->map(fn (array $slide, int $index) => $this->heroSlide($slide, $fallbacks[$index] ?? $fallbacks[0]))
+            ->pad(3, null)
+            ->map(fn ($slide, int $index) => $slide ?? $fallbacks[$index])
+            ->values()
+            ->all();
+    }
+
+    private function heroSlide(array $slide, array $fallback): array
+    {
+        $imagePath = $this->assetPath($slide['image'] ?? null);
+
+        return [
+            'badge' => filled($slide['badge'] ?? null) ? $slide['badge'] : $fallback['badge'],
+            'title' => filled($slide['title'] ?? null) ? $slide['title'] : $fallback['title'],
+            'description' => filled($slide['description'] ?? null) ? $slide['description'] : $fallback['description'],
+            'primaryButtonLabel' => filled($slide['button_label'] ?? null) ? $slide['button_label'] : $fallback['primaryButtonLabel'],
+            'primaryButtonUrl' => filled($slide['button_url'] ?? null) ? $slide['button_url'] : $fallback['primaryButtonUrl'],
+            'secondaryButtonLabel' => filled($slide['secondary_button_label'] ?? null) ? $slide['secondary_button_label'] : $fallback['secondaryButtonLabel'],
+            'secondaryButtonUrl' => filled($slide['secondary_button_url'] ?? null) ? $slide['secondary_button_url'] : $fallback['secondaryButtonUrl'],
+            'imagePath' => $imagePath ?: $fallback['imagePath'],
+        ];
     }
 
     public function products(): JsonResponse
@@ -237,6 +334,10 @@ class StorefrontController extends Controller
 
         if (str_starts_with($path, '/storage/') || str_starts_with($path, '/images/')) {
             return $path;
+        }
+
+        if (str_starts_with($path, 'storage/')) {
+            return '/'.$path;
         }
 
         if (str_starts_with($path, '/')) {

@@ -71,7 +71,7 @@ const Footer = ({ forceDocumentNavigation = false }) => {
             <h4 className="newsletter-title">{footer.newsletterTitle}</h4>
             <p>{footer.newsletterText}</p>
 
-            <form className="newsletter-form">
+            <form className="newsletter-form" onSubmit={(event) => event.preventDefault()}>
               <input type="email" placeholder={footer.newsletterPlaceholder} />
               <button type="submit">{footer.newsletterButtonLabel}</button>
             </form>

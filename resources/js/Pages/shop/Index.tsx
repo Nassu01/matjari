@@ -95,7 +95,7 @@ export default function ShopIndex() {
     const [minPrice, setMinPrice] = useState(filters.min_price || '');
     const [maxPrice, setMaxPrice] = useState(filters.max_price || '');
     const [favoriteIds, setFavoriteIds] = useState<number[]>(pageFavoriteIds);
-    const [showFavoritePrompt, setShowFavoritePrompt] = useState(false);
+    const [showLoginPrompt, setShowLoginPrompt] = useState(false);
     const [cartNotice, setCartNotice] = useState('');
     const activeFilters = useMemo(() => cleanFilters(filters), [filters]);
 
@@ -122,7 +122,7 @@ export default function ShopIndex() {
 
     const toggleFavorite = (id: number) => {
         if (!auth?.user) {
-            setShowFavoritePrompt(true);
+            setShowLoginPrompt(true);
             return;
         }
 
@@ -133,6 +133,11 @@ export default function ShopIndex() {
     };
 
     const addToCart = (product: ShopProduct) => {
+        if (!auth?.user) {
+            setShowLoginPrompt(true);
+            return;
+        }
+
         addProductToCart(product);
         setCartNotice('Produit ajouté au panier.');
         window.setTimeout(() => setCartNotice(''), 2200);
@@ -240,10 +245,10 @@ export default function ShopIndex() {
 
                             <div className="mb-6 flex flex-col gap-3 rounded-lg border border-black/10 bg-white px-5 py-4 shadow-[0_18px_42px_rgba(32,37,38,0.05)] sm:flex-row sm:items-center sm:justify-between">
                                 <p className="text-sm font-semibold text-[#202526]">{resultCount} résultats</p>
-                                <label className="flex items-center gap-3 text-sm text-[#687074]">
+                                <label className="flex flex-col gap-2 text-sm text-[#687074] sm:flex-row sm:items-center sm:gap-3">
                                     Trier par :
                                     <select
-                                        className="min-h-10 rounded-md border border-black/10 bg-[#f8f6f3] px-3 text-sm font-semibold text-[#202526] outline-none transition focus:border-[#202526]"
+                                        className="min-h-10 w-full rounded-md border border-black/10 bg-[#f8f6f3] px-3 text-sm font-semibold text-[#202526] outline-none transition focus:border-[#202526] sm:w-auto"
                                         value={filters.sort || 'most_demanded'}
                                         onChange={(event) => visitShop({ sort: event.target.value, page: undefined } as Filters)}
                                     >
@@ -296,7 +301,7 @@ export default function ShopIndex() {
                 </div>
             </main>
 
-            {showFavoritePrompt ? <FavoriteAuthPrompt onClose={() => setShowFavoritePrompt(false)} /> : null}
+            {showLoginPrompt ? <LoginRequiredPrompt onClose={() => setShowLoginPrompt(false)} /> : null}
             {cartNotice ? <CartNotice message={cartNotice} /> : null}
         </AuthStorefrontLayout>
     );
@@ -373,7 +378,17 @@ function ShopProductCard({
     const image = productImage(product);
 
     return (
-        <article className="group relative flex min-h-[470px] flex-col overflow-hidden rounded-md border border-black/10 bg-white p-4 pb-0 shadow-[0_12px_30px_rgba(32,37,38,0.04)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(32,37,38,0.13)]">
+        <article
+            className="group relative flex min-h-[470px] cursor-pointer flex-col overflow-hidden rounded-md border border-black/10 bg-white p-4 pb-0 shadow-[0_12px_30px_rgba(32,37,38,0.04)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(32,37,38,0.13)]"
+            role="link"
+            tabIndex={0}
+            onClick={() => router.visit(detailsUrl)}
+            onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                    router.visit(detailsUrl);
+                }
+            }}
+        >
             {product.sale || product.discount ? (
                 <span className="absolute left-4 top-4 z-10 bg-[#b91f2c] px-2 py-1 text-xs font-extrabold text-white">
                     {product.discount ? `-${product.discount}%` : '%'}
@@ -385,7 +400,7 @@ function ShopProductCard({
                 </span>
             ) : null}
 
-            <Link className="grid h-[280px] place-items-center overflow-hidden rounded-sm bg-[#f6f4f1]" href={detailsUrl}>
+            <Link className="grid h-[280px] place-items-center overflow-hidden rounded-sm bg-[#f6f4f1]" href={detailsUrl} onClick={(event) => event.stopPropagation()}>
                 <SafeProductImage
                     className="max-h-[245px] max-w-[86%] object-contain mix-blend-multiply drop-shadow-[0_14px_16px_rgba(0,0,0,0.14)] transition duration-300 group-hover:scale-[1.035]"
                     src={image}
@@ -395,8 +410,8 @@ function ShopProductCard({
 
             <div className="flex flex-1 flex-col pt-4">
                 <span className="text-xs font-medium text-[#697175] underline">{product.brand || product.category || 'Produit'}</span>
-                <h3 className="mt-2 min-h-[48px] font-serif text-[19px] leading-tight text-[#202526]">
-                    <Link className="transition hover:text-[#b91f2c]" href={detailsUrl}>
+                <h3 className="mt-2 min-h-[48px] break-words font-serif text-[19px] leading-tight text-[#202526]">
+                    <Link className="transition hover:text-[#b91f2c]" href={detailsUrl} onClick={(event) => event.stopPropagation()}>
                         {product.name}
                     </Link>
                 </h3>
@@ -410,7 +425,10 @@ function ShopProductCard({
                 <button
                     type="button"
                     className="inline-flex min-w-0 items-center gap-2 text-left text-sm font-semibold text-[#252b2c] transition hover:-translate-y-0.5 hover:text-[#b91f2c]"
-                    onClick={() => onAddToCart(product)}
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onAddToCart(product);
+                    }}
                 >
                     <FiShoppingBag className="h-4 w-4 shrink-0" /> <span className="truncate">Ajouter au panier</span>
                 </button>
@@ -420,7 +438,10 @@ function ShopProductCard({
                         favorite ? 'text-[#b91f2c]' : ''
                     }`}
                     aria-label="Ajouter aux favoris"
-                    onClick={() => onToggleFavorite(product.id)}
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onToggleFavorite(product.id);
+                    }}
                 >
                     <FiHeart />
                 </button>
@@ -428,6 +449,7 @@ function ShopProductCard({
                     className="grid h-10 w-10 place-items-center rounded-full text-[#5a6164] transition hover:-translate-y-0.5 hover:bg-[#f4f4f3] hover:text-[#b91f2c]"
                     href={detailsUrl}
                     aria-label="Voir le produit"
+                    onClick={(event) => event.stopPropagation()}
                 >
                     <FiEye />
                 </Link>
@@ -490,23 +512,23 @@ function normalizeImagePath(path: string): string {
 
 function CartNotice({ message }: { message: string }) {
     return (
-        <div className="fixed bottom-6 left-1/2 z-[120] -translate-x-1/2 rounded-md border border-black/10 bg-[#202526] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
+        <div className="fixed bottom-6 left-1/2 z-[120] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 rounded-md border border-black/10 bg-[#202526] px-5 py-3 text-center text-sm font-semibold text-white shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
             {message}
         </div>
     );
 }
 
-function FavoriteAuthPrompt({ onClose }: { onClose: () => void }) {
+function LoginRequiredPrompt({ onClose }: { onClose: () => void }) {
     return (
         <div className="fixed inset-0 z-[120] grid place-items-center bg-black/45 px-5 backdrop-blur-sm" role="dialog" aria-modal="true">
             <div className="relative w-full max-w-md rounded-lg border border-black/10 bg-white p-8 shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
                 <button className="absolute right-4 top-3 text-2xl leading-none text-[#202526] transition hover:text-[#b91f2c]" type="button" onClick={onClose} aria-label="Fermer">
                     x
                 </button>
-                <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#b91f2c]">Favoris</span>
+                <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#b91f2c]">Connexion</span>
                 <h2 className="mt-3 font-serif text-3xl font-semibold text-[#202526]">Connexion requise</h2>
                 <p className="mt-4 text-sm leading-7 text-[#687074]">
-                    Vous devez vous connecter ou créer un compte pour ajouter ce produit aux favoris.
+                    Vous devez vous connecter d'abord pour effectuer cette action.
                 </p>
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     <Link className="inline-flex min-h-11 items-center justify-center rounded-md bg-black px-5 text-sm font-semibold text-white hover:bg-neutral-800 hover:text-white" href="/login">
